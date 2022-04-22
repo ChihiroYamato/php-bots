@@ -1,0 +1,28 @@
+{
+    "name": "youtube/chatbot",
+    "description": "YouTube ChatBot",
+    "autoload": {
+        "psr-4": {
+            "App\\Base\\": "core/"
+        },
+        "classmap": [],
+        "files": []
+    },
+    "authors": [
+        {
+            "name": "Alexander Mironov",
+            "email": "alexan9610@gmail.com"
+        }
+    ],
+    "require": {
+        "google/apiclient": "^2.12.1"
+    },
+    "scripts": {
+        "pre-autoload-dump": "Google\\Task\\Composer::cleanup"
+    },
+    "extra": {
+        "google/apiclient-services": [
+            "YouTube"
+        ]
+    }
+}
