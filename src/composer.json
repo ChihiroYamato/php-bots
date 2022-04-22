@@ -6,7 +6,9 @@
             "App\\Base\\": "core/"
         },
         "classmap": [],
-        "files": []
+        "files": [
+            "const.php"
+        ]
     },
     "authors": [
         {
