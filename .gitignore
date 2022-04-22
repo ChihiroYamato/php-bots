@@ -1,0 +1,11 @@
+# Default
+*.code-workspace
+.idea/
+.vscode/
+
+# Test
+test*.*
+test/
+
+# Composer
+vendor/
