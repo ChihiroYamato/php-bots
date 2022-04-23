@@ -1,5 +1,6 @@
 <?php
 
+define('DEFAULT_USER_AGENT', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36');
 define('SETTING_DIR', __DIR__ . '/settings');
 
 if (! is_dir(SETTING_DIR)) {
@@ -12,3 +13,5 @@ if (count($secret) > 1) {
 }
 
 define('CLIENT_SECRET_JSON', SETTING_DIR . "/{$secret[0]}");
+define('OAUTH_TOKEN_JSON', SETTING_DIR . '/oauth_token.json');
+define('API_KEY_JSON', SETTING_DIR . '/youtube_api_key.json');
