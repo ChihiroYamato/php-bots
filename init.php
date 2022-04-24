@@ -40,7 +40,7 @@ if ($liveChatID === null) {
 
 $lastMessageID = null;
 
-for ($i = 0; $i < 3; $i++) {
+// for ($i = 0; $i < 1; $i++) {
     $responseMessageList = $service->liveChatMessages->listLiveChatMessages($liveChatID, 'snippet', ['maxResults' => 100]);
 
     $messageList = $responseMessageList['items'];
@@ -69,28 +69,51 @@ for ($i = 0; $i < 3; $i++) {
         $lastMessageID = $currentMessages[count($currentMessages) - 1]['id'];
     }
 
-    var_dump($currentMessages);
-    echo "wait\n";
-    sleep(1);
-    echo "wait\n";
-    sleep(1);
-    echo "wait\n";
-    sleep(1);
-    echo "wait\n";
-    sleep(1);
-    echo "wait\n";
-    sleep(1);
-    echo "wait\n";
-    sleep(1);
-    echo "wait\n";
-    sleep(1);
-    echo "wait\n";
-    sleep(1);
-    echo "wait\n";
-    sleep(1);
-    echo "wait\n";
-    sleep(1);
-}
+    // var_dump($currentMessages);
+
+
+    $liveChatMessage = new Google\Service\YouTube\LiveChatMessage();
+    $liveChatMessageSnippet = new Google\Service\YouTube\LiveChatMessageSnippet();
+    $liveChatTextMessageDetails = new Google\Service\YouTube\LiveChatTextMessageDetails();
+
+    $liveChatTextMessageDetails->setMessageText('well, I must go, bb, good game');
+
+    $liveChatMessageSnippet->setLiveChatId('fgfgfg');
+    $liveChatMessageSnippet->setType('textMessageEvent');
+    $liveChatMessageSnippet->setTextMessageDetails($liveChatTextMessageDetails);
+
+    $liveChatMessage->setSnippet($liveChatMessageSnippet);
+
+    try {
+        $responseSendMess = $service->liveChatMessages->insert('snippet', $liveChatMessage);
+        var_dump($responseSendMess);
+    } catch (Google\Service\Exception $error) {
+        var_dump($error->getMessage());
+    }
+
+
+    // echo "wait\n";
+    // sleep(1);
+    // echo "wait\n";
+    // sleep(1);
+    // echo "wait\n";
+    // sleep(1);
+    // echo "wait\n";
+    // sleep(1);
+    // echo "wait\n";
+    // sleep(1);
+    // echo "wait\n";
+    // sleep(1);
+    // echo "wait\n";
+    // sleep(1);
+    // echo "wait\n";
+    // sleep(1);
+    // echo "wait\n";
+    // sleep(1);
+    // echo "wait\n";
+    // sleep(1);
+// }
+
 // file_put_contents('test-mess.json', json_encode($currentMessages, JSON_FORCE_OBJECT));
 
 // foreach ($response['items'] as $item) {
