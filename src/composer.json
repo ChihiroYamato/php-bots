@@ -3,7 +3,7 @@
     "description": "YouTube ChatBot",
     "autoload": {
         "psr-4": {
-            "Anet\\Bots\\": "core/"
+            "Anet\\App\\": "core/"
         },
         "classmap": [],
         "files": [

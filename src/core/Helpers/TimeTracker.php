@@ -1,6 +1,6 @@
 <?php
 
-namespace Anet\Bots\Helpers;
+namespace Anet\App\Helpers;
 
 final class TimeTracker
 {
