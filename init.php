@@ -15,7 +15,7 @@ use Google\Service\YouTube;
 $timeTracker = new TimeTracker(); // TODO ------------------------------------- TIMER
 
 $client = new Client();
-$client->setApplicationName('Yamato-Chat-Bot');
+$client->setApplicationName(APP_NAME);
 
 $client->setAuthConfig(CLIENT_SECRET_JSON);
 $client->setAccessType('offline');
@@ -24,7 +24,7 @@ $client->setScopes([
     YouTube::YOUTUBE_FORCE_SSL,
     YouTube::YOUTUBE_READONLY,
 ]);
-$client->setLoginHint('alexan9610@gmail.com');
+$client->setLoginHint(APP_EMAIL);
 $client->setAccessToken(json_decode(file_get_contents(OAUTH_TOKEN_JSON), true));
 
 $timeTracker->setPoint('login'); // TODO ------------------------------------- TIMER
