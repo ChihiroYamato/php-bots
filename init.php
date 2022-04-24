@@ -12,8 +12,11 @@ if (! file_exists(API_KEY_JSON)) {
     die;
 }
 
+use Anet\Bots\Helpers\TimeTracker;
 use Google\Client;
 use Google\Service\YouTube;
+
+$timeTracker = new TimeTracker(); // TODO ------------------------------------- TIMER
 
 $client = new Client();
 $client->setApplicationName('Yamato-Chat-Bot');
@@ -28,6 +31,7 @@ $client->setScopes([
 $client->setLoginHint('alexan9610@gmail.com');
 $client->setAccessToken(json_decode(file_get_contents(OAUTH_TOKEN_JSON), true));
 
+$timeTracker->setPoint('login'); // TODO ------------------------------------- TIMER
 
 $queryString = json_decode(file_get_contents(API_KEY_JSON), true);
 
@@ -52,6 +56,8 @@ if (($response = curl_exec($curl)) === false) {
     throw new Exception('Error request for current URL');
 }
 
+$timeTracker->setPoint('curl_response'); // TODO ------------------------------------- TIMER
+
 $response = json_decode($response, true);
 
 $liveChatID = $response['items'][0]['liveStreamingDetails']['activeLiveChatId'] ?? null;
@@ -63,10 +69,15 @@ if ($liveChatID === null) {
 $service = new YouTube($client);
 
 $queryParams = [
-    'maxResults' => 100
+    'maxResults' => 100,
 ];
+
 
 $response = $service->liveChatMessages->listLiveChatMessages($liveChatID, 'snippet', $queryParams);
 echo '<pre>';
 print_r($response['items']);
 echo '</pre>';
+
+$timeTracker->setPoint('youtube'); // TODO ------------------------------------- TIMER
+
+var_dump($timeTracker->getStatistic()); // TODO ------------------------------------- TIMER
