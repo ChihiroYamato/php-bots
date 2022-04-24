@@ -2,7 +2,7 @@
 
 namespace Anet\App\Helpers;
 
-class Timer
+final class Timer
 {
     public static function setSleep(int $sec, ?int $iterator = null, string $message = 'Wait...') : void
     {
