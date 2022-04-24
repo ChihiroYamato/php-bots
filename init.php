@@ -7,6 +7,7 @@ if (! file_exists(OAUTH_TOKEN_JSON)) {
     die;
 }
 
+use Anet\App\Helpers\Timer;
 use Anet\App\Helpers\TimeTracker;
 use Google\Client;
 use Google\Service\YouTube;
@@ -92,26 +93,7 @@ $lastMessageID = null;
     }
 
 
-    // echo "wait\n";
-    // sleep(1);
-    // echo "wait\n";
-    // sleep(1);
-    // echo "wait\n";
-    // sleep(1);
-    // echo "wait\n";
-    // sleep(1);
-    // echo "wait\n";
-    // sleep(1);
-    // echo "wait\n";
-    // sleep(1);
-    // echo "wait\n";
-    // sleep(1);
-    // echo "wait\n";
-    // sleep(1);
-    // echo "wait\n";
-    // sleep(1);
-    // echo "wait\n";
-    // sleep(1);
+    Timer::setSleep(10, 1);
 // }
 
 // file_put_contents('test-mess.json', json_encode($currentMessages, JSON_FORCE_OBJECT));
