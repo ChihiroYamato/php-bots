@@ -7,12 +7,7 @@ if (! file_exists(OAUTH_TOKEN_JSON)) {
     die;
 }
 
-if (! file_exists(API_KEY_JSON)) {
-    echo 'Create file with api key for youtube';
-    die;
-}
-
-use Anet\Bots\Helpers\TimeTracker;
+use Anet\App\Helpers\TimeTracker;
 use Google\Client;
 use Google\Service\YouTube;
 
@@ -33,50 +28,74 @@ $client->setAccessToken(json_decode(file_get_contents(OAUTH_TOKEN_JSON), true));
 
 $timeTracker->setPoint('login'); // TODO ------------------------------------- TIMER
 
-$queryString = json_decode(file_get_contents(API_KEY_JSON), true);
+$service = new YouTube($client);
 
-if (! is_array($queryString)) {
-    throw new \Exception('Incorrect api key json');
-}
+$responseLiveChatID = $service->videos->listVideos('liveStreamingDetails', ['id' => 'Eb_CKBVVelc']); // TODO ---------- add auto parse
 
-$queryString['id'] = 'HkjV2ZmFHMg';
-$queryString['part'] = 'liveStreamingDetails';
-
-$videoUrlApi = 'https://www.googleapis.com/youtube/v3/videos';
-$videoUrlApi .= '?' . http_build_query($queryString);
-
-$curl = curl_init();
-
-curl_setopt($curl, CURLOPT_URL, $videoUrlApi);
-curl_setopt($curl, CURLOPT_USERAGENT, DEFAULT_USER_AGENT);
-curl_setopt($curl, CURLOPT_HTTPGET, true);
-curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-
-if (($response = curl_exec($curl)) === false) {
-    throw new Exception('Error request for current URL');
-}
-
-$timeTracker->setPoint('curl_response'); // TODO ------------------------------------- TIMER
-
-$response = json_decode($response, true);
-
-$liveChatID = $response['items'][0]['liveStreamingDetails']['activeLiveChatId'] ?? null;
+$liveChatID = $responseLiveChatID['items'][0]['liveStreamingDetails']['activeLiveChatId'] ?? null;
 
 if ($liveChatID === null) {
     throw new Exception('Error response with live chat ID');
 }
 
-$service = new YouTube($client);
+$lastMessageID = null;
 
-$queryParams = [
-    'maxResults' => 100,
-];
+for ($i = 0; $i < 3; $i++) {
+    $responseMessageList = $service->liveChatMessages->listLiveChatMessages($liveChatID, 'snippet', ['maxResults' => 100]);
 
+    $messageList = $responseMessageList['items'];
+    $currentMessages = [];
+    $writeMod = ($lastMessageID === null);
 
-$response = $service->liveChatMessages->listLiveChatMessages($liveChatID, 'snippet', $queryParams);
-echo '<pre>';
-print_r($response['items']);
-echo '</pre>';
+    foreach ($messageList as $mess) {
+        if ($writeMod) {
+            $responseChannelID = $service->channels->listChannels('snippet', ['id' => $mess['snippet']['authorChannelId']]);
+
+            $currentMessages[] = [
+                'id' => $mess['id'],
+                'authorId' => $mess['snippet']['authorChannelId'],
+                'authorName' => $responseChannelID['items'][0]['snippet']['title'] ?? '',
+                'message' => $mess['snippet']['displayMessage'],
+                'published' => $mess['snippet']['publishedAt'],
+            ];
+        }
+
+        if ($mess['id'] === $lastMessageID) {
+            $writeMod = true;
+        }
+    }
+
+    if (! empty($currentMessages)) {
+        $lastMessageID = $currentMessages[count($currentMessages) - 1]['id'];
+    }
+
+    var_dump($currentMessages);
+    echo "wait\n";
+    sleep(1);
+    echo "wait\n";
+    sleep(1);
+    echo "wait\n";
+    sleep(1);
+    echo "wait\n";
+    sleep(1);
+    echo "wait\n";
+    sleep(1);
+    echo "wait\n";
+    sleep(1);
+    echo "wait\n";
+    sleep(1);
+    echo "wait\n";
+    sleep(1);
+    echo "wait\n";
+    sleep(1);
+    echo "wait\n";
+    sleep(1);
+}
+// file_put_contents('test-mess.json', json_encode($currentMessages, JSON_FORCE_OBJECT));
+
+// foreach ($response['items'] as $item) {
+//     var_dump($item);
+// }
 
 $timeTracker->setPoint('youtube'); // TODO ------------------------------------- TIMER
 

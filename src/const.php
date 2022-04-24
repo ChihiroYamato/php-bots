@@ -14,4 +14,3 @@ if (count($secret) > 1) {
 
 define('CLIENT_SECRET_JSON', SETTING_DIR . "/{$secret[0]}");
 define('OAUTH_TOKEN_JSON', SETTING_DIR . '/oauth_token.json');
-define('API_KEY_JSON', SETTING_DIR . '/youtube_api_key.json');
