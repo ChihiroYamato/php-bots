@@ -79,7 +79,7 @@ $lastMessageID = null;
 
     $liveChatTextMessageDetails->setMessageText('well, I must go, bb, good game');
 
-    $liveChatMessageSnippet->setLiveChatId('fgfgfg');
+    $liveChatMessageSnippet->setLiveChatId($liveChatID);
     $liveChatMessageSnippet->setType('textMessageEvent');
     $liveChatMessageSnippet->setTextMessageDetails($liveChatTextMessageDetails);
 
