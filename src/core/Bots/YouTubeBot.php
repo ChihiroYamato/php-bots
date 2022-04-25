@@ -14,7 +14,7 @@ use Google\Service\YouTube\LiveChatTextMessageDetails;
 
 final class YouTubeBot extends ChatBot
 {
-    use UrlHelper;
+    use UrlHelper; // TODO ========== ErrorHelper, LogHelper
 
     private YouTube $youtubeService;
     private TimeTracker $timeTracker;
@@ -233,20 +233,59 @@ final class YouTubeBot extends ChatBot
 
     public function listen(int $interval) : void
     {
+        $sendingCount = 0;
+        $sendingCount += $this->sendMessage('Всем привет, хорошего дня/вечера/ночи/утра');
+
         while ($this->errorCount < 5) {
             $this->timeTracker->setPoint('prepare');
 
             $chatList = $this->getChatList();
-
             $this->timeTracker->setPoint('getChatList');
 
-            $sendingCount = $this->prepareMessages($chatList); // TODO =================================================================
+            if (empty($chatList)) {
+                if ($this->timeTracker->trackerState()) {
+                    if ($this->timeTracker->trackerCheck(5 * 60)) {
+                        $sendingCount += $this->sendMessage('Dead Chat');
+                        $this->timeTracker->trackerStop();
+                    }
+                } else {
+                    $this->timeTracker->trackerStart();
+                }
+            } else {
+                $sendingCount += $this->prepareMessages($chatList); // TODO =================================================================
+            }
 
             $this->timeTracker->setPoint('sendingMessage');
 
+            $sendingCount = 0;
             Timer::setSleep($interval);
         }
 
-        var_dump($this->errorList);
+        print_r($this->errorList);
+    }
+
+    public function testConnect() : void
+    {
+        $testing = $this->getChatList();
+
+        if (! empty($testing) && empty($this->errorList)) {
+            echo 'Тестирование запроса к чату проведено успешно, текущий список:' . PHP_EOL;
+            print_r(array_column($testing, 'message'));
+        } else {
+            echo 'Тестирование провалилось, текущие ошибки:' . PHP_EOL;
+            print_r($this->errorList);
+        }
+    }
+
+    public function testSend() : void
+    {
+        $testing = $this->sendMessage('Прогрев чата');
+
+        if ($testing) {
+            echo 'Тестирование отправки сообщения проведено успешно' . PHP_EOL;
+        } else {
+            echo 'Тестирование провалилось, текущие ошибки:' . PHP_EOL;
+            print_r($this->errorList);
+        }
     }
 }
