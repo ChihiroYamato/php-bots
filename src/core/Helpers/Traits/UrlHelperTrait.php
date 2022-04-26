@@ -2,9 +2,9 @@
 
 namespace Anet\App\Helpers\Traits;
 
-trait UrlHelper
+trait UrlHelperTrait
 {
-    private static function getCurrentUrl() : string
+    private static function fetchCurrentUrl() : string
     {
         $protocol = strtolower(preg_replace('/\/.*/', '://', $_SERVER['SERVER_PROTOCOL']));
         $host = $_SERVER['HTTP_HOST'];

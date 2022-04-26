@@ -2,22 +2,18 @@
 
 namespace Anet\App\Bots;
 
-use Anet\App\Helpers\Timer;
-use Anet\App\Helpers\TimeTracker;
-use Anet\App\Helpers\Traits\UrlHelper;
-use Google\Client;
+use Anet\App\Helpers;
+use Anet\App\Helpers\Traits;
+use Google;
+use Google\Service;
 use Google\Service\YouTube;
-use Google\Service\Exception;
-use Google\Service\YouTube\LiveChatMessage;
-use Google\Service\YouTube\LiveChatMessageSnippet;
-use Google\Service\YouTube\LiveChatTextMessageDetails;
 
-final class YouTubeBot extends ChatBot
+final class YouTubeBot extends ChatBotAbstract
 {
-    use UrlHelper; // TODO ========== ErrorHelper, LogHelper
+    use Traits\UrlHelperTrait; // TODO ========== ErrorHelperTrait, LogHelperTrait
 
-    private YouTube $youtubeService;
-    private TimeTracker $timeTracker;
+    private Service\YouTube $youtubeService;
+    private Helpers\TimeTracker $timeTracker;
     private string $youtubeURL;
     private string $videoID;
     private string $botUserEmail;
@@ -30,10 +26,10 @@ final class YouTubeBot extends ChatBot
     public function __construct(string $youtubeURL)
     {
         if (! file_exists(OAUTH_TOKEN_JSON)) {
-            throw new Exception('Create file with oAuth tokken');
+            throw new Service\Exception('Create file with oAuth tokken');
         }
 
-        $this->timeTracker = new TimeTracker();
+        $this->timeTracker = new Helpers\TimeTracker();
         $this->errorList = [];
         $this->errorCount = 0;
         $this->youtubeURL = $this->validateYoutubeURL($youtubeURL);
@@ -47,7 +43,7 @@ final class YouTubeBot extends ChatBot
 
         $this->timeTracker->setPoint('login');
 
-        $this->youtubeService = new YouTube($client);
+        $this->youtubeService = new Service\YouTube($client);
 
         $this->liveChatID = $this->getLiveChatID($this->videoID);
         $this->lastChatMessageID = null;
@@ -55,21 +51,21 @@ final class YouTubeBot extends ChatBot
         $this->timeTracker->setPoint('getChatID');
     }
 
-    private static function createGoogleClient(bool $setRedirectUrl = false) : Client
+    private static function createGoogleClient(bool $setRedirectUrl = false) : Google\Client
     {
-        $client = new Client();
+        $client = new Google\Client();
 
         $client->setApplicationName(APP_NAME);
         $client->setAuthConfig(CLIENT_SECRET_JSON);
         $client->setAccessType('offline');
 
         if ($setRedirectUrl) {
-            $client->setRedirectUri(self::getCurrentUrl());
+            $client->setRedirectUri(self::fetchCurrentUrl());
         }
 
         $client->setScopes([
-            YouTube::YOUTUBE_FORCE_SSL,
-            YouTube::YOUTUBE_READONLY,
+            Service\YouTube::YOUTUBE_FORCE_SSL,
+            Service\YouTube::YOUTUBE_READONLY,
         ]);
         $client->setLoginHint(APP_EMAIL);
 
@@ -103,13 +99,13 @@ final class YouTubeBot extends ChatBot
         $liveChatID = $response['items'][0]['liveStreamingDetails']['activeLiveChatId'] ?? null;
 
         if ($liveChatID === null) {
-            throw new Exception('Error response with live chat ID');
+            throw new Service\Exception('Error response with live chat ID');
         }
 
         return $liveChatID;
     }
 
-    private function getChatList() : array
+    private function fetchChatList() : array
     {
         try {
             $response = $this->youtubeService->liveChatMessages->listLiveChatMessages($this->liveChatID, 'snippet', ['maxResults' => 100]);
@@ -143,8 +139,8 @@ final class YouTubeBot extends ChatBot
             $this->lastChatMessageID = $actualChat[count($actualChat) - 1]['id'];
 
             return $actualChat;
-        } catch (Exception $error) {
-            $this->errorList['getChatList'][] = $error->getMessage();
+        } catch (Service\Exception $error) {
+            $this->errorList['fetchChatList'][] = $error->getMessage();
             $this->errorCount++;
 
             return [];
@@ -162,17 +158,13 @@ final class YouTubeBot extends ChatBot
 
         foreach ($chatlist as $mess) {
             if (mb_stripos($mess['message'], "@{$this->botUserName}")) {
-                match (mb_strtolower(preg_replace("/@{$this->botUserName} */", '', $mess['message']))) {
+                $currentMessage = mb_strtolower(preg_replace("/@{$this->botUserName} */", '', $mess['message']));
+                match ($currentMessage) {
                     'help', 'помощь' => $sendingList[] = '@' . $mess['authorName'] . ' Приветствую, в настоящий момент функционал дорабатывается, список команд будет доступен позднее',
-                    default => true, // TODO =================================================================
+                    default => $sendingList[] = "@{$mess['authorName']} " . $this->prepareSmartAnswer($currentMessage),
                 };
             } elseif ($mess['authorName'] === 'no') {
 
-            } else {
-                // match (mb_strtolower($mess['message'])) {
-                //     'да' => $sendingList[] = "@{$mess['authorName']} пизда",
-                //     'нет' => $sendingList[] = "@{$mess['authorName']} пидора ответ",
-                // };
             }
         }
 
@@ -188,9 +180,9 @@ final class YouTubeBot extends ChatBot
     protected function sendMessage(string $message) : bool
     {
         try {
-            $liveChatMessage = new LiveChatMessage();
-            $liveChatMessageSnippet = new LiveChatMessageSnippet();
-            $liveChatTextMessageDetails = new LiveChatTextMessageDetails();
+            $liveChatMessage = new YouTube\LiveChatMessage();
+            $liveChatMessageSnippet = new YouTube\LiveChatMessageSnippet();
+            $liveChatTextMessageDetails = new YouTube\LiveChatTextMessageDetails();
 
             $liveChatTextMessageDetails->setMessageText($message);
 
@@ -203,7 +195,7 @@ final class YouTubeBot extends ChatBot
             $this->youtubeService->liveChatMessages->insert('snippet', $liveChatMessage);
 
             return true;
-        } catch (Exception $error) {
+        } catch (Service\Exception $error) {
             $this->errorList['sendMessage'][] = $error->getMessage();
             $this->errorCount++;
 
@@ -214,7 +206,7 @@ final class YouTubeBot extends ChatBot
     private function validateYoutubeURL(string $url) : string
     {
         if (! preg_match('/https:\/\/www\.youtube\.com.*/', $url)) {
-            throw new Exception('Incorrect YouTube url');
+            throw new Service\Exception('Incorrect YouTube url');
         }
 
         return $url;
@@ -225,7 +217,7 @@ final class YouTubeBot extends ChatBot
         preg_match('/youtube\.com\/watch\?.*v=([^&]+)/',  $url, $matches);
 
         if (empty($matches[1])) {
-            throw new Exception('Incorrect YouTube video ID');
+            throw new Service\Exception('Incorrect YouTube video ID');
         }
 
         return $matches[1];
@@ -239,8 +231,8 @@ final class YouTubeBot extends ChatBot
         while ($this->errorCount < 5) {
             $this->timeTracker->setPoint('prepare');
 
-            $chatList = $this->getChatList();
-            $this->timeTracker->setPoint('getChatList');
+            $chatList = $this->fetchChatList();
+            $this->timeTracker->setPoint('fetchChatList');
 
             if (empty($chatList)) {
                 if ($this->timeTracker->trackerState()) {
@@ -252,13 +244,13 @@ final class YouTubeBot extends ChatBot
                     $this->timeTracker->trackerStart();
                 }
             } else {
-                $sendingCount += $this->prepareMessages($chatList); // TODO =================================================================
+                $sendingCount += $this->prepareMessages($chatList); // TODO ===== Log
             }
 
             $this->timeTracker->setPoint('sendingMessage');
 
             $sendingCount = 0;
-            Timer::setSleep($interval);
+            Helpers\Timer::setSleep($interval);
         }
 
         print_r($this->errorList);
@@ -266,13 +258,13 @@ final class YouTubeBot extends ChatBot
 
     public function testConnect() : void
     {
-        $testing = $this->getChatList();
+        $testing = $this->fetchChatList();
 
         if (! empty($testing) && empty($this->errorList)) {
-            echo 'Тестирование запроса к чату проведено успешно, текущий список:' . PHP_EOL;
+            echo 'Chat request tested successfully, current list:' . PHP_EOL;
             print_r(array_column($testing, 'message'));
         } else {
-            echo 'Тестирование провалилось, текущие ошибки:' . PHP_EOL;
+            echo 'Testing Failed, Current Errors:' . PHP_EOL;
             print_r($this->errorList);
         }
     }
@@ -282,9 +274,9 @@ final class YouTubeBot extends ChatBot
         $testing = $this->sendMessage('Прогрев чата');
 
         if ($testing) {
-            echo 'Тестирование отправки сообщения проведено успешно' . PHP_EOL;
+            echo 'Message sending test completed successfully' . PHP_EOL;
         } else {
-            echo 'Тестирование провалилось, текущие ошибки:' . PHP_EOL;
+            echo 'Testing Failed, Current Errors:' . PHP_EOL;
             print_r($this->errorList);
         }
     }

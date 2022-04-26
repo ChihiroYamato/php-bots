@@ -2,7 +2,7 @@
 
 namespace Anet\App\Bots\Interfaces;
 
-interface Bot
+interface BotInterface
 {
     public function listen(int $interval) : void;
 }
