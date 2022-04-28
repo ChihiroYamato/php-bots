@@ -131,7 +131,6 @@ final class YouTubeBot extends ChatBotAbstract
             }
 
             $this->lastChatMessageID = array_pop($chatList)['id'];
-            // $this->lastChatMessageID = $actualChat[count($actualChat) - 1]['id']; // todo ======
 
             return $actualChat;
         } catch (Service\Exception $error) {
