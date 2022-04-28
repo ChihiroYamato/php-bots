@@ -4,7 +4,7 @@
 .vscode/
 
 # Test
-test*.*
+test*
 test/
 
 # Composer
