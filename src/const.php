@@ -9,7 +9,7 @@ if (! is_dir(SETTING_DIR)) {
 }
 
 if (! defined('CLIENT_SECRET_JSON')) {
-    $secret = array_values(array_filter(scandir(SETTING_DIR), fn ($item) => preg_match('/client_secret.*\.json/', $item)));
+    $secret = array_values(array_filter(scandir(SETTING_DIR), fn ($item) => preg_match('/^client_secret.*\.json/', $item)));
 
     switch (count($secret)) {
         case 1:
@@ -23,6 +23,23 @@ if (! defined('CLIENT_SECRET_JSON')) {
     }
 
     define('CLIENT_SECRET_JSON', SETTING_DIR . "/{$secret[0]}");
+}
+
+if (! defined('SMALL_TALK_API_KEY')) {
+    $secret = array_values(array_filter(scandir(SETTING_DIR), fn ($item) => preg_match('/^small-talk.*\.json/', $item)));
+
+    switch (count($secret)) {
+        case 1:
+            break;
+        case 0:
+            throw new \Exception('Create oAuth client_secret file in [' . SETTING_DIR . '] directory');
+            break;
+        default:
+            throw new \Exception('Too many oAuth client_secret files in [' . SETTING_DIR . '] directory');
+            break;
+    }
+
+    define('SMALL_TALK_API_KEY', SETTING_DIR . "/{$secret[0]}");
 }
 
 if (! defined('OAUTH_TOKEN_JSON')) {
