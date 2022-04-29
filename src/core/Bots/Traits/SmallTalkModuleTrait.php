@@ -7,8 +7,8 @@ use Google\Cloud\Dialogflow\V2;
 
 trait SmallTalkModuleTrait
 {
-    protected ?string $smallTalkSession = null;
-    protected ?V2\SessionsClient $smallTalkClient = null;
+    private ?string $smallTalkSession = null;
+    private ?V2\SessionsClient $smallTalkClient = null;
 
     protected function fetchAnswerFromSmallTalk(string $message) : string
     {
