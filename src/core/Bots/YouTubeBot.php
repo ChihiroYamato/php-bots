@@ -10,7 +10,7 @@ use Google\Service\YouTube;
 
 final class YouTubeBot extends ChatBotAbstract
 {
-    use Traits\UrlHelperTrait; // TODO ========== ErrorHelperTrait, LogHelperTrait
+    use Traits\UrlHelperTrait, Traits\ErrorHelperTrait; // TODO ========== LogHelperTrait
 
     private Service\YouTube $youtubeService;
     private Helpers\TimeTracker $timeTracker;
@@ -132,8 +132,7 @@ final class YouTubeBot extends ChatBotAbstract
 
             return $actualChat;
         } catch (Service\Exception $error) {
-            $this->errorList['fetchChatList'][] = $error->getMessage();
-            $this->errorCount++;
+            $this->addError('fetchChatList', $error->getMessage());
 
             return [];
         }
@@ -216,8 +215,7 @@ final class YouTubeBot extends ChatBotAbstract
 
             return true;
         } catch (Service\Exception $error) {
-            $this->errorList['sendMessage'][] = $error->getMessage();
-            $this->errorCount++;
+            $this->addError('sendMessage', $error->getMessage());
 
             return false;
         }
@@ -248,7 +246,7 @@ final class YouTubeBot extends ChatBotAbstract
         $sendingCount = 0;
         $sendingCount += $this->sendMessage('Всем привет, хорошего дня/вечера/ночи/утра');
 
-        while ($this->errorCount < 5) {
+        while ($this->getErrorCount() < 5) {
             $this->timeTracker->setPoint('prepare');
 
             $chatList = $this->fetchChatList();
@@ -273,19 +271,19 @@ final class YouTubeBot extends ChatBotAbstract
             Helpers\Timer::setSleep($interval);
         }
 
-        print_r($this->errorList);
+        print_r($this->getErrors());
     }
 
     public function testConnect() : void
     {
         $this->fetchChatList();
 
-        if ($this->lastChatMessageID !== null && empty($this->errorList)) {
+        if ($this->lastChatMessageID !== null && empty($this->getErrors())) {
             echo 'Chat request tested successfully, current last mess ID:' . PHP_EOL;
             print_r($this->lastChatMessageID);
         } else {
             echo 'Testing Failed, Current Errors:' . PHP_EOL;
-            print_r($this->errorList);
+            print_r($this->getErrors());
         }
     }
 
@@ -297,7 +295,7 @@ final class YouTubeBot extends ChatBotAbstract
             echo 'Message sending test completed successfully' . PHP_EOL;
         } else {
             echo 'Testing Failed, Current Errors:' . PHP_EOL;
-            print_r($this->errorList);
+            print_r($this->getErrors());
         }
     }
 }

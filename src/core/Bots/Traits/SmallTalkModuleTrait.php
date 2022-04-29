@@ -2,11 +2,14 @@
 
 namespace Anet\App\Bots\Traits;
 
+use Anet\App\Helpers\Traits;
 use Google\ApiCore;
 use Google\Cloud\Dialogflow\V2;
 
 trait SmallTalkModuleTrait
 {
+    use Traits\ErrorHelperTrait;
+
     private ?string $smallTalkSession = null;
     private ?V2\SessionsClient $smallTalkClient = null;
 
@@ -28,6 +31,7 @@ trait SmallTalkModuleTrait
 
             return $queryResult->getFulfillmentText();
         } catch (ApiCore\ApiException $error) {
+            $this->addError('answerFromSmallTalk', $error->getMessage());
             var_dump($error->getMessage()); // Todo ============ logs?
             return '';
         }
