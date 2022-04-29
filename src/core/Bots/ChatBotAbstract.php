@@ -9,6 +9,8 @@ abstract class ChatBotAbstract implements Interfaces\BotInterface, Interfaces\Bo
 {
     use Traits\SmallTalkModuleTrait;
 
+    protected ?array $vocabulary = null;
+
     abstract protected function prepareMessages(array $chatlist) : int;
 
     abstract protected function sendMessage(string $message) : bool;
@@ -18,9 +20,25 @@ abstract class ChatBotAbstract implements Interfaces\BotInterface, Interfaces\Bo
         $answer = $this->fetchAnswerFromSmallTalk($message);
 
         if (empty($answer) && $setDefault) {
-            $answer = 'спроси что попроще';
+            $answer = $this->getVocabulary()['no_answer']['response'][rand(0, count($this->getVocabulary()['no_answer']['response']) - 1)];
         }
 
         return $answer;
+    }
+
+    protected function getVocabulary() : array
+    {
+        if ($this->vocabulary === null) {
+            $this->vocabulary = [
+                'standart' => require_once VOC_STANDART,
+                'no_answer' => require_once VOC_NO_ANSWER,
+                'no_care' => require_once VOC_NO_CARE,
+                'dead_chat' => require_once VOC_DEAD_CHAT,
+                'dead_inside' => require_once VOC_DEAD_INSIDE,
+                'another' => require_once VOC_ANOTHER,
+            ];
+        }
+
+        return $this->vocabulary;
     }
 }

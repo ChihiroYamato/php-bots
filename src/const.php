@@ -45,3 +45,34 @@ if (! defined('SMALL_TALK_API_KEY')) {
 if (! defined('OAUTH_TOKEN_JSON')) {
     define('OAUTH_TOKEN_JSON', SETTING_DIR . '/oauth_token.json');
 }
+
+if (! defined('SRC_VOCABULARY')) {
+    define('SRC_VOCABULARY', __DIR__ . '/vocabulary');
+}
+
+if (! defined('VOC_STANDART')) {
+    define('VOC_STANDART', SRC_VOCABULARY . '/standart.php');
+}
+
+if (! defined('VOC_NO_ANSWER')) {
+    define('VOC_NO_ANSWER', SRC_VOCABULARY . '/no_answer.php');
+}
+
+if (! defined('VOC_NO_CARE')) {
+    define('VOC_NO_CARE', SRC_VOCABULARY . '/no_care.php');
+}
+
+if (! defined('VOC_DEAD_CHAT')) {
+    define('VOC_DEAD_CHAT', SRC_VOCABULARY . '/dead_chat.php');
+}
+if (! defined('VOC_DEAD_INSIDE')) {
+    define('VOC_DEAD_INSIDE', SRC_VOCABULARY . '/dead_inside.php');
+}
+
+if (! defined('VOC_ANOTHER')) {
+    if (file_exists(SRC_VOCABULARY . '/another-close.php')) {
+        define('VOC_ANOTHER', SRC_VOCABULARY . '/another-close.php');
+    } else {
+        define('VOC_ANOTHER', SRC_VOCABULARY . '/another.php');
+    }
+}

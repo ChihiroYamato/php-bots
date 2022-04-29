@@ -112,18 +112,18 @@ final class YouTubeBot extends ChatBotAbstract
             $actualChat = [];
             $writeMod = false;
 
-            foreach ($chatList as $mess) {
-                if ($mess['id'] === $this->lastChatMessageID) {
+            foreach ($chatList as $chatItem) {
+                if ($chatItem['id'] === $this->lastChatMessageID) {
                     $writeMod = true;
                 } elseif ($writeMod) {
-                    $responseChannelID = $this->youtubeService->channels->listChannels('snippet', ['id' => $mess['snippet']['authorChannelId']]);
+                    $responseChannelID = $this->youtubeService->channels->listChannels('snippet', ['id' => $chatItem['snippet']['authorChannelId']]);
 
                     $actualChat[] = [
-                        'id' => $mess['id'],
-                        'authorId' => $mess['snippet']['authorChannelId'],
+                        'id' => $chatItem['id'],
+                        'authorId' => $chatItem['snippet']['authorChannelId'],
                         'authorName' => $responseChannelID['items'][0]['snippet']['title'] ?? '',
-                        'message' => $mess['snippet']['displayMessage'],
-                        'published' => $mess['snippet']['publishedAt'],
+                        'message' => $chatItem['snippet']['displayMessage'],
+                        'published' => $chatItem['snippet']['publishedAt'],
                     ];
                 }
             }
@@ -141,54 +141,91 @@ final class YouTubeBot extends ChatBotAbstract
     protected function prepareMessages(array $chatlist) : int // TODO ===========================================================
     {
         $sendingList = [];
+        $sendingDetail = [];
         $sendCount = 0;
+        $sending = '';
 
         if (empty($chatlist)) {
             return $sendCount;
         }
 
-        foreach ($chatlist as $mess) {
-            if ($mess['authorName'] !== $this->botUserName) {
-                if (mb_stripos($mess['message'], $this->botUserName) !== false) {
-                    $currentMessage = trim(mb_strtolower(preg_replace("/@?{$this->botUserName}/", '', $mess['message'])));
-                    match ($currentMessage) {
-                        // TODO =========================== функционал команд
-                        'help', 'помощь' => $sendingList[] = '@' . $mess['authorName'] . ' Приветствую, в настоящий момент функционал дорабатывается, список команд будет доступен позднее',
-                        default => $sendingList[] = "@{$mess['authorName']} " . $this->prepareSmartAnswer($currentMessage),
-                    };
-                } elseif ($mess['authorName'] === '____') {
-                    $answer = $this->prepareSmartAnswer($mess['message'], false);
+        foreach ($chatlist as $chatItem) {
+            if ($chatItem['authorName'] !== $this->botUserName) {
+                $sendingDetail = [
+                    'author' => $chatItem['authorName'],
+                    'message' => $chatItem['message'],
+                    'published' => $chatItem['published'],
+                ];
+                $sending = "@{$chatItem['authorName']} ";
 
-                    if (! empty($answer)) {
-                        $sendingList[] = "@{$mess['authorName']} $answer";
+                $lastWord = mb_strtolower(array_pop(explode(' ', trim(str_replace(['!', ',', '.', '?'], '', $chatItem['message'])))));
+
+                if (in_array($lastWord, $this->getVocabulary()['dead_inside']['response'])) {
+                    $sendingDetail['sending'] = $sending . "сколько будет {$lastWord}-7?";
+                    $sendingList[] = $sendingDetail;
+                } elseif (mb_stripos($chatItem['message'], $this->botUserName) !== false) {
+                    $currentMessage = trim(mb_strtolower(preg_replace("/@?{$this->botUserName}/", '', $chatItem['message'])));
+
+                    switch (true) {
+                        case in_array($currentMessage, ['help', 'помощь']):
+                            $sending .= 'приветствую, в настоящий момент функционал дорабатывается, список команд будет доступен позднее';
+                            break;
+                        default:
+                            $sending .= $this->prepareSmartAnswer($currentMessage);
+                            break;
                     }
+
+                    $sendingDetail['sending'] = $sending;
+                    $sendingList[] = $sendingDetail;
                 } else {
-                    $matches = explode(' ', trim(str_replace(['!', ',', '.', '?'], '', $mess['message'])));
-                    $currentMessage = mb_strtolower(array_pop($matches));
-                    switch ($currentMessage) {
-                        case 'да':
-                        case 'da':
-                            $sendingList[] = "@{$mess['authorName']} пᴎᴣдa";
-                            var_dump('response yes'); // Todo =============================================
-                            break;
-                        case 'нет':
-                        case 'net':
-                            $sendingList[] = "@{$mess['authorName']} пᴎдoрa oтвет";
-                            var_dump('response no'); // Todo =============================================
-                            break;
-                        case 'иксди':
-                            $sendingList[] = "@{$mess['authorName']} нaxyй пойди";
-                            var_dump('response no'); // Todo =============================================
-                            break;
-                    };
+                    foreach ($this->getVocabulary()['standart']['request'] as $category) {
+                        foreach ($category as $option) {
+                            if (mb_stripos($chatItem['message'], $option) !== false) {
+                                $answer = $this->prepareSmartAnswer($option, false);
+
+                                if (! empty($answer)) {
+                                    $sendingDetail['sending'] = $sending . $answer;
+                                    $sendingList[] = $sendingDetail;
+                                }
+                                break;
+                            }
+                        }
+                    }
+
+                    if (! array_key_exists('sending', $sendingDetail)) {
+                        foreach ($this->getVocabulary()['another'] as $key => $item) {
+                            if (in_array($key, ['hah', 'mmm', 'three'])) {
+                                foreach ($item['request'] as $option) {
+                                    if (mb_stripos($chatItem['message'], $option) !== false) {
+                                        $sendingDetail['sending'] = $sending . $item['response'][rand(0, count($item['response']) - 1)];
+                                        $sendingList[] = $sendingDetail;
+                                        break;
+                                    }
+                                }
+                            } elseif (in_array($chatItem['authorName'], USER_LISTEN_LIST) && in_array($lastWord, $item['request'])) {
+                                $sendingDetail['sending'] = $sending . $item['response'][rand(0, count($item['response']) - 1)];
+                                $sendingList[] = $sendingDetail;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (! array_key_exists('sending', $sendingDetail) && in_array($chatItem['authorName'], USER_LISTEN_LIST)) {
+                        $answer = $this->prepareSmartAnswer($chatItem['message'], false);
+
+                        if (! empty($answer)) {
+                            $sendingDetail['sending'] = $sending . $answer;
+                            $sendingList[] = $sendingDetail;
+                        }
+                    }
                 }
             }
         }
 
         if (! empty($sendingList)) {
             var_dump($sendingList); // Todo =============================================
-            foreach ($sendingList as $sending) {
-                $sendCount += $this->sendMessage($sending);
+            foreach ($sendingList as $sendItem) {
+                $sendCount += $this->sendMessage($sendItem['sending']);
                 sleep(1); // Todo =============================================
             }
         }
@@ -254,8 +291,8 @@ final class YouTubeBot extends ChatBotAbstract
 
             if (empty($chatList)) {
                 if ($this->timeTracker->trackerState()) {
-                    if ($this->timeTracker->trackerCheck(5 * 60)) {
-                        $sendingCount += $this->sendMessage('Dead Chat'); // todo Баг с постоянной отправкой по таймеру
+                    if ($this->timeTracker->trackerCheck(5 * 60)) { // todo Баг с постоянной отправкой по таймеру
+                        $sendingCount += $this->sendMessage($this->getVocabulary()['dead_chat']['response'][rand(0, count($this->getVocabulary()['dead_chat']['response']) - 1)]);
                         $this->timeTracker->trackerStop();
                     }
                 } else {
