@@ -20,8 +20,6 @@ final class YouTubeBot extends ChatBotAbstract
     private string $botUserName;
     private string $liveChatID;
     private ?string $lastChatMessageID;
-    private array $errorList;
-    private int $errorCount;
 
     public function __construct(string $youtubeURL)
     {
@@ -160,7 +158,11 @@ final class YouTubeBot extends ChatBotAbstract
                         default => $sendingList[] = "@{$mess['authorName']} " . $this->prepareSmartAnswer($currentMessage),
                     };
                 } elseif ($mess['authorName'] === '____') {
+                    $answer = $this->prepareSmartAnswer($mess['message'], false);
 
+                    if (! empty($answer)) {
+                        $sendingList[] = "@{$mess['authorName']} $answer";
+                    }
                 } else {
                     $matches = explode(' ', trim(str_replace(['!', ',', '.', '?'], '', $mess['message'])));
                     $currentMessage = mb_strtolower(array_pop($matches));
