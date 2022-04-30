@@ -106,7 +106,7 @@ final class YouTubeBot extends ChatBotAbstract
     private function fetchChatList() : array
     {
         try {
-            $response = $this->youtubeService->liveChatMessages->listLiveChatMessages($this->liveChatID, 'snippet', ['maxResults' => 100]);
+            $response = $this->youtubeService->liveChatMessages->listLiveChatMessages($this->liveChatID, 'snippet', ['maxResults' => 20]);
 
             $chatList = $response['items'];
             $actualChat = [];
@@ -158,12 +158,13 @@ final class YouTubeBot extends ChatBotAbstract
                 ];
                 $sending = "@{$chatItem['authorName']} ";
 
-                $lastWord = mb_strtolower(array_pop(explode(' ', trim(str_replace(['!', ',', '.', '?'], '', $chatItem['message'])))));
+                $matches = explode(' ', trim(str_replace(['!', ',', '.', '?'], '', $chatItem['message'])));
+                $lastWord = mb_strtolower(array_pop($matches));
 
                 if (in_array($lastWord, $this->getVocabulary()['dead_inside']['response'])) {
                     $sendingDetail['sending'] = $sending . "сколько будет {$lastWord}-7?";
                     $sendingList[] = $sendingDetail;
-                } elseif (mb_stripos($chatItem['message'], $this->botUserName) !== false) {
+                } elseif (mb_stripos(mb_strtolower($chatItem['message']), $this->botUserName) !== false) {
                     $currentMessage = trim(mb_strtolower(preg_replace("/@?{$this->botUserName}/", '', $chatItem['message'])));
 
                     switch (true) {
@@ -180,7 +181,7 @@ final class YouTubeBot extends ChatBotAbstract
                 } else {
                     foreach ($this->getVocabulary()['standart']['request'] as $category) {
                         foreach ($category as $option) {
-                            if (mb_stripos($chatItem['message'], $option) !== false) {
+                            if (mb_stripos(mb_strtolower($chatItem['message']), $option) !== false) {
                                 $answer = $this->prepareSmartAnswer($option, false);
 
                                 if (! empty($answer)) {
@@ -196,7 +197,7 @@ final class YouTubeBot extends ChatBotAbstract
                         foreach ($this->getVocabulary()['another'] as $key => $item) {
                             if (in_array($key, ['hah', 'mmm', 'three'])) {
                                 foreach ($item['request'] as $option) {
-                                    if (mb_stripos($chatItem['message'], $option) !== false) {
+                                    if (mb_stripos(mb_strtolower($chatItem['message']), $option) !== false) {
                                         $sendingDetail['sending'] = $sending . $item['response'][rand(0, count($item['response']) - 1)];
                                         $sendingList[] = $sendingDetail;
                                         break;
@@ -211,7 +212,7 @@ final class YouTubeBot extends ChatBotAbstract
                     }
 
                     if (! array_key_exists('sending', $sendingDetail) && in_array($chatItem['authorName'], USER_LISTEN_LIST)) {
-                        $answer = $this->prepareSmartAnswer($chatItem['message'], false);
+                        $answer = $this->prepareSmartAnswer($chatItem['message'], true);
 
                         if (! empty($answer)) {
                             $sendingDetail['sending'] = $sending . $answer;
@@ -281,7 +282,7 @@ final class YouTubeBot extends ChatBotAbstract
     public function listen(int $interval) : void
     {
         $sendingCount = 0;
-        $sendingCount += $this->sendMessage('Всем привет, хорошего дня/вечера/ночи/утра');
+        // $sendingCount += $this->sendMessage('Всем привет, хорошего дня/вечера/ночи/утра');
 
         while ($this->getErrorCount() < 5) {
             $this->timeTracker->setPoint('prepare');
