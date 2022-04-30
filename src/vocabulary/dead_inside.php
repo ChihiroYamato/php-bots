@@ -4,7 +4,7 @@ function deadInside() : array
 {
     $result = ['response' => []];
 
-    for ($i = 993; $i > 0; $i -=7) {
+    for ($i = 1000; $i > 0; $i -=7) {
         $result['response'][] = (string) $i;
     }
 

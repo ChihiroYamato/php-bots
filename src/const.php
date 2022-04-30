@@ -70,8 +70,8 @@ if (! defined('VOC_DEAD_INSIDE')) {
 }
 
 if (! defined('VOC_ANOTHER')) {
-    if (file_exists(SRC_VOCABULARY . '/another-close.php')) {
-        define('VOC_ANOTHER', SRC_VOCABULARY . '/another-close.php');
+    if (file_exists(SRC_VOCABULARY . '/another_close.php')) {
+        define('VOC_ANOTHER', SRC_VOCABULARY . '/another_close.php');
     } else {
         define('VOC_ANOTHER', SRC_VOCABULARY . '/another.php');
     }
