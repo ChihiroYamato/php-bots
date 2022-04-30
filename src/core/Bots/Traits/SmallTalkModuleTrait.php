@@ -31,7 +31,7 @@ trait SmallTalkModuleTrait
 
             return $queryResult->getFulfillmentText();
         } catch (ApiCore\ApiException $error) {
-            $this->addError('answerFromSmallTalk', $error->getMessage());
+            $this->addError(__FUNCTION__, $error->getMessage());
             var_dump($error->getMessage()); // Todo ============ logs?
             return '';
         }

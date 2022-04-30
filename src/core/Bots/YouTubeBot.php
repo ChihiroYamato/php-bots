@@ -116,6 +116,7 @@ final class YouTubeBot extends ChatBotAbstract
                 if ($chatItem['id'] === $this->lastChatMessageID) {
                     $writeMod = true;
                 } elseif ($writeMod) {
+                    // todo ===================== Реализовать запрос и хранение юзеров в БД
                     $responseChannelID = $this->youtubeService->channels->listChannels('snippet', ['id' => $chatItem['snippet']['authorChannelId']]);
 
                     $actualChat[] = [
@@ -132,7 +133,7 @@ final class YouTubeBot extends ChatBotAbstract
 
             return $actualChat;
         } catch (Service\Exception $error) {
-            $this->addError('fetchChatList', $error->getMessage());
+            $this->addError(__FUNCTION__, $error->getMessage());
 
             return [];
         }
@@ -164,21 +165,7 @@ final class YouTubeBot extends ChatBotAbstract
                 if (in_array($lastWord, $this->getVocabulary()['dead_inside']['response'])) {
                     $sendingDetail['sending'] = $sending . "сколько будет {$lastWord}-7?";
                     $sendingList[] = $sendingDetail;
-                } elseif (mb_stripos(mb_strtolower($chatItem['message']), $this->botUserName) !== false) {
-                    $currentMessage = trim(mb_strtolower(preg_replace("/@?{$this->botUserName}/", '', $chatItem['message'])));
-
-                    switch (true) {
-                        case in_array($currentMessage, ['help', 'помощь']):
-                            $sending .= 'приветствую, в настоящий момент функционал дорабатывается, список команд будет доступен позднее';
-                            break;
-                        default:
-                            $sending .= $this->prepareSmartAnswer($currentMessage);
-                            break;
-                    }
-
-                    $sendingDetail['sending'] = $sending;
-                    $sendingList[] = $sendingDetail;
-                } else {
+                } else { // todo === не уверен что работает
                     foreach ($this->getVocabulary()['standart']['request'] as $category) {
                         foreach ($category as $option) {
                             if (mb_stripos(mb_strtolower($chatItem['message']), $option) !== false) {
@@ -209,6 +196,24 @@ final class YouTubeBot extends ChatBotAbstract
                                 break;
                             }
                         }
+                    }
+
+                    if (! array_key_exists('sending', $sendingDetail) && mb_stripos(mb_strtolower($chatItem['message']), $this->botUserName) !== false) {
+                        $currentMessage = trim(mb_strtolower(preg_replace("/@?{$this->botUserName}/", '', $chatItem['message'])));
+
+                        switch (true) {
+                            case in_array($currentMessage, ['help', 'помощь']):
+                                $sending .= 'приветствую, в настоящий момент функционал дорабатывается, список команд будет доступен позднее';
+                                break;
+                            // TODO =========== анекдоты
+                            // TODO =========== проверить корректность переноса блока
+                            default:
+                                $sending .= $this->prepareSmartAnswer($currentMessage);
+                                break;
+                        }
+
+                        $sendingDetail['sending'] = $sending;
+                        $sendingList[] = $sendingDetail;
                     }
 
                     if (! array_key_exists('sending', $sendingDetail) && in_array($chatItem['authorName'], USER_LISTEN_LIST)) {
@@ -253,7 +258,7 @@ final class YouTubeBot extends ChatBotAbstract
 
             return true;
         } catch (Service\Exception $error) {
-            $this->addError('sendMessage', $error->getMessage());
+            $this->addError(__FUNCTION__, $error->getMessage());
 
             return false;
         }
@@ -282,7 +287,7 @@ final class YouTubeBot extends ChatBotAbstract
     public function listen(int $interval) : void
     {
         $sendingCount = 0;
-        // $sendingCount += $this->sendMessage('Всем привет, хорошего дня/вечера/ночи/утра');
+        $sendingCount += $this->sendMessage('Всем привет, хорошего дня/вечера/ночи/утра');
 
         while ($this->getErrorCount() < 5) {
             $this->timeTracker->setPoint('prepare');
