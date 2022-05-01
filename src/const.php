@@ -65,6 +65,7 @@ if (! defined('VOC_NO_CARE')) {
 if (! defined('VOC_DEAD_CHAT')) {
     define('VOC_DEAD_CHAT', SRC_VOCABULARY . '/dead_chat.php');
 }
+
 if (! defined('VOC_DEAD_INSIDE')) {
     define('VOC_DEAD_INSIDE', SRC_VOCABULARY . '/dead_inside.php');
 }
@@ -75,4 +76,8 @@ if (! defined('VOC_ANOTHER')) {
     } else {
         define('VOC_ANOTHER', SRC_VOCABULARY . '/another.php');
     }
+}
+
+if (! defined('LOGS_PATH')) {
+    define('LOGS_PATH', __DIR__ . '/project_logs');
 }
