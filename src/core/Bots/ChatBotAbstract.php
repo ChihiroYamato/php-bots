@@ -14,6 +14,7 @@ abstract class ChatBotAbstract implements Interfaces\BotInterface, Interfaces\Bo
     protected int $totalIterations = 0;
     protected ?array $vocabulary = null;
     protected array $buffer = [];
+    protected bool $listeningFlag = true;
 
     abstract protected function prepareSendings(array $chatlist) : array;
 

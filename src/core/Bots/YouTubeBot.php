@@ -43,6 +43,13 @@ final class YouTubeBot extends ChatBotAbstract
         $this->lastChatMessageID = null;
     }
 
+    public function __destruct()
+    {
+        Helpers\LogerHelper::loggingProccess($this->getStatistics(), $this->fetchBuffer());
+
+        print_r("Принудительное завершение скрипта\n");
+    }
+
     private static function createGoogleClient(bool $setRedirectUrl = false) : Google\Client
     {
         $client = new Google\Client();
@@ -156,6 +163,13 @@ final class YouTubeBot extends ChatBotAbstract
                 $matches = explode(' ', trim(str_replace(['!', ',', '.', '?'], '', $chatItem['message'])));
                 $lastWord = mb_strtolower(array_pop($matches));
 
+                if ($lastWord === '/stop' && $chatItem['authorName'] === '大和千ひろ') { // todo == chech with DB
+                    $sendingDetail['sending'] = $sending . 'Завершаю свою работу.';
+                    $sendingList[] = $sendingDetail;
+                    $this->listeningFlag = false;
+                    break;
+                }
+
                 foreach ($this->getVocabulary()['standart']['request'] as $category) {
                     foreach ($category as $option) {
                         if (mb_stripos(mb_strtolower($chatItem['message']), $option) !== false) {
@@ -165,7 +179,7 @@ final class YouTubeBot extends ChatBotAbstract
                                 $sendingDetail['sending'] = $sending . $answer;
                                 $sendingList[] = $sendingDetail;
                             }
-                            break;
+                            break 2;
                         }
                     }
                 }
@@ -177,7 +191,7 @@ final class YouTubeBot extends ChatBotAbstract
                                 if (mb_stripos(mb_strtolower($chatItem['message']), $option) !== false) {
                                     $sendingDetail['sending'] = $sending . $item['response'][rand(0, count($item['response']) - 1)];
                                     $sendingList[] = $sendingDetail;
-                                    break;
+                                    break 2;
                                 }
                             }
                         } elseif (in_array($chatItem['authorName'], USER_LISTEN_LIST) && in_array($lastWord, $item['request'])) {
@@ -290,7 +304,7 @@ final class YouTubeBot extends ChatBotAbstract
         $sendingCount = 0;
         $sendingCount += $this->sendMessage('Всем привет, хорошего дня/вечера/ночи/утра');
 
-        while ($this->getErrorCount() < 5) {
+        while ($this->getErrorCount() < 5 && $this->listeningFlag) {
             if ($this->timeTracker->trackerState('loggingProccess')) {
                 if ($this->timeTracker->trackerCheck('loggingProccess', 120)) {
                     $this->timeTracker->trackerStop('loggingProccess');
@@ -347,7 +361,9 @@ final class YouTubeBot extends ChatBotAbstract
             Helpers\Timer::setSleep($interval);
         }
 
-        Helpers\LogerHelper::loggingErrors($this->getErrors());
+        if (! empty($this->getErrors())) {
+            Helpers\LogerHelper::loggingErrors($this->getErrors());
+        }
     }
 
     public function testConnect() : void
