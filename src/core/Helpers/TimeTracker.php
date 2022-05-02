@@ -4,68 +4,80 @@ namespace Anet\App\Helpers;
 
 final class TimeTracker
 {
-    private array $timePoints;
-    private ?int $tracker;
+    private int $systemTimeInit;
+    private \DateTime $DateTimeInit;
+    private array $points;
+    private array $bufferPoints;
+    private array $tracker;
 
     public function __construct()
     {
-        $this->timePoints = ['init' => hrtime(true)];
-        $this->tracker = null;
+        $this->systemTimeInit = hrtime(true);
+        $this->DateTimeInit = new \DateTime();
+        $this->points = [];
+        $this->bufferPoints = [];
+        $this->tracker = [];
+    }
+
+    public function getTimeInit(string $format = 'H:i:s'): string
+    {
+        return $this->DateTimeInit->format($format);
+    }
+
+    public function getDuration(string $format = '%H:%I:%S'): string
+    {
+        return $this->DateTimeInit->diff(new \DateTime())->format($format);
+    }
+
+    public function trackerStart(string $trackName) : void
+    {
+        $this->tracker[$trackName] = hrtime(true);
+    }
+
+    public function trackerStop(string $trackName) : void
+    {
+        $this->tracker[$trackName] = null;
+    }
+
+    public function trackerState(string $trackName) : bool
+    {
+        return isset($this->tracker[$trackName]);
+    }
+
+    public function trackerCheck(string $trackName, int $timer) : bool
+    {
+        if (! $this->trackerState($trackName)) {
+            return false;
+        }
+
+        return (((hrtime(true) - $this->tracker[$trackName]) / 1000000000) > $timer);
+    }
+
+    public function startPointTracking() : void
+    {
+        $this->bufferPoints = ['__START__' => hrtime(true)];
     }
 
     public function setPoint(string $point) : void
     {
-        $count = 1;
-        $newPoint = $point;
-
-        while (isset($this->timePoints[$newPoint])) {
-            $newPoint = $point . $count++;
-        }
-
-        $this->timePoints[$newPoint] = hrtime(true);
+        $this->bufferPoints[$point] = hrtime(true);
     }
 
-    public function getStatistic() : array
+    public function finishPointTracking() : void
     {
-        $count = count($this->timePoints);
-        if ($count < 2) {
-            return ['init' => 0];
-        }
-
-        $keys = array_keys($this->timePoints);
-        $values = array_values($this->timePoints);
-        $result = [];
-
-        for ($i = 1; $i < $count; $i++) {
-            $result[] = ($values[$i] - $values[$i - 1]) / 1000000000;
-        }
-
-        array_shift($keys);
-
-        return array_combine($keys, $result);
+        $this->points[] = $this->bufferPoints;
+        $this->bufferPoints = [];
     }
 
-    public function trackerStart() : void
+    public function clearPoints() : void
     {
-        $this->tracker = hrtime(true);
+        $this->points = [];
     }
 
-    public function trackerStop() : void
+    public function sumPointsAverage() : float
     {
-        $this->tracker = null;
-    }
+        $list = $this->points;
 
-    public function trackerState() : bool
-    {
-        return ($this->tracker !== null);
-    }
-
-    public function trackerCheck(int $timer) : bool
-    {
-        if (! $this->trackerState()) {
-            return false;
-        }
-
-        return (((hrtime(true) - $this->tracker) / 1000000000) > $timer);
+        return array_sum(array_map(fn (array $tem) => array_pop($tem) - array_shift($tem), $list)) / (count($list) * 1000000000);
     }
 }
