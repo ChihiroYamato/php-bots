@@ -5,13 +5,19 @@ namespace Anet\App\Bots;
 use Anet\App\Bots\Interfaces;
 use Anet\App\Bots\Traits;
 
-abstract class ChatBotAbstract implements Interfaces\BotInterface, Interfaces\BotDebugInterface
+abstract class ChatBotAbstract implements Interfaces\BotInterface, Interfaces\BotDebugInterface, Interfaces\StatisticsInterface
 {
     use Traits\SmallTalkModuleTrait;
 
+    protected int $totalMessageReading = 0;
+    protected int $totalMessageSending = 0;
+    protected int $totalIterations = 0;
     protected ?array $vocabulary = null;
+    protected array $buffer = [];
 
-    abstract protected function prepareMessages(array $chatlist) : int;
+    abstract protected function prepareSendings(array $chatlist) : array;
+
+    abstract protected function sendingMessages(array $sending) : int;
 
     abstract protected function sendMessage(string $message) : bool;
 
@@ -40,5 +46,20 @@ abstract class ChatBotAbstract implements Interfaces\BotInterface, Interfaces\Bo
         }
 
         return $this->vocabulary;
+    }
+
+    protected function fetchBuffer() : array
+    {
+        $buffer = $this->buffer;
+        $this->buffer = [];
+
+        return $buffer;
+    }
+
+    protected function addBuffer(array $buffer) : void
+    {
+        $prepareBuffer = $buffer;
+        $prepareBuffer['time'] = (new \DateTime())->format('H:i:s');
+        $this->buffer[] = $prepareBuffer;
     }
 }
