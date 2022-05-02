@@ -10,7 +10,7 @@ use Google\Service\YouTube;
 
 final class YouTubeBot extends ChatBotAbstract
 {
-    use Traits\UrlHelperTrait, Traits\ErrorHelperTrait; // TODO ========== LogHelperTrait
+    use Traits\UrlHelperTrait, Traits\ErrorHelperTrait;
 
     private Service\YouTube $youtubeService;
     private Helpers\TimeTracker $timeTracker;
@@ -28,8 +28,6 @@ final class YouTubeBot extends ChatBotAbstract
         }
 
         $this->timeTracker = new Helpers\TimeTracker();
-        $this->errorList = [];
-        $this->errorCount = 0;
         $this->youtubeURL = $this->validateYoutubeURL($youtubeURL);
         $this->videoID = $this->getVideoID($this->youtubeURL);
         $this->botUserEmail = APP_EMAIL;
@@ -39,14 +37,10 @@ final class YouTubeBot extends ChatBotAbstract
 
         $client->setAccessToken(json_decode(file_get_contents(OAUTH_TOKEN_JSON), true));
 
-        $this->timeTracker->setPoint('login');
-
         $this->youtubeService = new Service\YouTube($client);
 
         $this->liveChatID = $this->getLiveChatID($this->videoID);
         $this->lastChatMessageID = null;
-
-        $this->timeTracker->setPoint('getChatID');
     }
 
     private static function createGoogleClient(bool $setRedirectUrl = false) : Google\Client
@@ -130,6 +124,7 @@ final class YouTubeBot extends ChatBotAbstract
             }
 
             $this->lastChatMessageID = array_pop($chatList)['id'];
+            $this->totalMessageReading += count($actualChat);
 
             return $actualChat;
         } catch (Service\Exception $error) {
@@ -139,15 +134,14 @@ final class YouTubeBot extends ChatBotAbstract
         }
     }
 
-    protected function prepareMessages(array $chatlist) : int // TODO ===========================================================
+    protected function prepareSendings(array $chatlist) : array
     {
         $sendingList = [];
         $sendingDetail = [];
-        $sendCount = 0;
         $sending = '';
 
         if (empty($chatlist)) {
-            return $sendCount;
+            return [];
         }
 
         foreach ($chatlist as $chatItem) {
@@ -206,7 +200,7 @@ final class YouTubeBot extends ChatBotAbstract
                                 $sending .= 'приветствую, в настоящий момент функционал дорабатывается, список команд будет доступен позднее';
                                 break;
                             // TODO =========== анекдоты
-                            // TODO =========== проверить корректность переноса блока
+                            // TODO =========== проверить корректность переноса блока с анализом адрессованных сообщений
                             default:
                                 $sending .= $this->prepareSmartAnswer($currentMessage);
                                 break;
@@ -228,11 +222,18 @@ final class YouTubeBot extends ChatBotAbstract
             }
         }
 
-        if (! empty($sendingList)) {
-            var_dump($sendingList); // Todo =============================================
-            foreach ($sendingList as $sendItem) {
+        return $sendingList;
+    }
+
+    protected function sendingMessages(array $sending) : int
+    {
+        $sendCount = 0;
+
+        if (! empty($sending)) {
+            foreach ($sending as $sendItem) {
+                $this->addBuffer($sendItem);
                 $sendCount += $this->sendMessage($sendItem['sending']);
-                sleep(1); // Todo =============================================
+                sleep(1);
             }
         }
 
@@ -290,31 +291,63 @@ final class YouTubeBot extends ChatBotAbstract
         $sendingCount += $this->sendMessage('Всем привет, хорошего дня/вечера/ночи/утра');
 
         while ($this->getErrorCount() < 5) {
-            $this->timeTracker->setPoint('prepare');
+            if ($this->timeTracker->trackerState('loggingProccess')) {
+                if ($this->timeTracker->trackerCheck('loggingProccess', 120)) {
+                    $this->timeTracker->trackerStop('loggingProccess');
+
+                    Helpers\LogerHelper::loggingProccess($this->getStatistics(), $this->fetchBuffer());
+
+                    $this->timeTracker->clearPoints();
+                }
+            } else {
+                $this->timeTracker->trackerStart('loggingProccess');
+            }
+
+            $this->timeTracker->startPointTracking();
 
             $chatList = $this->fetchChatList();
             $this->timeTracker->setPoint('fetchChatList');
 
             if (empty($chatList)) {
-                if ($this->timeTracker->trackerState()) {
-                    if ($this->timeTracker->trackerCheck(5 * 60)) { // todo Баг с постоянной отправкой по таймеру
+                if ($this->timeTracker->trackerState('dead_chat')) {
+                    if ($this->timeTracker->trackerCheck('dead_chat', 5 * 60)) {
+                        $this->timeTracker->trackerStop('dead_chat');
+
                         $sendingCount += $this->sendMessage($this->getVocabulary()['dead_chat']['response'][rand(0, count($this->getVocabulary()['dead_chat']['response']) - 1)]);
-                        $this->timeTracker->trackerStop();
                     }
                 } else {
-                    $this->timeTracker->trackerStart();
+                    $this->timeTracker->trackerStart('dead_chat');
                 }
             } else {
-                $sendingCount += $this->prepareMessages($chatList); // TODO ===== Log
+                $this->timeTracker->trackerStop('dead_chat');
+
+                $sendingCount += $this->sendingMessages($this->prepareSendings($chatList));
+            }
+
+            if ($sendingCount < 1) {
+                if ($this->timeTracker->trackerState('no_care')) {
+                    if ($this->timeTracker->trackerCheck('no_care', 60)) {
+                        $this->timeTracker->trackerStop('no_care');
+
+                        $sendingCount += $this->sendMessage($this->getVocabulary()['no_care']['response'][rand(0, count($this->getVocabulary()['no_care']['response']) - 1)]);
+                    }
+                } else {
+                    $this->timeTracker->trackerStart('no_care');
+                }
+            } else {
+                $this->timeTracker->trackerStop('no_care');
             }
 
             $this->timeTracker->setPoint('sendingMessage');
+            $this->timeTracker->finishPointTracking();
 
+            $this->totalMessageSending += $sendingCount;
             $sendingCount = 0;
+            $this->totalIterations++;
             Helpers\Timer::setSleep($interval);
         }
 
-        print_r($this->getErrors());
+        Helpers\LogerHelper::loggingErrors($this->getErrors());
     }
 
     public function testConnect() : void
@@ -332,7 +365,7 @@ final class YouTubeBot extends ChatBotAbstract
 
     public function testSend() : void
     {
-        $testing = $this->sendMessage('Прогрев чата');
+        $testing = $this->sendMessage('Прогрев чата'); // todo == протестировать длину сообщения !!
 
         if ($testing) {
             echo 'Message sending test completed successfully' . PHP_EOL;
@@ -340,5 +373,21 @@ final class YouTubeBot extends ChatBotAbstract
             echo 'Testing Failed, Current Errors:' . PHP_EOL;
             print_r($this->getErrors());
         }
+    }
+
+    public function getStatistics() : array
+    {
+        return [
+            'TimeStarting' => $this->timeTracker->getTimeInit(),
+            'TimeProccessing' => $this->timeTracker->getDuration(),
+            'MessageReading' => $this->totalMessageReading,
+            'MessageSending' => $this->totalMessageSending,
+            'Iterations' => $this->totalIterations,
+            'IterationAverageTime' => $this->timeTracker->sumPointsAverage(),
+            'YouTubeURL' => $this->youtubeURL,
+            'VideoID' => $this->videoID,
+            'BotUserName' => $this->botUserName,
+            'BotUserEmail' => $this->botUserEmail,
+        ];
     }
 }
