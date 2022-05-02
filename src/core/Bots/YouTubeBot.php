@@ -156,68 +156,68 @@ final class YouTubeBot extends ChatBotAbstract
                 $matches = explode(' ', trim(str_replace(['!', ',', '.', '?'], '', $chatItem['message'])));
                 $lastWord = mb_strtolower(array_pop($matches));
 
-                if (in_array($lastWord, $this->getVocabulary()['dead_inside']['response'])) {
-                    $sendingDetail['sending'] = $sending . "сколько будет {$lastWord}-7?";
-                    $sendingList[] = $sendingDetail;
-                } else { // todo === не уверен что работает
-                    foreach ($this->getVocabulary()['standart']['request'] as $category) {
-                        foreach ($category as $option) {
-                            if (mb_stripos(mb_strtolower($chatItem['message']), $option) !== false) {
-                                $answer = $this->prepareSmartAnswer($option, false);
+                foreach ($this->getVocabulary()['standart']['request'] as $category) {
+                    foreach ($category as $option) {
+                        if (mb_stripos(mb_strtolower($chatItem['message']), $option) !== false) {
+                            $answer = $this->prepareSmartAnswer($option, false);
 
-                                if (! empty($answer)) {
-                                    $sendingDetail['sending'] = $sending . $answer;
-                                    $sendingList[] = $sendingDetail;
-                                }
-                                break;
-                            }
-                        }
-                    }
-
-                    if (! array_key_exists('sending', $sendingDetail)) {
-                        foreach ($this->getVocabulary()['another'] as $key => $item) {
-                            if (in_array($key, ['hah', 'mmm', 'three'])) {
-                                foreach ($item['request'] as $option) {
-                                    if (mb_stripos(mb_strtolower($chatItem['message']), $option) !== false) {
-                                        $sendingDetail['sending'] = $sending . $item['response'][rand(0, count($item['response']) - 1)];
-                                        $sendingList[] = $sendingDetail;
-                                        break;
-                                    }
-                                }
-                            } elseif (in_array($chatItem['authorName'], USER_LISTEN_LIST) && in_array($lastWord, $item['request'])) {
-                                $sendingDetail['sending'] = $sending . $item['response'][rand(0, count($item['response']) - 1)];
+                            if (! empty($answer)) {
+                                $sendingDetail['sending'] = $sending . $answer;
                                 $sendingList[] = $sendingDetail;
-                                break;
                             }
+                            break;
                         }
                     }
+                }
 
-                    if (! array_key_exists('sending', $sendingDetail) && mb_stripos(mb_strtolower($chatItem['message']), $this->botUserName) !== false) {
-                        $currentMessage = trim(mb_strtolower(preg_replace("/@?{$this->botUserName}/", '', $chatItem['message'])));
-
-                        switch (true) {
-                            case in_array($currentMessage, ['help', 'помощь']):
-                                $sending .= 'приветствую, в настоящий момент функционал дорабатывается, список команд будет доступен позднее';
-                                break;
-                            // TODO =========== анекдоты
-                            // TODO =========== проверить корректность переноса блока с анализом адрессованных сообщений
-                            default:
-                                $sending .= $this->prepareSmartAnswer($currentMessage);
-                                break;
+                if (! array_key_exists('sending', $sendingDetail)) {
+                    foreach ($this->getVocabulary()['another'] as $key => $item) {
+                        if (in_array($key, ['hah', 'mmm', 'three'])) {
+                            foreach ($item['request'] as $option) {
+                                if (mb_stripos(mb_strtolower($chatItem['message']), $option) !== false) {
+                                    $sendingDetail['sending'] = $sending . $item['response'][rand(0, count($item['response']) - 1)];
+                                    $sendingList[] = $sendingDetail;
+                                    break;
+                                }
+                            }
+                        } elseif (in_array($chatItem['authorName'], USER_LISTEN_LIST) && in_array($lastWord, $item['request'])) {
+                            $sendingDetail['sending'] = $sending . $item['response'][rand(0, count($item['response']) - 1)];
+                            $sendingList[] = $sendingDetail;
+                            break;
                         }
+                    }
+                }
 
-                        $sendingDetail['sending'] = $sending;
+                if (! array_key_exists('sending', $sendingDetail) && mb_stripos(mb_strtolower($chatItem['message']), $this->botUserName) !== false) {
+                    $currentMessage = trim(mb_strtolower(preg_replace("/@?{$this->botUserName}/", '', $chatItem['message'])));
+
+                    switch (true) {
+                        case in_array($currentMessage, ['help', 'помощь']):
+                            $sending .= 'приветствую, в настоящий момент функционал дорабатывается, список команд будет доступен позднее';
+                            break;
+                        // TODO =========== анекдоты
+                        // TODO =========== проверить корректность переноса блока с анализом адрессованных сообщений
+                        default:
+                            $sending .= $this->prepareSmartAnswer($currentMessage);
+                            break;
+                    }
+
+                    $sendingDetail['sending'] = $sending;
+                    $sendingList[] = $sendingDetail;
+                }
+
+                if (! array_key_exists('sending', $sendingDetail) && in_array($chatItem['authorName'], USER_LISTEN_LIST)) {
+                    $answer = $this->prepareSmartAnswer($chatItem['message'], true);
+
+                    if (! empty($answer)) {
+                        $sendingDetail['sending'] = $sending . $answer;
                         $sendingList[] = $sendingDetail;
                     }
+                }
 
-                    if (! array_key_exists('sending', $sendingDetail) && in_array($chatItem['authorName'], USER_LISTEN_LIST)) {
-                        $answer = $this->prepareSmartAnswer($chatItem['message'], true);
-
-                        if (! empty($answer)) {
-                            $sendingDetail['sending'] = $sending . $answer;
-                            $sendingList[] = $sendingDetail;
-                        }
-                    }
+                if (! array_key_exists('sending', $sendingDetail) && in_array($lastWord, $this->getVocabulary()['dead_inside']['response'])) {
+                    $sendingDetail['sending'] = $sending . "сколько будет {$lastWord}-7?";
+                    $sendingList[] = $sendingDetail;
                 }
             }
         }
