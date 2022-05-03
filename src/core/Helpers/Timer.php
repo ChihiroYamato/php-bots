@@ -4,9 +4,11 @@ namespace Anet\App\Helpers;
 
 final class Timer
 {
-    public static function setSleep(int $sec, ?int $iterator = null, string $message = 'Wait...') : void
+    public static function setSleep(int $sec, bool $showMess = false, ?int $iterator = null, string $message = 'Wait...') : void
     {
-        echo "Script fall asleep for $sec seconds\n";
+        if ($showMess) {
+            echo "Script fall asleep for $sec seconds\n";
+        }
 
         if ($iterator === null || ($sec / $iterator) <= 1) {
             sleep($sec);

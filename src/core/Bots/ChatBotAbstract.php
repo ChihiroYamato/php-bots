@@ -27,7 +27,7 @@ abstract class ChatBotAbstract implements Interfaces\BotInterface, Interfaces\Bo
         $answer = $this->fetchAnswerFromSmallTalk($message);
 
         if (empty($answer) && $setDefault) {
-            $answer = $this->getVocabulary()['no_answer']['response'][rand(0, count($this->getVocabulary()['no_answer']['response']) - 1)];
+            $answer = $this->getVocabulary()['no_answer']['response'][random_int(0, count($this->getVocabulary()['no_answer']['response']) - 1)];
         }
 
         return $answer;
@@ -49,18 +49,18 @@ abstract class ChatBotAbstract implements Interfaces\BotInterface, Interfaces\Bo
         return $this->vocabulary;
     }
 
-    protected function fetchBuffer() : array
+    protected function fetchBuffer(string $node) : array
     {
-        $buffer = $this->buffer;
-        $this->buffer = [];
+        $buffer = $this->buffer[$node];
+        $this->buffer[$node] = [];
 
         return $buffer;
     }
 
-    protected function addBuffer(array $buffer) : void
+    protected function addBuffer(string $node, array $buffer) : void
     {
         $prepareBuffer = $buffer;
         $prepareBuffer['time'] = (new \DateTime())->format('H:i:s');
-        $this->buffer[] = $prepareBuffer;
+        $this->buffer[$node][] = $prepareBuffer;
     }
 }

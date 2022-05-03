@@ -26,8 +26,8 @@ trait ErrorHelperTrait
     {
         $this->errors[] = [
             'Category' => $category,
-            'Message' => $message,
             'Time' => (new \DateTime())->format('H:i:s'),
+            'Message' => $message,
         ];
         $this->errorCount++;
     }

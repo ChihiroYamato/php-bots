@@ -76,6 +76,10 @@ final class TimeTracker
 
     public function sumPointsAverage() : float
     {
+        if (empty($this->points)) {
+            return 0;
+        }
+
         $list = $this->points;
 
         return array_sum(array_map(fn (array $tem) => array_pop($tem) - array_shift($tem), $list)) / (count($list) * 1000000000);

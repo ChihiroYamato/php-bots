@@ -45,7 +45,8 @@ final class YouTubeBot extends ChatBotAbstract
 
     public function __destruct()
     {
-        Helpers\LogerHelper::loggingProccess($this->getStatistics(), $this->fetchBuffer());
+        Helpers\LogerHelper::loggingProccess($this->getStatistics(), $this->fetchBuffer('sendings'));
+        Helpers\LogerHelper::logging($this->fetchBuffer('messageList'), 'message'); // todo
 
         print_r("Принудительное завершение скрипта\n");
     }
@@ -107,7 +108,7 @@ final class YouTubeBot extends ChatBotAbstract
     private function fetchChatList() : array
     {
         try {
-            $response = $this->youtubeService->liveChatMessages->listLiveChatMessages($this->liveChatID, 'snippet', ['maxResults' => 20]);
+            $response = $this->youtubeService->liveChatMessages->listLiveChatMessages($this->liveChatID, 'snippet', ['maxResults' => 50]); // todo
 
             $chatList = $response['items'];
             $actualChat = [];
@@ -152,86 +153,95 @@ final class YouTubeBot extends ChatBotAbstract
         }
 
         foreach ($chatlist as $chatItem) {
-            if ($chatItem['authorName'] !== $this->botUserName) {
-                $sendingDetail = [
-                    'author' => $chatItem['authorName'],
-                    'message' => $chatItem['message'],
-                    'published' => $chatItem['published'],
-                ];
-                $sending = "@{$chatItem['authorName']} ";
+            $this->addBuffer('messageList', $chatItem); // todo
 
-                $matches = explode(' ', trim(str_replace(['!', ',', '.', '?'], '', $chatItem['message'])));
-                $lastWord = mb_strtolower(array_pop($matches));
+            if ($chatItem['authorName'] === $this->botUserName) {
+                continue;
+            }
 
-                if ($lastWord === '/stop' && $chatItem['authorName'] === '大和千ひろ') { // todo == chech with DB
-                    $sendingDetail['sending'] = $sending . 'Завершаю свою работу.';
-                    $sendingList[] = $sendingDetail;
-                    $this->listeningFlag = false;
-                    break;
-                }
+            $sendingDetail = [
+                'author' => $chatItem['authorName'],
+                'message' => $chatItem['message'],
+                'published' => $chatItem['published'],
+            ];
+            $sending = "@{$chatItem['authorName']} ";
 
-                foreach ($this->getVocabulary()['standart']['request'] as $category) {
-                    foreach ($category as $option) {
-                        if (mb_stripos(mb_strtolower($chatItem['message']), $option) !== false) {
-                            $answer = $this->prepareSmartAnswer($option, false);
+            $matches = explode(' ', trim(str_replace(['!', ',', '.', '?'], '', $chatItem['message'])));
+            $lastWord = mb_strtolower(array_pop($matches));
 
-                            if (! empty($answer)) {
-                                $sendingDetail['sending'] = $sending . $answer;
-                                $sendingList[] = $sendingDetail;
-                            }
-                            break 2;
-                        }
-                    }
-                }
-
-                if (! array_key_exists('sending', $sendingDetail)) {
-                    foreach ($this->getVocabulary()['another'] as $key => $item) {
-                        if (in_array($key, ['hah', 'mmm', 'three'])) {
-                            foreach ($item['request'] as $option) {
-                                if (mb_stripos(mb_strtolower($chatItem['message']), $option) !== false) {
-                                    $sendingDetail['sending'] = $sending . $item['response'][rand(0, count($item['response']) - 1)];
-                                    $sendingList[] = $sendingDetail;
-                                    break 2;
-                                }
-                            }
-                        } elseif (in_array($chatItem['authorName'], USER_LISTEN_LIST) && in_array($lastWord, $item['request'])) {
-                            $sendingDetail['sending'] = $sending . $item['response'][rand(0, count($item['response']) - 1)];
-                            $sendingList[] = $sendingDetail;
-                            break;
-                        }
-                    }
-                }
-
-                if (! array_key_exists('sending', $sendingDetail) && mb_stripos(mb_strtolower($chatItem['message']), $this->botUserName) !== false) {
-                    $currentMessage = trim(mb_strtolower(preg_replace("/@?{$this->botUserName}/", '', $chatItem['message'])));
-
-                    switch (true) {
-                        case in_array($currentMessage, ['help', 'помощь']):
-                            $sending .= 'приветствую, в настоящий момент функционал дорабатывается, список команд будет доступен позднее';
-                            break;
-                        // TODO =========== анекдоты
-                        // TODO =========== проверить корректность переноса блока с анализом адрессованных сообщений
-                        default:
-                            $sending .= $this->prepareSmartAnswer($currentMessage);
-                            break;
-                    }
-
-                    $sendingDetail['sending'] = $sending;
-                    $sendingList[] = $sendingDetail;
-                }
-
-                if (! array_key_exists('sending', $sendingDetail) && in_array($chatItem['authorName'], USER_LISTEN_LIST)) {
-                    $answer = $this->prepareSmartAnswer($chatItem['message'], true);
-
-                    if (! empty($answer)) {
-                        $sendingDetail['sending'] = $sending . $answer;
+            if ($chatItem['authorName'] === '大和千ひろ') { // todo == chech with DB
+                switch ($lastWord) {
+                    case '/stop':
+                        $sendingDetail['sending'] = $sending . 'Завершаю свою работу.';
                         $sendingList[] = $sendingDetail;
+                        $this->listeningFlag = false;
+                        break 2;
+                }
+            }
+
+            foreach ($this->getVocabulary()['standart']['request'] as $category) {
+                foreach ($category as $option) {
+                    if (mb_stripos(mb_strtolower($chatItem['message']), $option) !== false) {
+                        $answer = $this->prepareSmartAnswer($option, false);
+
+                        if (! empty($answer)) {
+                            $sendingDetail['sending'] = $sending . $answer;
+                            $sendingList[] = $sendingDetail;
+                            continue 3;
+                        }
                     }
                 }
+            }
 
-                if (! array_key_exists('sending', $sendingDetail) && in_array($lastWord, $this->getVocabulary()['dead_inside']['response'])) {
-                    $sendingDetail['sending'] = $sending . "сколько будет {$lastWord}-7?";
+            foreach ($this->getVocabulary()['another'] as $key => $item) {
+                if (in_array($key, ['hah', 'mmm', 'three'])) {
+                    foreach ($item['request'] as $option) {
+                        if (mb_stripos(mb_strtolower($chatItem['message']), $option) !== false) {
+                            $sendingDetail['sending'] = $sending . $item['response'][random_int(0, count($item['response']) - 1)];
+                            $sendingList[] = $sendingDetail;
+                            continue 3;
+                        }
+                    }
+                } elseif (in_array($chatItem['authorName'], USER_LISTEN_LIST) && in_array($lastWord, $item['request'])) {
+                    $sendingDetail['sending'] = $sending . $item['response'][random_int(0, count($item['response']) - 1)];
                     $sendingList[] = $sendingDetail;
+                    continue 2;
+                }
+            }
+
+
+            if (mb_stripos(mb_strtolower($chatItem['message']), $this->botUserName) !== false) {
+                $currentMessage = trim(mb_strtolower(preg_replace("/@?{$this->botUserName}/", '', $chatItem['message'])));
+
+                switch (true) {
+                    case in_array($currentMessage, ['help', 'справка']):
+                        $sending .= 'приветствую, в настоящий момент функционал дорабатывается, список команд будет доступен позднее';
+                        break;
+                    // TODO =========== анекдоты
+                    // TODO =========== проверить корректность переноса блока с анализом адрессованных сообщений
+                    default:
+                        $sending .= $this->prepareSmartAnswer($currentMessage);
+                        break;
+                }
+
+                $sendingDetail['sending'] = $sending;
+                $sendingList[] = $sendingDetail;
+                continue;
+            }
+
+            if (in_array($lastWord, $this->getVocabulary()['dead_inside']['response'])) {
+                $sendingDetail['sending'] = $sending . "сколько будет {$lastWord}-7?";
+                $sendingList[] = $sendingDetail;
+                continue;
+            }
+
+            if (in_array($chatItem['authorName'], USER_LISTEN_LIST)) {
+                $answer = $this->prepareSmartAnswer($chatItem['message'], true);
+
+                if (! empty($answer)) {
+                    $sendingDetail['sending'] = $sending . $answer;
+                    $sendingList[] = $sendingDetail;
+                    continue;
                 }
             }
         }
@@ -241,14 +251,16 @@ final class YouTubeBot extends ChatBotAbstract
 
     protected function sendingMessages(array $sending) : int
     {
+        if (empty($sending)) {
+            return 0;
+        }
+
         $sendCount = 0;
 
-        if (! empty($sending)) {
-            foreach ($sending as $sendItem) {
-                $this->addBuffer($sendItem);
-                $sendCount += $this->sendMessage($sendItem['sending']);
-                sleep(1);
-            }
+        foreach ($sending as $sendItem) {
+            $this->addBuffer('sendings', $sendItem);
+            $sendCount += $this->sendMessage($sendItem['sending']);
+            sleep(1);
         }
 
         return $sendCount;
@@ -299,19 +311,43 @@ final class YouTubeBot extends ChatBotAbstract
         return $matches[1];
     }
 
+    private function checkingMessageSendEvent(bool $event, int $sec, string $vocabularyKey) : bool
+    {
+        $sendStatus = false;
+
+        if ($event) {
+            if ($this->timeTracker->trackerState($vocabularyKey)) {
+                if ($this->timeTracker->trackerCheck($vocabularyKey, $sec)) {
+                    $this->timeTracker->trackerStop($vocabularyKey);
+
+                    $sendStatus = $this->sendMessage($this->getVocabulary()[$vocabularyKey]['response'][random_int(0, count($this->getVocabulary()[$vocabularyKey]['response']) - 1)]);
+                }
+            } else {
+                $this->timeTracker->trackerStart($vocabularyKey);
+            }
+        } else {
+            $this->timeTracker->trackerStop($vocabularyKey);
+        }
+
+        return $sendStatus;
+    }
+
     public function listen(int $interval) : void
     {
         $sendingCount = 0;
-        $sendingCount += $this->sendMessage('Всем привет, хорошего дня/вечера/ночи/утра');
+        // $sendingCount += $this->sendMessage('Всем привет, хорошего дня/вечера/ночи/утра'); // todo
 
         while ($this->getErrorCount() < 5 && $this->listeningFlag) {
             if ($this->timeTracker->trackerState('loggingProccess')) {
-                if ($this->timeTracker->trackerCheck('loggingProccess', 120)) {
+                if ($this->timeTracker->trackerCheck('loggingProccess', 60 * 3)) {
                     $this->timeTracker->trackerStop('loggingProccess');
 
-                    Helpers\LogerHelper::loggingProccess($this->getStatistics(), $this->fetchBuffer());
+                    Helpers\LogerHelper::loggingProccess($this->getStatistics(), $this->fetchBuffer('sendings'));
+                    Helpers\LogerHelper::logging($this->fetchBuffer('messageList'), 'message'); // todo
 
                     $this->timeTracker->clearPoints();
+
+                    printf('Логи сохранены. Текущая итерация: %i Длительность работы: %s' . PHP_EOL, $this->totalIterations, $this->timeTracker->getDuration());
                 }
             } else {
                 $this->timeTracker->trackerStart('loggingProccess');
@@ -322,35 +358,36 @@ final class YouTubeBot extends ChatBotAbstract
             $chatList = $this->fetchChatList();
             $this->timeTracker->setPoint('fetchChatList');
 
-            if (empty($chatList)) {
-                if ($this->timeTracker->trackerState('dead_chat')) {
-                    if ($this->timeTracker->trackerCheck('dead_chat', 5 * 60)) {
-                        $this->timeTracker->trackerStop('dead_chat');
+            // if (empty($chatList)) {
+            //     if ($this->timeTracker->trackerState('dead_chat')) {
+            //         if ($this->timeTracker->trackerCheck('dead_chat', 5 * 60)) {
+            //             $this->timeTracker->trackerStop('dead_chat');
 
-                        $sendingCount += $this->sendMessage($this->getVocabulary()['dead_chat']['response'][rand(0, count($this->getVocabulary()['dead_chat']['response']) - 1)]);
-                    }
-                } else {
-                    $this->timeTracker->trackerStart('dead_chat');
-                }
-            } else {
-                $this->timeTracker->trackerStop('dead_chat');
+            //             $sendingCount += $this->sendMessage($this->getVocabulary()['dead_chat']['response'][random_int(0, count($this->getVocabulary()['dead_chat']['response']) - 1)]);
+            //         }
+            //     } else {
+            //         $this->timeTracker->trackerStart('dead_chat');
+            //     }
+            // } else {
+            //     $this->timeTracker->trackerStop('dead_chat');
+            // }
+            $sendingCount += $this->checkingMessageSendEvent(empty($chatList), 5 * 60, 'dead_chat');
+            $sendingCount += $this->sendingMessages($this->prepareSendings($chatList));
+            $sendingCount += $this->checkingMessageSendEvent($sendingCount < 1 && $this->totalIterations > 1, 2 * 60, 'no_care');
 
-                $sendingCount += $this->sendingMessages($this->prepareSendings($chatList));
-            }
+            // if ($sendingCount < 1 && $this->totalIterations > 1) {
+            //     if ($this->timeTracker->trackerState('no_care')) {
+            //         if ($this->timeTracker->trackerCheck('no_care', 2* 60)) {
+            //             $this->timeTracker->trackerStop('no_care');
 
-            if ($sendingCount < 1) {
-                if ($this->timeTracker->trackerState('no_care')) {
-                    if ($this->timeTracker->trackerCheck('no_care', 60)) {
-                        $this->timeTracker->trackerStop('no_care');
-
-                        $sendingCount += $this->sendMessage($this->getVocabulary()['no_care']['response'][rand(0, count($this->getVocabulary()['no_care']['response']) - 1)]);
-                    }
-                } else {
-                    $this->timeTracker->trackerStart('no_care');
-                }
-            } else {
-                $this->timeTracker->trackerStop('no_care');
-            }
+            //             $sendingCount += $this->sendMessage($this->getVocabulary()['no_care']['response'][random_int(0, count($this->getVocabulary()['no_care']['response']) - 1)]);
+            //         }
+            //     } else {
+            //         $this->timeTracker->trackerStart('no_care');
+            //     }
+            // } else {
+            //     $this->timeTracker->trackerStop('no_care');
+            // }
 
             $this->timeTracker->setPoint('sendingMessage');
             $this->timeTracker->finishPointTracking();
@@ -362,7 +399,7 @@ final class YouTubeBot extends ChatBotAbstract
         }
 
         if (! empty($this->getErrors())) {
-            Helpers\LogerHelper::loggingErrors($this->getErrors());
+            Helpers\LogerHelper::logging($this->getErrors());
         }
     }
 

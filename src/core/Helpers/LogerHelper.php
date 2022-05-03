@@ -11,6 +11,7 @@ final class LogerHelper
     private const LOGS_PATH = LOGS_PATH;
     private const LOGS_ERRORS_BASE_NAME = '/errors/error_report';
     private const LOGS_PROCCESS_BASE_NAME = '/proccess/proccess_report';
+    private const LOGS_DEFAULT_BASE_NAME = '/default/report';
     private const XML_ROOT_TAG = 'Body';
     private const XML_PROCCESS_GLOBAL_TAG = 'Global';
     private const XML_PROCCESS_DETAIL_TAG = 'Detail';
@@ -26,10 +27,10 @@ final class LogerHelper
         return $fileName;
     }
 
-    public static function loggingErrors(array $errors) : string
+    public static function logging(array $data, ?string $mode = null) : string
     {
-        $fileName = self::initialLogsXML(self::LOGS_ERRORS_BASE_NAME);
-        self::saveErrorToXML($fileName, $errors);
+        $fileName = self::initialLogsXML(($mode !== null) ? self::LOGS_DEFAULT_BASE_NAME : self::LOGS_ERRORS_BASE_NAME);
+        self::saveToXML($fileName, $data, $mode ?? self::XML_ERROR_NODE_TAG);
         self::formatLogsXML($fileName);
 
         return $fileName;
@@ -70,7 +71,7 @@ final class LogerHelper
         }
     }
 
-    private static function saveErrorToXML(string $logsName, array $errors) : void
+    private static function saveToXML(string $logsName, array $errors, string $nodeName) : void
     {
         $xmlFile = file_get_contents($logsName);
 
@@ -81,7 +82,7 @@ final class LogerHelper
         $xml = new \SimpleXMLElement($xmlFile);
 
         foreach ($errors as $error) {
-            $xmlNode = $xml->addChild(self::XML_ERROR_NODE_TAG);
+            $xmlNode = $xml->addChild($nodeName);
             $xmlNode->addAttribute('id', uniqid('', true));
 
             foreach ($error as $tag => $note) {
