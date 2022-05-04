@@ -334,7 +334,7 @@ final class YouTubeBot extends ChatBotAbstract
     public function listen(int $interval) : void
     {
         $sendingCount = 0;
-        // $sendingCount += $this->sendMessage('Всем привет, хорошего дня/вечера/ночи/утра'); // todo
+        $sendingCount += $this->sendMessage('Всем привет, хорошего дня/вечера/ночи/утра'); // todo
 
         while ($this->getErrorCount() < 5 && $this->listeningFlag) {
             if ($this->timeTracker->trackerState('loggingProccess')) {
