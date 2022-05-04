@@ -79,5 +79,5 @@ if (! defined('VOC_ANOTHER')) {
 }
 
 if (! defined('LOGS_PATH')) {
-    define('LOGS_PATH', __DIR__ . '/project_logs');
+    define('LOGS_PATH', dirname(__DIR__, 2) . '/project_logs');
 }
