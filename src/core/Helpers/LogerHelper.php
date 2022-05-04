@@ -1,12 +1,10 @@
 <?php
 
-namespace Anet\App\Helpers;
-
-use Anet\App\Helpers\Traits;
+namespace App\Anet\Helpers;
 
 final class LogerHelper
 {
-    use Traits\FileSystemHelperTrait;
+    use FileSystemHelperTrait;
 
     private const LOGS_PATH = LOGS_PATH;
     private const LOGS_ERRORS_BASE_NAME = '/errors/error_report';

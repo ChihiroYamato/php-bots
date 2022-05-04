@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/src/vendor/autoload.php';
 
-use Anet\App\Bots\YouTubeBot;
+use App\Anet\Bots\YouTubeBot;
 
 if (YouTubeBot::createAuthTokken()) {
     echo 'oAuth tokken saved successful' . PHP_EOL;

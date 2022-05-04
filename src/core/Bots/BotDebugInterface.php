@@ -1,6 +1,6 @@
 <?php
 
-namespace Anet\App\Bots\Interfaces;
+namespace App\Anet\Bots;
 
 interface BotDebugInterface
 {

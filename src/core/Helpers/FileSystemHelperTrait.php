@@ -1,6 +1,6 @@
 <?php
 
-namespace Anet\App\Helpers\Traits;
+namespace App\Anet\Helpers;
 
 /**
  *

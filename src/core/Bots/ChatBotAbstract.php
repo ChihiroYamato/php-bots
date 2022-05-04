@@ -1,13 +1,10 @@
 <?php
 
-namespace Anet\App\Bots;
+namespace App\Anet\Bots;
 
-use Anet\App\Bots\Interfaces;
-use Anet\App\Bots\Traits;
-
-abstract class ChatBotAbstract implements Interfaces\BotInterface, Interfaces\BotDebugInterface, Interfaces\StatisticsInterface
+abstract class ChatBotAbstract implements BotInterface, BotDebugInterface, StatisticsInterface
 {
-    use Traits\SmallTalkModuleTrait;
+    use SmallTalkModuleTrait;
 
     protected int $totalMessageReading = 0;
     protected int $totalMessageSending = 0;

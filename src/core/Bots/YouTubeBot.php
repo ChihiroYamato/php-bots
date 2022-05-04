@@ -1,16 +1,15 @@
 <?php
 
-namespace Anet\App\Bots;
+namespace App\Anet\Bots;
 
-use Anet\App\Helpers;
-use Anet\App\Helpers\Traits;
+use App\Anet\Helpers;
 use Google;
 use Google\Service;
 use Google\Service\YouTube;
 
 final class YouTubeBot extends ChatBotAbstract
 {
-    use Traits\UrlHelperTrait, Traits\ErrorHelperTrait;
+    use Helpers\UrlHelperTrait, Helpers\ErrorHelperTrait;
 
     private Service\YouTube $youtubeService;
     private Helpers\TimeTracker $timeTracker;

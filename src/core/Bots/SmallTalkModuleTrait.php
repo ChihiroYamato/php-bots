@@ -1,14 +1,14 @@
 <?php
 
-namespace Anet\App\Bots\Traits;
+namespace App\Anet\Bots;
 
-use Anet\App\Helpers\Traits;
+use App\Anet\Helpers;
 use Google\ApiCore;
 use Google\Cloud\Dialogflow\V2;
 
 trait SmallTalkModuleTrait
 {
-    use Traits\ErrorHelperTrait;
+    use Helpers\ErrorHelperTrait;
 
     private ?string $smallTalkSession = null;
     private ?V2\SessionsClient $smallTalkClient = null;

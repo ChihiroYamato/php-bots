@@ -1,6 +1,6 @@
 <?php
 
-namespace Anet\App\Helpers;
+namespace App\Anet\Helpers;
 
 final class Timer
 {
