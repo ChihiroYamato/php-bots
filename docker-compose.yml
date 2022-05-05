@@ -8,7 +8,7 @@ services:
         - ${APP_PATH_HOST}:${APP_PATH_CONTAINER}
         - ${PROJECT_LOGS_HOST}:${PROJECT_LOGS_CONTAINER}
       ports:
-        - 6080:80
+        - 8080:80
       working_dir: ${APP_PATH_CONTAINER}
     db:
       image: mysql:8.0
@@ -23,7 +23,7 @@ services:
       image: adminer
       restart: always
       ports:
-        - 8080:8080
+        - 6080:8080
     composer:
       image: composer:2.3
       volumes:
