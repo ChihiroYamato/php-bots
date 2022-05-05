@@ -7,7 +7,7 @@ if (count($argv) < 2) {
 use App\Anet\Bots\YouTubeBot;
 use Google\Service\Exception;
 
-require_once __DIR__ . '/src/vendor/autoload.php';
+require_once __DIR__ . '/vendor/autoload.php';
 
 try {
     $youtubeBot = new YouTubeBot($argv[1]);

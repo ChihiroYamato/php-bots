@@ -3,12 +3,12 @@
     "description": "YouTube ChatBot",
     "autoload": {
         "psr-4": {
-            "App\\Anet\\": "core/"
+            "App\\Anet\\": "src/core/"
         },
         "classmap": [],
         "files": [
-            "const.php",
-            "pre_const.php"
+            "./src/const.php",
+            "./src/pre_const.php"
         ]
     },
     "authors": [
