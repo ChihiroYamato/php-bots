@@ -48,6 +48,10 @@ abstract class ChatBotAbstract implements BotInterface, BotDebugInterface, Stati
 
     protected function fetchBuffer(string $node) : array
     {
+        if (! array_key_exists($node, $this->buffer)) {
+            return [];
+        }
+
         $buffer = $this->buffer[$node];
         $this->buffer[$node] = [];
 

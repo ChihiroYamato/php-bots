@@ -16,22 +16,30 @@ final class LogerHelper
     private const XML_PROCCESS_NODE_TAG = 'Proccessing';
     private const XML_ERROR_NODE_TAG = 'Error';
 
-    public static function loggingProccess(array $globalProccess, $detailProccess) : string
+    public static function loggingProccess(array $globalProccess, array $detailProccess) : bool
     {
+        if (empty($globalProccess) || empty($detailProccess)) {
+            return false;
+        }
+
         $fileName = self::initialLogsXML(self::LOGS_PROCCESS_BASE_NAME);
         self::saveProccessToXML($fileName, $globalProccess, $detailProccess);
         self::formatLogsXML($fileName);
 
-        return $fileName;
+        return true;
     }
 
-    public static function logging(array $data, ?string $mode = null) : string
+    public static function logging(array $data, ?string $mode = null) : bool
     {
+        if (empty($data)) {
+            return false;
+        }
+
         $fileName = self::initialLogsXML(($mode !== null) ? self::LOGS_DEFAULT_BASE_NAME : self::LOGS_ERRORS_BASE_NAME);
         self::saveToXML($fileName, $data, $mode ?? self::XML_ERROR_NODE_TAG);
         self::formatLogsXML($fileName);
 
-        return $fileName;
+        return true;
     }
 
     private static function initialLogsXML(string $logsBaseName) : string

@@ -47,7 +47,7 @@ final class YouTubeBot extends ChatBotAbstract
         Helpers\LogerHelper::loggingProccess($this->getStatistics(), $this->fetchBuffer('sendings'));
         Helpers\LogerHelper::logging($this->fetchBuffer('messageList'), 'message'); // todo
 
-        print_r("Принудительное завершение скрипта\n");
+        print_r("Force termination of a script\n");
     }
 
     private static function createGoogleClient(bool $setRedirectUrl = false) : Google\Client
@@ -107,7 +107,7 @@ final class YouTubeBot extends ChatBotAbstract
     private function fetchChatList() : array
     {
         try {
-            $response = $this->youtubeService->liveChatMessages->listLiveChatMessages($this->liveChatID, 'snippet', ['maxResults' => 50]); // todo
+            $response = $this->youtubeService->liveChatMessages->listLiveChatMessages($this->liveChatID, 'snippet', ['maxResults' => 100]); // todo
 
             $chatList = $response['items'];
             $actualChat = [];
@@ -346,7 +346,7 @@ final class YouTubeBot extends ChatBotAbstract
 
                     $this->timeTracker->clearPoints();
 
-                    printf('Логи сохранены. Текущая итерация: %i Длительность работы: %s' . PHP_EOL, $this->totalIterations, $this->timeTracker->getDuration());
+                    printf('Logs saved. Current iteration is: %d Proccessing duration: %s' . PHP_EOL, $this->totalIterations, $this->timeTracker->getDuration());
                 }
             } else {
                 $this->timeTracker->trackerStart('loggingProccess');
@@ -417,7 +417,7 @@ final class YouTubeBot extends ChatBotAbstract
 
     public function testSend() : void
     {
-        $testing = $this->sendMessage('Прогрев чата'); // todo == протестировать длину сообщения !!
+        $testing = $this->sendMessage('Прогрев чата');
 
         if ($testing) {
             echo 'Message sending test completed successfully' . PHP_EOL;
