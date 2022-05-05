@@ -178,15 +178,21 @@ final class YouTubeBot extends ChatBotAbstract
                 }
             }
 
-            foreach ($this->getVocabulary()['standart']['request'] as $category) {
-                foreach ($category as $option) {
-                    if (mb_stripos(mb_strtolower($chatItem['message']), $option) !== false) {
-                        $answer = $this->prepareSmartAnswer($option, false);
+            // todo ================= NEED TESTING
+            if (! $this->timeTracker->trackerState('standart_responce') || $this->timeTracker->trackerCheck('standart_responce', 30)) {
+                $this->timeTracker->trackerStop('standart_responce');
 
-                        if (! empty($answer)) {
-                            $sendingDetail['sending'] = $sending . $answer;
-                            $sendingList[] = $sendingDetail;
-                            continue 3;
+                foreach ($this->getVocabulary()['standart']['request'] as $category) {
+                    foreach ($category as $option) {
+                        if (mb_stripos(mb_strtolower($chatItem['message']), $option) !== false) {
+                            $answer = $this->prepareSmartAnswer($option, false);
+
+                            if (! empty($answer)) {
+                                $sendingDetail['sending'] = $sending . $answer;
+                                $sendingList[] = $sendingDetail;
+                                $this->timeTracker->trackerStart('standart_responce');
+                                continue 3;
+                            }
                         }
                     }
                 }
