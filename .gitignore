@@ -4,7 +4,7 @@
 .vscode/
 
 # Test
-test*.*
+test*
 test/
 
 # Composer
@@ -13,3 +13,12 @@ vendor/
 # Project
 settings/
 pre_const.php
+another_close.php
+
+# Project logs
+project_logs/*
+!project_logs/.gitkeep
+
+# DB
+project_database/*
+!project_database/.gitkeep

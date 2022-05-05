@@ -1,8 +1,8 @@
 <?php
 
-namespace Anet\App\Bots\Interfaces;
+namespace App\Anet\Bots;
 
-interface Bot
+interface BotInterface
 {
     public function listen(int $interval) : void;
 }

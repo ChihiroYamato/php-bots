@@ -3,12 +3,12 @@
     "description": "YouTube ChatBot",
     "autoload": {
         "psr-4": {
-            "Anet\\App\\": "core/"
+            "App\\Anet\\": "src/core/"
         },
         "classmap": [],
         "files": [
-            "const.php",
-            "pre_const.php"
+            "./src/const.php",
+            "./src/pre_const.php"
         ]
     },
     "authors": [
@@ -18,7 +18,8 @@
         }
     ],
     "require": {
-        "google/apiclient": "^2.12.1"
+        "google/apiclient": "^2.12.1",
+        "google/cloud-dialogflow": "^0.25.0"
     },
     "scripts": {
         "pre-autoload-dump": "Google\\Task\\Composer::cleanup"

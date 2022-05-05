@@ -1,10 +1,10 @@
 <?php
 
-namespace Anet\App\Helpers\Traits;
+namespace App\Anet\Helpers;
 
-trait UrlHelper
+trait UrlHelperTrait
 {
-    private static function getCurrentUrl() : string
+    private static function fetchCurrentUrl() : string
     {
         $protocol = strtolower(preg_replace('/\/.*/', '://', $_SERVER['SERVER_PROTOCOL']));
         $host = $_SERVER['HTTP_HOST'];
