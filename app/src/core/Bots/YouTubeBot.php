@@ -40,6 +40,8 @@ final class YouTubeBot extends ChatBotAbstract
 
         $this->liveChatID = $this->getLiveChatID($this->videoID);
         $this->lastChatMessageID = null;
+
+        Helpers\LogerHelper::archiveLogs();
     }
 
     public function __destruct()

@@ -16,6 +16,19 @@ final class LogerHelper
     private const XML_PROCCESS_NODE_TAG = 'Proccessing';
     private const XML_ERROR_NODE_TAG = 'Error';
 
+    public static function archiveLogs() : void
+    {
+        foreach (scandir(self::LOGS_PATH) as $dir) {
+            $path = self::LOGS_PATH . "/$dir";
+
+            if (is_dir($path) && ! in_array($dir, ['.', '..'])) {
+                foreach (scandir($path) as $file) {
+                    self::archiveFile("$path/$file");
+                }
+            }
+        }
+    }
+
     public static function loggingProccess(array $globalProccess, array $detailProccess) : bool
     {
         if (empty($globalProccess) || empty($detailProccess)) {

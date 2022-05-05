@@ -12,7 +12,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 try {
     $youtubeBot = new YouTubeBot($argv[1]);
 } catch (Exception $error) {
-    print_r($error);
+    print_r($error->getMessage());
     exit;
 }
 
