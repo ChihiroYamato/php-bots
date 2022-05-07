@@ -81,3 +81,20 @@ if (! defined('VOC_ANOTHER')) {
 if (! defined('LOGS_PATH')) {
     define('LOGS_PATH', dirname(__DIR__, 2) . '/project_logs');
 }
+
+
+if (! defined('DB_HOST')) {
+    define('DB_HOST', 'db');
+}
+
+if (! defined('DB_BASE')) {
+    define('DB_BASE', 'bots');
+}
+
+if (! defined('DB_USER_NAME')) {
+    define('DB_USER_NAME', 'root');
+}
+
+if (! defined('DB_PASSWORD')) {
+    define('DB_PASSWORD', '123456');
+}
