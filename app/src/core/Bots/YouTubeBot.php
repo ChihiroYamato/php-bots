@@ -2,22 +2,19 @@
 
 namespace App\Anet\Bots;
 
-use App\Anet\Helpers;
 use Google;
 use Google\Service;
 use Google\Service\YouTube;
+use App\Anet\YouTubeHelpers;
+use App\Anet\Helpers;
 
 final class YouTubeBot extends ChatBotAbstract
 {
-    use Helpers\UrlHelperTrait, Helpers\ErrorHelperTrait;
-
     private Service\YouTube $youtubeService;
     private Helpers\TimeTracker $timeTracker;
-    private string $youtubeURL;
-    private string $videoID;
+    private YouTubeHelpers\YoutubeProps $youtubeProps;
     private string $botUserEmail;
     private string $botUserName;
-    private string $liveChatID;
     private ?string $lastChatMessageID;
 
     public function __construct(string $youtubeURL)
@@ -25,10 +22,10 @@ final class YouTubeBot extends ChatBotAbstract
         if (! file_exists(OAUTH_TOKEN_JSON)) {
             throw new Service\Exception('Create file with oAuth tokken');
         }
+        parent::__construct();
 
         $this->timeTracker = new Helpers\TimeTracker();
-        $this->youtubeURL = $this->validateYoutubeURL($youtubeURL);
-        $this->videoID = $this->getVideoID($this->youtubeURL);
+        $this->youtubeProps = new YouTubeHelpers\YoutubeProps($youtubeURL);
         $this->botUserEmail = APP_EMAIL;
         $this->botUserName = APP_USER_NAME;
 
@@ -38,7 +35,7 @@ final class YouTubeBot extends ChatBotAbstract
 
         $this->youtubeService = new Service\YouTube($client);
 
-        $this->liveChatID = $this->getLiveChatID($this->videoID);
+        $this->youtubeProps->setLiveChatID($this->getLiveChatID($this->youtubeProps->getVideoID()));
         $this->lastChatMessageID = null;
 
         Helpers\LogerHelper::archiveLogs();
@@ -46,8 +43,8 @@ final class YouTubeBot extends ChatBotAbstract
 
     public function __destruct()
     {
-        Helpers\LogerHelper::loggingProccess($this->getStatistics(), $this->fetchBuffer('sendings'));
-        Helpers\LogerHelper::logging($this->fetchBuffer('messageList'), 'message'); // todo
+        Helpers\LogerHelper::loggingProccess($this->getStatistics(), $this->buffer->fetch('sendings'));
+        Helpers\LogerHelper::logging($this->buffer->fetch('messageList'), 'message'); // todo
 
         print_r("Force termination of a script\n");
     }
@@ -109,7 +106,7 @@ final class YouTubeBot extends ChatBotAbstract
     private function fetchChatList() : array
     {
         try {
-            $response = $this->youtubeService->liveChatMessages->listLiveChatMessages($this->liveChatID, 'snippet', ['maxResults' => 100]); // todo
+            $response = $this->youtubeService->liveChatMessages->listLiveChatMessages($this->youtubeProps->getLiveChatID(), 'snippet', ['maxResults' => 100]); // todo
 
             $chatList = $response['items'];
             $actualChat = [];
@@ -154,7 +151,7 @@ final class YouTubeBot extends ChatBotAbstract
         }
 
         foreach ($chatlist as $chatItem) {
-            $this->addBuffer('messageList', $chatItem); // todo
+            $this->buffer->add('messageList', $chatItem); // todo
 
             if ($chatItem['authorName'] === $this->botUserName) {
                 continue;
@@ -184,8 +181,8 @@ final class YouTubeBot extends ChatBotAbstract
             if (! $this->timeTracker->trackerState('standart_responce') || $this->timeTracker->trackerCheck('standart_responce', 30)) {
                 $this->timeTracker->trackerStop('standart_responce');
 
-                foreach ($this->getVocabulary()['standart']['request'] as $category) {
-                    foreach ($category as $option) {
+                foreach ($this->vocabulary->getCategoriesGroup('standart', ['greetings', 'parting']) as $category) {
+                    foreach ($category['request'] as $option) {
                         if (mb_stripos(mb_strtolower($chatItem['message']), $option) !== false) {
                             $answer = $this->prepareSmartAnswer($option, false);
 
@@ -200,17 +197,17 @@ final class YouTubeBot extends ChatBotAbstract
                 }
             }
 
-            foreach ($this->getVocabulary()['another'] as $key => $item) {
-                if (in_array($key, ['hah', 'mmm', 'three'])) {
+            foreach ($this->vocabulary->getCategoriesGroup('another', ['say_yes', 'say_no', 'say_haha', 'say_foul', 'say_three']) as $key => $item) {
+                if (in_array($key, ['say_haha', 'say_foul', 'say_three'])) {
                     foreach ($item['request'] as $option) {
                         if (mb_stripos(mb_strtolower($chatItem['message']), $option) !== false) {
-                            $sendingDetail['sending'] = $sending . $item['response'][random_int(0, count($item['response']) - 1)];
+                            $sendingDetail['sending'] = $sending . $this->vocabulary->getRandItem($key);
                             $sendingList[] = $sendingDetail;
                             continue 3;
                         }
                     }
                 } elseif (in_array($chatItem['authorName'], USER_LISTEN_LIST) && in_array($lastWord, $item['request'])) {
-                    $sendingDetail['sending'] = $sending . $item['response'][random_int(0, count($item['response']) - 1)];
+                    $sendingDetail['sending'] = $sending . $this->vocabulary->getRandItem($key);
                     $sendingList[] = $sendingDetail;
                     continue 2;
                 }
@@ -236,7 +233,7 @@ final class YouTubeBot extends ChatBotAbstract
                 continue;
             }
 
-            if (in_array($lastWord, $this->getVocabulary()['dead_inside']['response'])) {
+            if (in_array($lastWord, $this->vocabulary->getCategoryType('dead_inside', 'request'))) {
                 $sendingDetail['sending'] = $sending . "сколько будет {$lastWord}-7?";
                 $sendingList[] = $sendingDetail;
                 continue;
@@ -265,7 +262,7 @@ final class YouTubeBot extends ChatBotAbstract
         $sendCount = 0;
 
         foreach ($sending as $sendItem) {
-            $this->addBuffer('sendings', $sendItem);
+            $this->buffer->add('sendings', $sendItem);
             $sendCount += $this->sendMessage($sendItem['sending']);
             sleep(1);
         }
@@ -282,7 +279,7 @@ final class YouTubeBot extends ChatBotAbstract
 
             $liveChatTextMessageDetails->setMessageText($message);
 
-            $liveChatMessageSnippet->setLiveChatId($this->liveChatID);
+            $liveChatMessageSnippet->setLiveChatId($this->youtubeProps->getLiveChatID());
             $liveChatMessageSnippet->setType('textMessageEvent');
             $liveChatMessageSnippet->setTextMessageDetails($liveChatTextMessageDetails);
 
@@ -327,7 +324,7 @@ final class YouTubeBot extends ChatBotAbstract
                 if ($this->timeTracker->trackerCheck($vocabularyKey, $sec)) {
                     $this->timeTracker->trackerStop($vocabularyKey);
 
-                    $sendStatus = $this->sendMessage($this->getVocabulary()[$vocabularyKey]['response'][random_int(0, count($this->getVocabulary()[$vocabularyKey]['response']) - 1)]);
+                    $sendStatus = $this->sendMessage($this->vocabulary->getRandItem($vocabularyKey));
                 }
             } else {
                 $this->timeTracker->trackerStart($vocabularyKey);
@@ -349,8 +346,8 @@ final class YouTubeBot extends ChatBotAbstract
                 if ($this->timeTracker->trackerCheck('loggingProccess', 60 * 3)) {
                     $this->timeTracker->trackerStop('loggingProccess');
 
-                    Helpers\LogerHelper::loggingProccess($this->getStatistics(), $this->fetchBuffer('sendings'));
-                    Helpers\LogerHelper::logging($this->fetchBuffer('messageList'), 'message'); // todo
+                    Helpers\LogerHelper::loggingProccess($this->getStatistics(), $this->buffer->fetch('sendings'));
+                    Helpers\LogerHelper::logging($this->buffer->fetch('messageList'), 'message'); // todo
 
                     $this->timeTracker->clearPoints();
 
@@ -444,8 +441,8 @@ final class YouTubeBot extends ChatBotAbstract
             'MessageSending' => $this->totalMessageSending,
             'Iterations' => $this->totalIterations,
             'IterationAverageTime' => $this->timeTracker->sumPointsAverage(),
-            'YouTubeURL' => $this->youtubeURL,
-            'VideoID' => $this->videoID,
+            'YouTubeURL' => $this->youtubeProps->getYoutubeURL(),
+            'VideoID' => $this->youtubeProps->getVideoID(),
             'BotUserName' => $this->botUserName,
             'BotUserEmail' => $this->botUserEmail,
         ];

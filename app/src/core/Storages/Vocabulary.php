@@ -7,13 +7,15 @@ use App\Anet\DB;
 final class Vocabulary
 {
     private array $storage;
+    private array $groups;
 
     public function __construct()
     {
         $this->fetchVocabulary();
+        $this->groups = [];
     }
 
-    public function getRandItem(string $category, string $type) : string
+    public function getRandItem(string $category, string $type = 'response') : string
     {
         if (empty($this->storage[$category][$type]) || ! is_array($this->storage[$category][$type])) {
             return '';
@@ -50,6 +52,26 @@ final class Vocabulary
         return $this->storage[$category][$type];
     }
 
+    public function getCategoriesGroup(string $group, array $categories) : array
+    {
+        if (array_key_exists($group, $this->groups)) {
+            return $this->groups[$group];
+        }
+
+        foreach ($categories as $category) {
+            if (array_key_exists($category, $this->storage)) {
+                $this->groups[$group][$category] = $this->storage[$category];
+            }
+        }
+
+        return $this->groups[$group];
+    }
+
+    public function clearCategoriesGroup(string $group) : void
+    {
+        unset($this->groups[$group]);
+    }
+
     private function fetchVocabulary() : void
     {
         $response = DB\DataBase::fetchVocabulary();
@@ -58,7 +80,7 @@ final class Vocabulary
             $this->storage[$item['category']][$item['type']][] = $item['content'];
         }
 
-        $this->storage['dead_inside']['response'] = call_user_func(function () {
+        $this->storage['dead_inside']['request'] = call_user_func(function () {
             $result = [];
 
             for ($i = 1000; $i > 0; $i -=7) {
