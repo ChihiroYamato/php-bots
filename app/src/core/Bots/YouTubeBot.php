@@ -17,6 +17,7 @@ final class YouTubeBot extends ChatBotAbstract
     private string $botUserEmail;
     private string $botUserName;
     private ?string $lastChatMessageID;
+    private array $usersListerning;
 
     public function __construct(string $youtubeURL)
     {
@@ -38,6 +39,7 @@ final class YouTubeBot extends ChatBotAbstract
         $this->users = new YouTubeHelpers\UserStorage($this->youtubeService);
 
         $this->lastChatMessageID = null;
+        $this->usersListerning = USER_LISTEN_LIST;
 
         Helpers\LogerHelper::archiveLogs();
     }
@@ -158,11 +160,25 @@ final class YouTubeBot extends ChatBotAbstract
             $lastWord = mb_strtolower(array_pop($matches));
 
             if ($this->users->get($chatItem['authorId'])->checkAdmin()) {
-                switch ($lastWord) {
-                    case '/stop':
+                switch (true) {
+                    case $lastWord === '/stop':
                         $sendingDetail['sending'] = $sending . 'Завершаю свою работу.';
                         $sendingList[] = $sendingDetail;
                         $this->listeningFlag = false;
+                        break 2;
+                    case mb_stripos($chatItem['message'], '/insert') !== false:
+                        $listernUser = preg_replace('/\/insert /', '', $chatItem['message']);
+                        $this->usersListerning[$listernUser] = $listernUser;
+
+                        $sendingDetail['sending'] = $sending . "Начинаю слушать пользователя <$listernUser>";
+                        $sendingList[] = $sendingDetail;
+                        break 2;
+                    case mb_stripos($chatItem['message'], '/drop') !== false:
+                        $listernUser = preg_replace('/\/drop /', '', $chatItem['message']);
+                        unset($this->usersListerning[$listernUser]);
+
+                        $sendingDetail['sending'] = $sending . "Прекращаю слушать пользователя <$listernUser>";
+                        $sendingList[] = $sendingDetail;
                         break 2;
                 }
             }
@@ -240,7 +256,7 @@ final class YouTubeBot extends ChatBotAbstract
                 continue;
             }
 
-            if (in_array($chatItem['authorName'], USER_LISTEN_LIST)) {
+            if (in_array($chatItem['authorName'], $this->usersListerning)) {
                 $answer = $this->prepareSmartAnswer($chatItem['message'], true);
 
                 if (! empty($answer)) {
@@ -294,26 +310,6 @@ final class YouTubeBot extends ChatBotAbstract
 
             return false;
         }
-    }
-
-    private function validateYoutubeURL(string $url) : string
-    {
-        if (! preg_match('/https:\/\/www\.youtube\.com.*/', $url)) {
-            throw new Service\Exception('Incorrect YouTube url');
-        }
-
-        return $url;
-    }
-
-    private function getVideoID(string $url) : string
-    {
-        preg_match('/youtube\.com\/watch\?.*v=([^&]+)/',  $url, $matches);
-
-        if (empty($matches[1])) {
-            throw new Service\Exception('Incorrect YouTube video ID');
-        }
-
-        return $matches[1];
     }
 
     private function checkingMessageSendEvent(bool $event, int $sec, string $vocabularyKey) : bool
