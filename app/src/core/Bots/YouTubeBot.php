@@ -155,6 +155,7 @@ final class YouTubeBot extends ChatBotAbstract
                 'published' => $chatItem['published'],
             ];
             $sending = "@{$chatItem['authorName']} ";
+            $largeSending = [];
 
             $matches = explode(' ', trim(str_replace(['!', ',', '.', '?'], '', $chatItem['message'])));
             $lastWord = mb_strtolower(array_pop($matches));
@@ -181,6 +182,29 @@ final class YouTubeBot extends ChatBotAbstract
                         $sendingList[] = $sendingDetail;
                         break 2;
                 }
+            }
+
+            switch (true) {
+                case in_array($chatItem['message'], ['/help', '/справка']):
+                    $largeSending[] = $sending . 'приветствую, в данном чате доступны следующие команды: </стата (/stat) @user> — получить статистику по указанному юзеру; </шутка (/joke)> — получить анекдот;';
+                    $largeSending[] = '</факт (/fact)> — получить факт; </стрим (/stream)> — получить информацию о стриме;';
+                    break;
+                case in_array($chatItem['message'], ['/stat', '/стата']):
+                    $largeSending = $this->users->showUserStatistic(mb_ereg_replace('.*(\/stat|\/стата) @', '', $chatItem['message']));
+                    break;
+                case in_array($chatItem['message'], ['/stream', '/стрим']):
+                    $largeSending = $this->video->showStatistic();
+                    break;
+                // TODO =========== анекдоты
+            }
+
+            if (! empty($largeSending)) {
+                foreach ($largeSending as $item) {
+                    $sendingDetail['sending'] = $item;
+                    $sendingList[] = $sendingDetail;
+                }
+
+                continue;
             }
 
             // todo ================= NEED TESTING
@@ -221,33 +245,13 @@ final class YouTubeBot extends ChatBotAbstract
 
 
             if (mb_stripos(mb_strtolower($chatItem['message']), $this->botUserName) !== false) {
-                $currentMessage = trim(mb_strtolower(preg_replace("/@?{$this->botUserName}/", '', $chatItem['message'])));
-                $largeSending = [];
                 $this->users->get($chatItem['authorId'])->incrementRaiting(rand(1, 3) * 5);
 
-                // todo ====== ВЫНЕСТИ БЛОК КОМАНД В ОБЩИЙ ДОСТУП
-                switch (true) {
-                    case in_array($currentMessage, ['help', 'справка']):
-                        $largeSending[] = $sending . 'приветствую, в данном чате доступны следующие команды: <стата (stat) @user> — получить статистику по указанному юзеру; <шутка (joke)> — получить анекдот;';
-                        $largeSending[] = '<факт (fact)> — получить факт; <стрим (stream)> — получить информацию о стриме;';
-                        break;
-                    case in_array($currentMessage, ['stat', 'стата']):
-                        $largeSending = $this->users->showUserStatistic(mb_ereg_replace('.*(stat|стата) @', '', $currentMessage));
-                        break;
-                    case in_array($currentMessage, ['stream', 'стрим']):
-                        $largeSending = $this->video->showStatistic();
-                        break;
-                    // TODO =========== анекдоты
-                    default:
-                        $largeSending[] = $sending . $this->prepareSmartAnswer($currentMessage);
-                        break;
-                }
+                $currentMessage = trim(mb_strtolower(preg_replace("/@?{$this->botUserName}/", '', $chatItem['message'])));
+                $sending = $sending . $this->prepareSmartAnswer($currentMessage);
 
-                foreach ($largeSending as $item) {
-                    $sendingDetail['sending'] = $item;
-                    $sendingList[] = $sendingDetail;
-                }
-
+                $sendingDetail['sending'] = $sending;
+                $sendingList[] = $sendingDetail;
                 continue;
             }
 
