@@ -12,7 +12,8 @@ final class YouTubeBot extends ChatBotAbstract
 {
     private Service\YouTube $youtubeService;
     private Helpers\TimeTracker $timeTracker;
-    private YouTubeHelpers\YoutubeProps $youtubeProps;
+    private YouTubeHelpers\VideoProperties $video;
+    private YouTubeHelpers\UserStorage $users;
     private string $botUserEmail;
     private string $botUserName;
     private ?string $lastChatMessageID;
@@ -25,7 +26,6 @@ final class YouTubeBot extends ChatBotAbstract
         parent::__construct();
 
         $this->timeTracker = new Helpers\TimeTracker();
-        $this->youtubeProps = new YouTubeHelpers\YoutubeProps($youtubeURL);
         $this->botUserEmail = APP_EMAIL;
         $this->botUserName = APP_USER_NAME;
 
@@ -34,8 +34,9 @@ final class YouTubeBot extends ChatBotAbstract
         $client->setAccessToken(json_decode(file_get_contents(OAUTH_TOKEN_JSON), true));
 
         $this->youtubeService = new Service\YouTube($client);
+        $this->video = new YouTubeHelpers\VideoProperties($this->youtubeService, $youtubeURL);
+        $this->users = new YouTubeHelpers\UserStorage($this->youtubeService);
 
-        $this->youtubeProps->setLiveChatID($this->getLiveChatID($this->youtubeProps->getVideoID()));
         $this->lastChatMessageID = null;
 
         Helpers\LogerHelper::archiveLogs();
@@ -90,39 +91,28 @@ final class YouTubeBot extends ChatBotAbstract
         return true;
     }
 
-    private function getLiveChatID(string $videoID) : string
-    {
-        $response = $this->youtubeService->videos->listVideos('liveStreamingDetails', ['id' => $videoID]);
-
-        $liveChatID = $response['items'][0]['liveStreamingDetails']['activeLiveChatId'] ?? null;
-
-        if ($liveChatID === null) {
-            throw new Service\Exception('Error response with live chat ID');
-        }
-
-        return $liveChatID;
-    }
-
     private function fetchChatList() : array
     {
         try {
-            $response = $this->youtubeService->liveChatMessages->listLiveChatMessages($this->youtubeProps->getLiveChatID(), 'snippet', ['maxResults' => 100]); // todo
+            $response = $this->youtubeService->liveChatMessages->listLiveChatMessages($this->video->getLiveChatID(), 'snippet', ['maxResults' => 100]); // todo
 
             $chatList = $response['items'];
             $actualChat = [];
             $writeMod = false;
 
+            var_dump($response);
+
             foreach ($chatList as $chatItem) {
                 if ($chatItem['id'] === $this->lastChatMessageID) {
                     $writeMod = true;
                 } elseif ($writeMod) {
-                    // todo ===================== Реализовать запрос и хранение юзеров в БД
-                    $responseChannelID = $this->youtubeService->channels->listChannels('snippet', ['id' => $chatItem['snippet']['authorChannelId']]);
+                    $currentUser = $this->users->fetch($chatItem['snippet']['authorChannelId']);
+                    $currentUser->incrementMessage();
 
                     $actualChat[] = [
                         'id' => $chatItem['id'],
                         'authorId' => $chatItem['snippet']['authorChannelId'],
-                        'authorName' => $responseChannelID['items'][0]['snippet']['title'] ?? '',
+                        'authorName' => $currentUser->getName(),
                         'message' => $chatItem['snippet']['displayMessage'],
                         'published' => $chatItem['snippet']['publishedAt'],
                     ];
@@ -167,7 +157,7 @@ final class YouTubeBot extends ChatBotAbstract
             $matches = explode(' ', trim(str_replace(['!', ',', '.', '?'], '', $chatItem['message'])));
             $lastWord = mb_strtolower(array_pop($matches));
 
-            if ($chatItem['authorName'] === '大和千ひろ') { // todo == chech with DB
+            if ($this->users->get($chatItem['authorId'])->checkAdmin()) {
                 switch ($lastWord) {
                     case '/stop':
                         $sendingDetail['sending'] = $sending . 'Завершаю свою работу.';
@@ -216,20 +206,31 @@ final class YouTubeBot extends ChatBotAbstract
 
             if (mb_stripos(mb_strtolower($chatItem['message']), $this->botUserName) !== false) {
                 $currentMessage = trim(mb_strtolower(preg_replace("/@?{$this->botUserName}/", '', $chatItem['message'])));
+                $largeSending = [];
 
+                // todo ====== ВЫНЕСТИ БЛОК КОМАНД В ОБЩИЙ ДОСТУП
                 switch (true) {
                     case in_array($currentMessage, ['help', 'справка']):
-                        $sending .= 'приветствую, в настоящий момент функционал дорабатывается, список команд будет доступен позднее';
+                        $largeSending[] = $sending . 'приветствую, в данном чате доступны следующие команды: <стата (stat) @user> — получить статистику по указанному юзеру; <шутка (joke)> — получить анекдот;';
+                        $largeSending[] = '<факт (fact)> — получить факт; <стрим (stream)> — получить информацию о стриме;';
+                        break;
+                    case in_array($currentMessage, ['stat', 'стата']):
+                        $largeSending = $this->users->showUserStatistic(mb_ereg_replace('.*(stat|стата) @', '', $currentMessage));
+                        break;
+                    case in_array($currentMessage, ['stream', 'стрим']):
+                        $largeSending = $this->video->showStatistic();
                         break;
                     // TODO =========== анекдоты
-                    // TODO =========== проверить корректность переноса блока с анализом адрессованных сообщений
                     default:
-                        $sending .= $this->prepareSmartAnswer($currentMessage);
+                        $largeSending[] = $sending . $this->prepareSmartAnswer($currentMessage);
                         break;
                 }
 
-                $sendingDetail['sending'] = $sending;
-                $sendingList[] = $sendingDetail;
+                foreach ($largeSending as $item) {
+                    $sendingDetail['sending'] = $item;
+                    $sendingList[] = $sendingDetail;
+                }
+
                 continue;
             }
 
@@ -279,7 +280,7 @@ final class YouTubeBot extends ChatBotAbstract
 
             $liveChatTextMessageDetails->setMessageText($message);
 
-            $liveChatMessageSnippet->setLiveChatId($this->youtubeProps->getLiveChatID());
+            $liveChatMessageSnippet->setLiveChatId($this->video->getLiveChatID());
             $liveChatMessageSnippet->setType('textMessageEvent');
             $liveChatMessageSnippet->setTextMessageDetails($liveChatTextMessageDetails);
 
@@ -441,8 +442,9 @@ final class YouTubeBot extends ChatBotAbstract
             'MessageSending' => $this->totalMessageSending,
             'Iterations' => $this->totalIterations,
             'IterationAverageTime' => $this->timeTracker->sumPointsAverage(),
-            'YouTubeURL' => $this->youtubeProps->getYoutubeURL(),
-            'VideoID' => $this->youtubeProps->getVideoID(),
+            'YouTubeURL' => $this->video->getYoutubeURL(),
+            'VideoID' => $this->video->getVideoID(),
+            'VideoStarting' => $this->video->getVideoStarting(),
             'BotUserName' => $this->botUserName,
             'BotUserEmail' => $this->botUserEmail,
         ];
