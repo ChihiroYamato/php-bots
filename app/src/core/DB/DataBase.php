@@ -4,6 +4,9 @@ namespace App\Anet\DB;
 
 final class DataBase
 {
+    private const YOUTUBE_USERS_PROPERTIES = ['name', 'active', 'isAdmin'];
+    private const YOUTUBE_USER_STATISTIC_PROPERTIES = ['last_published', 'message_count', 'social_rating', 'registation_date', 'subscriber_count', 'video_count', 'view_count', 'last_update'];
+
     private static ?\PDO $connectPDO = null;
 
     private static function getConnect() : \PDO
@@ -33,10 +36,118 @@ final class DataBase
                 $result[] = $response;
             }
         } catch (\PDOException $error) {
-            print_r($error->getMessage());
+            print_r($error->getMessage()); // todo ==============
             exit;
         }
 
         return $result;
+    }
+
+    public static function insertYoutubeUser(array $params) : void
+    {
+        try {
+            self::getConnect()->beginTransaction();
+
+            $request = self::getConnect()->prepare('INSERT INTO youtube_users(`key`, `name`) VALUES (?, ?)');
+            $request->execute([
+                $params['key'],
+                $params['name']
+            ]);
+
+            $request = self::getConnect()->prepare('INSERT INTO youtube_users_statisctics(`user_key`, `social_rating`, `registation_date`, `subscriber_count`, `video_count`, `view_count`) VALUES (?, ?, ?, ?, ?, ?)');
+            $request->execute([
+                $params['key'],
+                $params['social_rating'],
+                $params['registation_date'],
+                $params['subscriber_count'],
+                $params['video_count'],
+                $params['view_count']
+            ]);
+
+            self::getConnect()->commit();
+        }   catch (\PDOException $error) {
+            self::getConnect()->rollBack();
+            print_r($error->getMessage()); // todo ==============
+        }
+    }
+
+    public static function fetchYouTubeUsers() : array
+    {
+        $result = [];
+        $sqlString = 'SELECT yu.key, yu.name, yu.active, yu.isAdmin, yus.last_published, yus.message_count, yus.social_rating, yus.registation_date, yus.subscriber_count, yus.video_count, yus.view_count, yus.last_update FROM youtube_users AS yu JOIN youtube_users_statisctics AS yus ON yus.user_key=yu.key';
+
+        try {
+            $request = self::getConnect()->prepare($sqlString);
+            $request->execute();
+
+            foreach ($request as $response) {
+                $result[] = $response;
+            }
+        } catch (\PDOException $error) {
+            print_r($error->getMessage()); // todo ==============
+            exit;
+        }
+
+        return $result;
+    }
+
+    public static function updateYouTubeUser(string $id, array $newParams) : void
+    {
+        $queriesSQL = [
+            'main' => [
+                'table' => 'youtube_users',
+                'prefix' => '',
+                'stringSQL' => '',
+                'params' => [],
+            ],
+            'statistic' => [
+                'table' => 'youtube_users_statisctics',
+                'prefix' => 'user_',
+                'stringSQL' => '',
+                'params' => [],
+            ]
+        ];
+
+        foreach ($newParams as $prop => $item) {
+            if (in_array($prop, self::YOUTUBE_USERS_PROPERTIES)) {
+                $queriesSQL['main']['stringSQL'] .= " `$prop`=:$prop,";
+                $queriesSQL['main']['params'][":$prop"] = $item;
+            } elseif (in_array($prop, self::YOUTUBE_USER_STATISTIC_PROPERTIES)) {
+                $queriesSQL['statistic']['stringSQL'] .= " `$prop`=:$prop,";
+                $queriesSQL['statistic']['params'][":$prop"] = $item;
+            }
+        }
+
+        try {
+            self::getConnect()->beginTransaction();
+
+            foreach ($queriesSQL as $query) {
+                if ($query['stringSQL'] !== '') {
+                    $query['stringSQL'] = trim($query['stringSQL'], " ,");
+
+                    $request = self::getConnect()->prepare("UPDATE {$query['table']} SET {$query['stringSQL']} WHERE `{$query['prefix']}key`='$id'");
+                    $request->execute($query['params']);
+                }
+            }
+            self::getConnect()->commit();
+        } catch (\PDOException $error) {
+            self::getConnect()->rollBack();
+            print_r($error->getMessage()); // todo ==============
+        }
+    }
+
+    public static function deleteYouTubeUser(string $id) : void
+    {
+        try {
+            self::getConnect()->beginTransaction();
+
+            $request = self::getConnect()->prepare("DELETE FROM youtube_users WHERE `key`='$id'");
+            $request->execute();
+
+            self::getConnect()->commit();
+        } catch (\PDOException $error) {
+            self::getConnect()->rollBack();
+            print_r($error->getMessage()); // todo ==============
+        }
     }
 }

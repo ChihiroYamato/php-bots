@@ -23,7 +23,6 @@ abstract class ChatBotAbstract implements BotInterface, BotDebugInterface, Stati
         $this->totalMessageReading = 0;
         $this->totalMessageSending = 0;
         $this->totalIterations = 0;
-        $this->vocabulary = null;
         $this->listeningFlag = true;
         $this->smallTalk = new GoogleModules\SmallTalkModule();
         $this->buffer = new Storages\Buffer();
