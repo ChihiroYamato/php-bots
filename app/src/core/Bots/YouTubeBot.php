@@ -223,6 +223,7 @@ final class YouTubeBot extends ChatBotAbstract
             if (mb_stripos(mb_strtolower($chatItem['message']), $this->botUserName) !== false) {
                 $currentMessage = trim(mb_strtolower(preg_replace("/@?{$this->botUserName}/", '', $chatItem['message'])));
                 $largeSending = [];
+                $this->users->get($chatItem['authorId'])->incrementRaiting(rand(1, 3) * 5);
 
                 // todo ====== ВЫНЕСТИ БЛОК КОМАНД В ОБЩИЙ ДОСТУП
                 switch (true) {

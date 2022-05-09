@@ -106,6 +106,11 @@ final class User
         $this->lastPublished->setTimestamp(time());
     }
 
+    public function incrementRaiting(int $count = 5) : void
+    {
+        $this->rating += $count;
+    }
+
     public function updateName(string $name) : User
     {
         $this->name = $name;
