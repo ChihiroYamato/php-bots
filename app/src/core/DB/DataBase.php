@@ -154,7 +154,7 @@ final class DataBase
     public static function fetchRandText(string $category) : string
     {
         try {
-            $sqlString = "SELECT t.content FROM texts AS t JOIN text_categoties AS tc ON tc.id = t.category_id WHERE tc.name LIKE '$category' ORDER BY RAND() LIMIT 1";
+            $sqlString = "SELECT t.content FROM texts AS t JOIN text_categories AS tc ON tc.id = t.category_id WHERE tc.name LIKE '$category' ORDER BY RAND() LIMIT 1";
 
             $request = self::getConnect()->prepare($sqlString);
             $request->execute();

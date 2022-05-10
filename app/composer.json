@@ -27,7 +27,9 @@
     },
     "extra": {
         "google/apiclient-services": [
-            "YouTube"
+            "YouTube",
+            "YouTubeAnalytics",
+            "YouTubeReporting"
         ]
     }
 }
