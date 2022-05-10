@@ -5,6 +5,7 @@ namespace App\Anet\Bots;
 use Google;
 use Google\Service;
 use Google\Service\YouTube;
+use App\Anet\Services;
 use App\Anet\YouTubeHelpers;
 use App\Anet\Helpers;
 
@@ -186,16 +187,28 @@ final class YouTubeBot extends ChatBotAbstract
 
             switch (true) {
                 case in_array($chatItem['message'], ['/help', '/справка']):
-                    $largeSending[] = $sending . 'приветствую, в данном чате доступны следующие команды: </стата (/stat) @user> — получить статистику по указанному юзеру; </шутка (/joke)> — получить анекдот;';
-                    $largeSending[] = '</факт (/fact)> — получить факт; </стрим (/stream)> — получить информацию о стриме;';
+                    $largeSending[] = $sending . 'приветствую, в данном чате доступны следующие команды: </stat (/стата) "@user"> — получить статистику по себе (или по указанному юзеру); </joke (/шутка)> — получить баянистый анекдот;';
+                    $largeSending[] = '</fact (/факт)> — получить забавный (или не очень) факт; </stream (/стрим)> — получить информацию о стриме; </play> — раздел игр, для справки используйте приставку --help';
+                    break;
+                case mb_ereg_match('.*(\/stat|\/стата) @', $chatItem['message']):
+                    $largeSending = $this->users->showUserStatistic(mb_ereg_replace('.*(\/stat|\/стата) @', '', $chatItem['message']));
                     break;
                 case in_array($chatItem['message'], ['/stat', '/стата']):
-                    $largeSending = $this->users->showUserStatistic(mb_ereg_replace('.*(\/stat|\/стата) @', '', $chatItem['message']));
+                    $largeSending = $this->users->showUserStatistic($chatItem['authorName']);
                     break;
                 case in_array($chatItem['message'], ['/stream', '/стрим']):
                     $largeSending = $this->video->showStatistic();
                     break;
-                // TODO =========== анекдоты
+                case in_array($chatItem['message'], ['/факт', '/fact']):
+                    $largeSending[] = Services\Facts::fetchRandFact();
+                    break;
+                case in_array($chatItem['message'], ['/шутка', '/joke']):
+                    $largeSending[] = 'un do -- set'; // TODO =========== joke
+                    break;
+                case $chatItem['message'] === '/play --help':
+                    // TODO =========== игры
+                    $largeSending[] = $sending . 'раздел /play находится в разработке';
+                    break;
             }
 
             if (! empty($largeSending)) {
@@ -364,6 +377,7 @@ final class YouTubeBot extends ChatBotAbstract
             $chatList = $this->fetchChatList();
             $this->timeTracker->setPoint('fetchChatList');
 
+            // todo ======================================================================
             // if (empty($chatList)) {
             //     if ($this->timeTracker->trackerState('dead_chat')) {
             //         if ($this->timeTracker->trackerCheck('dead_chat', 5 * 60)) {
@@ -381,6 +395,7 @@ final class YouTubeBot extends ChatBotAbstract
             $sendingCount += $this->sendingMessages($this->prepareSendings($chatList));
             $sendingCount += $this->checkingMessageSendEvent($sendingCount < 1 && $this->totalIterations > 1, 2 * 60, 'no_care');
 
+            // todo ======================================================================
             // if ($sendingCount < 1 && $this->totalIterations > 1) {
             //     if ($this->timeTracker->trackerState('no_care')) {
             //         if ($this->timeTracker->trackerCheck('no_care', 2* 60)) {

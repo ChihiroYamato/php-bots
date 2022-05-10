@@ -150,4 +150,21 @@ final class DataBase
             print_r($error->getMessage()); // todo ==============
         }
     }
+
+    public static function fetchRandText(string $category) : string
+    {
+        try {
+            $sqlString = "SELECT t.content FROM texts AS t JOIN text_categoties AS tc ON tc.id = t.category_id WHERE tc.name LIKE '$category' ORDER BY RAND() LIMIT 1";
+
+            $request = self::getConnect()->prepare($sqlString);
+            $request->execute();
+
+            foreach ($request as $response) {
+                return $response['content'];
+            }
+        } catch (\PDOException $error) {
+            print_r($error->getMessage()); // todo ==============
+            return '';
+        }
+    }
 }
