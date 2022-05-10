@@ -163,6 +163,10 @@ final class YouTubeBot extends ChatBotAbstract
 
             if ($this->users->get($chatItem['authorId'])->checkAdmin()) {
                 switch (true) {
+                    case $lastWord === '/help':
+                        $sendingDetail['sending'] = $sending . '</stop> —— завершить скрипт; </insert @user> —— добавить юзера в список слежения ; </drop @user> —— удалить юзера из списка слежения;';
+                        $sendingList[] = $sendingDetail;
+                        break 2;
                     case $lastWord === '/stop':
                         $sendingDetail['sending'] = $sending . 'Завершаю свою работу.';
                         $sendingList[] = $sendingDetail;
