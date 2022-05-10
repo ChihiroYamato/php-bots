@@ -103,14 +103,18 @@ final class YouTubeBot extends ChatBotAbstract
             $actualChat = [];
             $writeMod = false;
 
-            var_dump($response);
-
             foreach ($chatList as $chatItem) {
                 if ($chatItem['id'] === $this->lastChatMessageID) {
                     $writeMod = true;
                 } elseif ($writeMod) {
                     $currentUser = $this->users->fetch($chatItem['snippet']['authorChannelId']);
+
+                    if ($currentUser->getName() === $this->botUserName) {
+                        continue;
+                    }
+
                     $currentUser->incrementMessage();
+                    $this->buffer->add('messageList', $chatItem); // todo
 
                     $actualChat[] = [
                         'id' => $chatItem['id'],
@@ -144,8 +148,6 @@ final class YouTubeBot extends ChatBotAbstract
         }
 
         foreach ($chatlist as $chatItem) {
-            $this->buffer->add('messageList', $chatItem); // todo
-
             if ($chatItem['authorName'] === $this->botUserName) {
                 continue;
             }
@@ -163,8 +165,8 @@ final class YouTubeBot extends ChatBotAbstract
 
             if ($this->users->get($chatItem['authorId'])->checkAdmin()) {
                 switch (true) {
-                    case $lastWord === '/help':
-                        $sendingDetail['sending'] = $sending . '</stop> —— завершить скрипт; </insert @user> —— добавить юзера в список слежения ; </drop @user> —— удалить юзера из списка слежения;';
+                    case $lastWord === '/help-admin':
+                        $sendingDetail['sending'] = $sending . '</stop> —— завершить скрипт; </insert user> —— добавить юзера в список слежения ; </drop user> —— удалить юзера из списка слежения; </show-listern> —— список слежения;';
                         $sendingList[] = $sendingDetail;
                         break 2;
                     case $lastWord === '/stop':
@@ -186,13 +188,18 @@ final class YouTubeBot extends ChatBotAbstract
                         $sendingDetail['sending'] = $sending . "Прекращаю слушать пользователя <$listernUser>";
                         $sendingList[] = $sendingDetail;
                         break 2;
+                    case mb_stripos($chatItem['message'], '/show-listern') !== false:
+
+                        $sendingDetail['sending'] = $sending . 'Список прослушиваемых: ' . implode(',', $this->usersListerning);
+                        $sendingList[] = $sendingDetail;
+                        break 2;
                 }
             }
 
             switch (true) {
                 case in_array($chatItem['message'], ['/help', '/справка']):
-                    $largeSending[] = $sending . 'приветствую, в данном чате доступны следующие команды: </stat (/стата) "@user"> — получить статистику по себе (или по указанному юзеру); </joke (/шутка)> — получить баянистый анекдот;';
-                    $largeSending[] = '</fact (/факт)> — получить забавный (или не очень) факт; </stream (/стрим)> — получить информацию о стриме; </play> — раздел игр, для справки используйте приставку --help';
+                    $largeSending[] = $sending . 'приветствую, в данном чате доступны следующие команды: </stat (/стата) "@user"> получить статистику по себе (или по указанному юзеру); —— </joke (/шутка)> получить баянистый анекдот;';
+                    $largeSending[] = '—— </fact (/факт)> получить забавный (или не очень) факт; —— </stream (/стрим)> получить информацию о стриме; —— </play> раздел игр, для справки используйте приставку --help';
                     break;
                 case mb_ereg_match('.*(\/stat|\/стата) @', $chatItem['message']):
                     $largeSending = $this->users->showUserStatistic(mb_ereg_replace('.*(\/stat|\/стата) @', '', $chatItem['message']));
@@ -216,6 +223,8 @@ final class YouTubeBot extends ChatBotAbstract
             }
 
             if (! empty($largeSending)) {
+                $this->users->get($chatItem['authorId'])->incrementRaiting(rand(1, 3) * 5);
+
                 foreach ($largeSending as $item) {
                     $sendingDetail['sending'] = $item;
                     $sendingList[] = $sendingDetail;
@@ -253,7 +262,7 @@ final class YouTubeBot extends ChatBotAbstract
                             continue 3;
                         }
                     }
-                } elseif (in_array($chatItem['authorName'], USER_LISTEN_LIST) && in_array($lastWord, $item['request'])) {
+                } elseif (in_array($lastWord, $item['request'])) {
                     $sendingDetail['sending'] = $sending . $this->vocabulary->getRandItem($key);
                     $sendingList[] = $sendingDetail;
                     continue 2;
@@ -381,38 +390,9 @@ final class YouTubeBot extends ChatBotAbstract
             $chatList = $this->fetchChatList();
             $this->timeTracker->setPoint('fetchChatList');
 
-            // todo ======================================================================
-            // if (empty($chatList)) {
-            //     if ($this->timeTracker->trackerState('dead_chat')) {
-            //         if ($this->timeTracker->trackerCheck('dead_chat', 5 * 60)) {
-            //             $this->timeTracker->trackerStop('dead_chat');
-
-            //             $sendingCount += $this->sendMessage($this->getVocabulary()['dead_chat']['response'][random_int(0, count($this->getVocabulary()['dead_chat']['response']) - 1)]);
-            //         }
-            //     } else {
-            //         $this->timeTracker->trackerStart('dead_chat');
-            //     }
-            // } else {
-            //     $this->timeTracker->trackerStop('dead_chat');
-            // }
-            $sendingCount += $this->checkingMessageSendEvent(empty($chatList), 5 * 60, 'dead_chat');
             $sendingCount += $this->sendingMessages($this->prepareSendings($chatList));
-            $sendingCount += $this->checkingMessageSendEvent($sendingCount < 1 && $this->totalIterations > 1, 2 * 60, 'no_care');
-
-            // todo ======================================================================
-            // if ($sendingCount < 1 && $this->totalIterations > 1) {
-            //     if ($this->timeTracker->trackerState('no_care')) {
-            //         if ($this->timeTracker->trackerCheck('no_care', 2* 60)) {
-            //             $this->timeTracker->trackerStop('no_care');
-
-            //             $sendingCount += $this->sendMessage($this->getVocabulary()['no_care']['response'][random_int(0, count($this->getVocabulary()['no_care']['response']) - 1)]);
-            //         }
-            //     } else {
-            //         $this->timeTracker->trackerStart('no_care');
-            //     }
-            // } else {
-            //     $this->timeTracker->trackerStop('no_care');
-            // }
+            $sendingCount += $this->checkingMessageSendEvent($sendingCount < 1 && $this->totalIterations > 1, 10 * 60, 'no_care');
+            $sendingCount += $this->checkingMessageSendEvent(empty($chatList), 15 * 60, 'dead_chat');
 
             $this->timeTracker->setPoint('sendingMessage');
             $this->timeTracker->finishPointTracking();
