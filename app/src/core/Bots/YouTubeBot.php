@@ -114,7 +114,6 @@ final class YouTubeBot extends ChatBotAbstract
                     }
 
                     $currentUser->incrementMessage();
-                    $this->buffer->add('messageList', $chatItem); // todo
 
                     $actualChat[] = [
                         'id' => $chatItem['id'],
@@ -151,6 +150,8 @@ final class YouTubeBot extends ChatBotAbstract
             if ($chatItem['authorName'] === $this->botUserName) {
                 continue;
             }
+
+            $this->buffer->add('messageList', $chatItem); // todo
 
             $sendingDetail = [
                 'author' => $chatItem['authorName'],
@@ -199,7 +200,7 @@ final class YouTubeBot extends ChatBotAbstract
             switch (true) {
                 case in_array($chatItem['message'], ['/help', '/справка']):
                     $largeSending[] = $sending . 'приветствую, в данном чате доступны следующие команды: </stat (/стата) "@user"> получить статистику по себе (или по указанному юзеру); —— </joke (/шутка)> получить баянистый анекдот;';
-                    $largeSending[] = '—— </fact (/факт)> получить забавный (или не очень) факт; —— </stream (/стрим)> получить информацию о стриме; —— </play> раздел игр, для справки используйте приставку --help';
+                    $largeSending[] = '—— </fact (/факт)> получить забавный (или не очень) факт; —— </stream (/стрим)> получить информацию о стриме; —— </play> раздел игр, для справки используйте приставку -help';
                     break;
                 case mb_ereg_match('.*(\/stat|\/стата) @', $chatItem['message']):
                     $largeSending = $this->users->showUserStatistic(mb_ereg_replace('.*(\/stat|\/стата) @', '', $chatItem['message']));
@@ -211,19 +212,19 @@ final class YouTubeBot extends ChatBotAbstract
                     $largeSending = $this->video->showStatistic();
                     break;
                 case in_array($chatItem['message'], ['/факт', '/fact']):
-                    $largeSending[] = Services\Facts::fetchRandFact();
+                    $largeSending = Services\Facts::fetchRandFact();
                     break;
                 case in_array($chatItem['message'], ['/шутка', '/joke']):
                     $largeSending[] = 'un do -- set'; // TODO =========== joke
                     break;
-                case $chatItem['message'] === '/play --help':
+                case $chatItem['message'] === '/play -help':
                     // TODO =========== игры
                     $largeSending[] = $sending . 'раздел /play находится в разработке';
                     break;
             }
 
             if (! empty($largeSending)) {
-                $this->users->get($chatItem['authorId'])->incrementRaiting(rand(1, 3) * 5);
+                $this->users->get($chatItem['authorId'])->incrementRaiting(rand(0, 4) * 5);
 
                 foreach ($largeSending as $item) {
                     $sendingDetail['sending'] = $item;
@@ -253,10 +254,30 @@ final class YouTubeBot extends ChatBotAbstract
                 }
             }
 
+            if (in_array($lastWord, $this->vocabulary->getCategoryType('dead_inside', 'request'))) {
+                $sendingDetail['sending'] = $sending . "сколько будет {$lastWord}-7?";
+                $sendingList[] = $sendingDetail;
+                continue;
+            }
+
+            if (mb_stripos(mb_strtolower($chatItem['message']), $this->botUserName) !== false) {
+                $this->users->get($chatItem['authorId'])->incrementRaiting(rand(0, 4) * 5);
+
+                $currentMessage = trim(mb_strtolower(preg_replace("/@?{$this->botUserName}/", '', $chatItem['message'])));
+                $sending = $sending . $this->prepareSmartAnswer($currentMessage);
+
+                $sendingDetail['sending'] = $sending;
+                $sendingList[] = $sendingDetail;
+                continue;
+            }
+
             foreach ($this->vocabulary->getCategoriesGroup('another', ['say_yes', 'say_no', 'say_haha', 'say_foul', 'say_three']) as $key => $item) {
                 if (in_array($key, ['say_haha', 'say_foul', 'say_three'])) {
                     foreach ($item['request'] as $option) {
                         if (mb_stripos(mb_strtolower($chatItem['message']), $option) !== false) {
+                            if ($key === 'say_foul') {
+                                $this->users->get($chatItem['authorId'])->incrementRaiting(rand(0, 2) * (-5));
+                            }
                             $sendingDetail['sending'] = $sending . $this->vocabulary->getRandItem($key);
                             $sendingList[] = $sendingDetail;
                             continue 3;
@@ -270,22 +291,6 @@ final class YouTubeBot extends ChatBotAbstract
             }
 
 
-            if (mb_stripos(mb_strtolower($chatItem['message']), $this->botUserName) !== false) {
-                $this->users->get($chatItem['authorId'])->incrementRaiting(rand(1, 3) * 5);
-
-                $currentMessage = trim(mb_strtolower(preg_replace("/@?{$this->botUserName}/", '', $chatItem['message'])));
-                $sending = $sending . $this->prepareSmartAnswer($currentMessage);
-
-                $sendingDetail['sending'] = $sending;
-                $sendingList[] = $sendingDetail;
-                continue;
-            }
-
-            if (in_array($lastWord, $this->vocabulary->getCategoryType('dead_inside', 'request'))) {
-                $sendingDetail['sending'] = $sending . "сколько будет {$lastWord}-7?";
-                $sendingList[] = $sendingDetail;
-                continue;
-            }
 
             if (in_array($chatItem['authorName'], $this->usersListerning)) {
                 $answer = $this->prepareSmartAnswer($chatItem['message'], true);

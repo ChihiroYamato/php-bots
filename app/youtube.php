@@ -32,4 +32,4 @@ if (isset($argv[2])) {
     }
 }
 
-$youtubeBot->listen(10); // todo проверка засыпания
+$youtubeBot->listen(15);
