@@ -10,7 +10,7 @@ final class UserStorage
 {
     use Helpers\ErrorHelperTrait;
 
-    private const DAYS_WITHOUT_UPDATE = 2;
+    private const DAYS_WITHOUT_UPDATE = 4;
     private const DAYS_WITHOUT_ACTIVE = 365;
 
     private Service\YouTube $youtube;
@@ -178,12 +178,12 @@ final class UserStorage
                 $item['active']
             );
 
-            if ($user->getLastUpdate()->diff(new \DateTime())->days >= self::DAYS_WITHOUT_ACTIVE) {
+            if (! $user->checkAdmin() && $user->getLastUpdate()->diff(new \DateTime())->days >= self::DAYS_WITHOUT_ACTIVE) {
                 $this->delete($user);
                 continue;
             }
 
-            if ($user->getLastUpdate()->diff(new \DateTime())->days >= self::DAYS_WITHOUT_UPDATE) {
+            if ($user->checkAdmin() || $user->getLastUpdate()->diff(new \DateTime())->days >= self::DAYS_WITHOUT_UPDATE) {
                 $this->updateGlobal($user);
             }
 
