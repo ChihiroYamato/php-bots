@@ -2,6 +2,7 @@
 
 namespace App\Anet\Bots;
 
+use App\Anet;
 use App\Anet\Helpers;
 use App\Anet\GoogleModules;
 use App\Anet\Storages;
@@ -17,6 +18,7 @@ abstract class ChatBotAbstract implements BotInterface, BotDebugInterface, Stati
     protected GoogleModules\SmallTalkModule $smallTalk;
     protected Storages\Vocabulary $vocabulary;
     protected Storages\Buffer $buffer;
+    protected Anet\Games $games;
 
     public function __construct()
     {
@@ -27,6 +29,7 @@ abstract class ChatBotAbstract implements BotInterface, BotDebugInterface, Stati
         $this->smallTalk = new GoogleModules\SmallTalkModule();
         $this->buffer = new Storages\Buffer();
         $this->vocabulary = new Storages\Vocabulary();
+        $this->games = new Anet\Games();
     }
 
     abstract protected function prepareSendings(array $chatlist) : array;

@@ -8,6 +8,7 @@ use Google\Service\YouTube;
 use App\Anet\Services;
 use App\Anet\YouTubeHelpers;
 use App\Anet\Helpers;
+use App\Anet\Games;
 
 final class YouTubeBot extends ChatBotAbstract
 {
@@ -168,8 +169,7 @@ final class YouTubeBot extends ChatBotAbstract
                 switch (true) {
                     case $lastWord === '/help-admin':
                         $sendingDetail['sending'] = $sending . '</stop> —— завершить скрипт; </insert user> —— добавить юзера в список слежения ; </drop user> —— удалить юзера из списка слежения; </show-listern> —— список слежения;';
-                        $sendingList[] = $sendingDetail;
-                        break 2;
+                        break;
                     case $lastWord === '/stop':
                         $sendingDetail['sending'] = $sending . 'Завершаю свою работу.';
                         $sendingList[] = $sendingDetail;
@@ -180,27 +180,34 @@ final class YouTubeBot extends ChatBotAbstract
                         $this->usersListerning[$listernUser] = $listernUser;
 
                         $sendingDetail['sending'] = $sending . "Начинаю слушать пользователя <$listernUser>";
-                        $sendingList[] = $sendingDetail;
-                        break 2;
+                        break;
                     case mb_stripos($chatItem['message'], '/drop') !== false:
                         $listernUser = preg_replace('/\/drop /', '', $chatItem['message']);
                         unset($this->usersListerning[$listernUser]);
 
                         $sendingDetail['sending'] = $sending . "Прекращаю слушать пользователя <$listernUser>";
-                        $sendingList[] = $sendingDetail;
-                        break 2;
+                        break;
                     case mb_stripos($chatItem['message'], '/show-listern') !== false:
-
                         $sendingDetail['sending'] = $sending . 'Список прослушиваемых: ' . implode(',', $this->usersListerning);
-                        $sendingList[] = $sendingDetail;
-                        break 2;
+                        break;
                 }
+
+                if (array_key_exists('sending', $sendingDetail)) {
+                    $sendingList[] = $sendingDetail;
+                    continue;
+                }
+            }
+
+            if ($this->games->checkUserActiveSession($chatItem['authorId'])) {
+                $sendingDetail['sending'] = $this->games->checkGame($chatItem['authorId'], $lastWord);
+                $sendingList[] = $sendingDetail;
+                continue;
             }
 
             switch (true) {
                 case in_array($chatItem['message'], ['/help', '/справка']):
                     $largeSending[] = $sending . 'приветствую, в данном чате доступны следующие команды: </stat (/стата) "@user"> получить статистику по себе (или по указанному юзеру); —— </joke (/шутка)> получить баянистый анекдот;';
-                    $largeSending[] = '—— </fact (/факт)> получить забавный (или не очень) факт; —— </stream (/стрим)> получить информацию о стриме; —— </play> раздел игр, для справки используйте приставку -help';
+                    $largeSending[] = '—— </fact (/факт)> получить забавный (или не очень) факт; —— </stream (/стрим)> получить информацию о стриме; —— </play> раздел игр';
                     break;
                 case mb_ereg_match('.*(\/stat|\/стата) @', $chatItem['message']):
                     $largeSending = $this->users->showUserStatistic(mb_ereg_replace('.*(\/stat|\/стата) @', '', $chatItem['message']));
@@ -217,9 +224,22 @@ final class YouTubeBot extends ChatBotAbstract
                 case in_array($chatItem['message'], ['/шутка', '/joke']):
                     $largeSending[] = Services\Jokes::fetchRandFact();
                     break;
-                case $chatItem['message'] === '/play -help':
+                case mb_strpos($chatItem['message'], '/play') !== false:
                     // TODO =========== игры
-                    $largeSending[] = $sending . 'раздел /play находится в разработке';
+                    $currentUser = $this->users->get($chatItem['authorId']);
+
+                    switch (true) {
+                        case $chatItem['message'] === '/play roul':
+                            $largeSending[] = '—— GAME ROULETTE —— правила: игроку предлагается угадать число от 1 до 6, в случае выигрыша - соц рейтинг удваивается, в случае проигрыша - уполовинивается';
+                            $largeSending[] = '—— старт: введите </play roul s>. Внимание! - каждое следующее сообщение игрока засчитывается как число, на игру отведено 2 минуты, по истечению засчитывается проигрыш';
+                            break;
+                        case $chatItem['message'] === '/play roul s':
+                            $largeSending = $this->games->validateAndStarting(new Games\Roulette($currentUser), $currentUser, 120);
+                            break;
+                        default:
+                            $largeSending[] = 'В настоящее время доступны следующие игры: —— русская рулетка </play roul> —— казино </play casino>';
+                            break;
+                    }
                     break;
             }
 
@@ -300,6 +320,21 @@ final class YouTubeBot extends ChatBotAbstract
                     $sendingList[] = $sendingDetail;
                     continue;
                 }
+            }
+        }
+
+        $sendingDetail = [
+            'author' => 'System',
+            'message' => 'none',
+            'published' => (new \DateTime())->format('Y-m-d H:i:s'),
+        ];
+
+        $gamesReport = $this->games->checkSessionsTimeOut();
+
+        if (! empty($gamesReport)) {
+            foreach ($gamesReport as $systemMess) {
+                $sendingDetail['sending'] = $systemMess;
+                $sendingList[] = $sendingDetail;
             }
         }
 
