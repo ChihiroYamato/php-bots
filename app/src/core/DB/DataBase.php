@@ -167,4 +167,29 @@ final class DataBase
             return '';
         }
     }
+
+    public static function saveTextByCategory(string $category, array $content) : void
+    {
+        try {
+            self::getConnect()->beginTransaction();
+
+            $request = self::getConnect()->prepare("SELECT `id` FROM text_categories WHERE `name` LIKE '$category' LIMIT 1");
+            $request->execute();
+
+            foreach ($request as $response) {
+                $id = $response['id'];
+            }
+
+            $request = self::getConnect()->prepare("INSERT INTO texts(`content`, `category_id`) VALUES (:content, $id)");
+
+            foreach ($content as $item) {
+                $request->execute([':content' => $item]);
+            }
+
+            self::getConnect()->commit();
+        } catch (\PDOException $error) {
+            self::getConnect()->rollBack();
+            print_r($error->getMessage()); // todo ==============
+        }
+    }
 }

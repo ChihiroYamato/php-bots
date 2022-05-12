@@ -2,20 +2,9 @@
 
 namespace App\Anet\Services;
 
-use App\Anet\DB;
-
-final class Facts
+final class Facts extends AbstractContent
 {
-    private const CATEGORY_NAME = 'facts';
+    protected const CATEGORY_NAME = 'facts';
+    protected const WARNING_MESSAGE = 'Сорри, что-то пошло не так, факт будет в другой раз:(';
 
-    public static function fetchRandFact() : string
-    {
-        $request = DB\DataBase::fetchRandText(self::CATEGORY_NAME);
-
-        if (empty($request)) {
-            $request = 'Сорри, что-то пошло не так, факт будет в другой раз:(';
-        }
-
-        return $request;
-    }
 }
