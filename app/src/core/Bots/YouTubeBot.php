@@ -215,7 +215,7 @@ final class YouTubeBot extends ChatBotAbstract
                     $largeSending = Services\Facts::fetchRandFact();
                     break;
                 case in_array($chatItem['message'], ['/шутка', '/joke']):
-                    $largeSending[] = 'un do -- set'; // TODO =========== joke
+                    $largeSending[] = Services\Jokes::fetchRandFact();
                     break;
                 case $chatItem['message'] === '/play -help':
                     // TODO =========== игры
