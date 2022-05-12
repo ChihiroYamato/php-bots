@@ -27,14 +27,28 @@ trait FileSystemHelperTrait
             return false;
         }
 
-        preg_match('/(?<base>[^\.]+)(?<ext>\.[^\.]+)?$/', $fileName, $parseName);
-        $baseName = $parseName['base'];
-        $extension = $parseName['ext'];
+        $newFileName = self::getFreeFileName($fileName, '-old');
 
-        if (! rename($fileName, "$baseName-old$extension")) {
-            throw new \Exception("Can't rename file $fileName to $baseName-old$extension\n");
+        if (! rename($fileName, $newFileName)) {
+            throw new \Exception("Can't rename file $fileName to $newFileName\n");
         }
 
         return true;
+    }
+
+    protected static function getFreeFileName(string $fileName, string $prefix = '', string $iterationPrefix = '-') : string
+    {
+        preg_match('/(?<base>[^\.]+)(?<ext>\.[^\.]+)?$/', $fileName, $parseName);
+        $baseName = $parseName['base'];
+        $extension = $parseName['ext'] ?? '';
+
+        $iteration = 0;
+        $modPrefix = '';
+
+        while (file_exists("{$baseName}{$prefix}{$modPrefix}{$extension}")) {
+            $modPrefix = $iterationPrefix . ++$iteration;
+        }
+
+        return "{$baseName}{$prefix}{$modPrefix}{$extension}";
     }
 }
