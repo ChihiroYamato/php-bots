@@ -84,4 +84,9 @@ final class TimeTracker
 
         return array_sum(array_map(fn (array $tem) => array_pop($tem) - array_shift($tem), $list)) / (count($list) * 1000000000);
     }
+
+    public static function calculateDuration(int $baseTime) : int
+    {
+        return (int) ((hrtime(true) - $baseTime) / 1000000000);
+    }
 }

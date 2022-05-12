@@ -192,4 +192,14 @@ final class DataBase
             print_r($error->getMessage()); // todo ==============
         }
     }
+
+    public static function saveGameStatistic(array $params) : void
+    {
+        try {
+            $request = self::getConnect()->prepare('INSERT INTO games_statistic(`user_key`, `game`, `score`, `date`) VALUES (:user_key, :game, :score, :date)');
+            $request->execute($params);
+        } catch (\PDOException $error) {
+            print_r($error->getMessage()); // todo ==============
+        }
+    }
 }
