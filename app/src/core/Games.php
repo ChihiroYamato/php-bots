@@ -45,7 +45,7 @@ final class Games
             throw new \Exception('Undefined User in Games storage');
         }
 
-        $response = $this->storage[$userId]->check($message);
+        $response = $this->storage[$userId]->step($message);
 
         if ($response['end'] === true) {
             $this->closeUserSession($userId);
