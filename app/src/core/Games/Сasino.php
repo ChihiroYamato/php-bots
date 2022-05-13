@@ -7,11 +7,11 @@ use App\Anet\YouTubeHelpers;
 class Сasino extends GameAbstract
 {
     public const GAME_NAME = 'CASINO';
+    public const MIN_POINT = 10;
+    public const MAX_POINT = 300;
+    public const BOARD_SIZE = 42;
     protected const GAME_INIT_MESSAGE = 'итак, выберите фишку';
     private const DEFAULT_EXPIRE_TIME = 120;
-    private const MIN_POINT = 10;
-    private const MAX_POINT = 300;
-    private const BOARD_SIZE = 42;
 
     private array $board;
     private ?int $position;
