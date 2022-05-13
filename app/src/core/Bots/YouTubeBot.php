@@ -230,11 +230,18 @@ final class YouTubeBot extends ChatBotAbstract
 
                     switch (true) {
                         case $chatItem['message'] === '/play roul':
-                            $largeSending[] = '—— GAME ROULETTE —— правила: игроку предлагается угадать число от 1 до 6, в случае выигрыша - соц рейтинг удваивается, в случае проигрыша - уполовинивается';
+                            $largeSending[] = '—— GAME ' . Games\Roulette::GAME_NAME . ' —— правила: игроку предлагается угадать число от 1 до 6, в случае выигрыша - соц рейтинг удваивается, в случае проигрыша - уполовинивается';
                             $largeSending[] = '—— старт: введите </play roul s>. Внимание! - каждое следующее сообщение игрока засчитывается как число, на игру отведено 2 минуты, по истечению засчитывается проигрыш';
+                            break;
+                        case $chatItem['message'] === '/play casino':
+                            $largeSending[] = '—— GAME ' . Games\Сasino::GAME_NAME . ' —— правила: игроку предлагается поставить на номер фишки от 1 до '. Games\Сasino::BOARD_SIZE . ', у каждой фишки есть сумма очков от ' . Games\Сasino::MIN_POINT . ' до ' . Games\Сasino::MAX_POINT . ', но половина фишек - выйгрышные, половина - проигрышные';
+                            $largeSending[] = '—— старт: введите </play roul s>. Внимание! - каждое следующее сообщение игрока засчитывается как число, на игру отведено 2 минуты, по истечению засчитывается проигрыш с максимумом очков';
                             break;
                         case $chatItem['message'] === '/play roul s':
                             $largeSending = $this->games->validateAndStarting(new Games\Roulette($currentUser), $currentUser, 120);
+                            break;
+                        case $chatItem['message'] === '/play casino s':
+                            $largeSending = $this->games->validateAndStarting(new Games\Сasino($currentUser), $currentUser, 300);
                             break;
                         default:
                             $largeSending[] = 'В настоящее время доступны следующие игры: —— русская рулетка </play roul> —— казино </play casino>';
