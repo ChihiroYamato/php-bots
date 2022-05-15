@@ -10,12 +10,12 @@ abstract class AbstractContent
     protected GuzzleHttp\Client $client;
     protected PHPHtmlParser\Dom $DomDocument;
     protected array $buffer;
-    protected ?array $pagination;
+    protected array $pagination;
     protected ?string $pageBody;
 
     abstract protected function fetchContent(array $selectorsParam) : void;
 
-    abstract public function setPagination(array $paginationParams) : AbstractContent;
+    abstract public function setPagination(array $paginationParams) : ?AbstractContent;
 
     abstract public function saveToDB() : void;
 
@@ -24,15 +24,21 @@ abstract class AbstractContent
         $this->client = new GuzzleHttp\Client(['base_uri' => $baseUrl]);
         $this->DomDocument = new PHPHtmlParser\Dom();
         $this->buffer = [];
-        $this->pagination = null;
+        $this->pagination = [];
         $this->pageBody = null;
     }
 
-    public function parseContentByPagination(string $url, array $selectorsParam)
+    public function parseContentByPagination(string $url, array $selectorsParam) : AbstractContent
     {
-        foreach ($this->pagination['page'] as $page) {
-            $this->parsePageBody("$url{$this->pagination['prifix']}$page")?->fetchContent($selectorsParam);
+        if (! (array_key_exists('page', $this->pagination) && array_key_exists('prefix', $this->pagination))) {
+            throw new \Exception('pagination params is\'t set');
         }
+
+        foreach ($this->pagination['page'] as $page) {
+            $this->parsePageBody("$url{$this->pagination['prefix']}$page")?->fetchContent($selectorsParam);
+        }
+
+        return $this;
     }
 
     public function parsePageBody(string $url) : ?AbstractContent

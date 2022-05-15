@@ -24,6 +24,10 @@ abstract class AbstractTexts extends AbstractContent
 
     protected function fetchContent(array $selectorsParam) : void
     {
+        if (! array_key_exists('content', $selectorsParam)) {
+            throw new \Exception('selector params is\'t set');
+        }
+
         try {
             $this->DomDocument->loadStr($this->pageBody);
 
@@ -37,8 +41,12 @@ abstract class AbstractTexts extends AbstractContent
         }
     }
 
-    public function setPagination(array $paginationParams) : Jokes
+    public function setPagination(array $paginationParams) : ?Jokes
     {
+        if (! (array_key_exists('selector', $paginationParams) && array_key_exists('prefix', $paginationParams))) {
+            return null;
+        }
+
         try {
             $this->DomDocument->loadStr($this->pageBody);
             $pagination = $this->DomDocument->find($paginationParams['selector'])->text;
@@ -46,7 +54,7 @@ abstract class AbstractTexts extends AbstractContent
 
             if (array_key_exists('result', $matches)) {
                 $this->pagination[['page']] = range(1, (int) $matches['result']);
-                $this->pagination[['prifix']] = $paginationParams['prefix'];
+                $this->pagination[['prefix']] = $paginationParams['prefix'];
             }
         } catch (PHPHtmlParser\Exceptions\EmptyCollectionException) {
             return null;

@@ -2,6 +2,7 @@
 
 namespace App\Anet\DB;
 
+// TODO ======================== Переработать класс
 final class DataBase
 {
     private const YOUTUBE_USERS_PROPERTIES = ['name', 'active', 'isAdmin'];
@@ -198,6 +199,56 @@ final class DataBase
         try {
             $request = self::getConnect()->prepare('INSERT INTO games_statistic(`user_key`, `game`, `score`, `date`) VALUES (:user_key, :game, :score, :date)');
             $request->execute($params);
+        } catch (\PDOException $error) {
+            print_r($error->getMessage()); // todo ==============
+        }
+    }
+
+    public static function saveCities(array $cities) : void
+    {
+        try {
+            $sqlQuery = 'INSERT INTO cities(`name`) VALUES';
+
+            foreach ($cities as $city) {
+                $sqlQuery .= " (\"$city\"),";
+            }
+
+            $sqlQuery = rtrim($sqlQuery, ',');
+
+            $request = self::getConnect()->prepare($sqlQuery);
+            $request->execute();
+        } catch (\PDOException $error) {
+            print_r($error->getMessage()); // todo ==============
+        }
+    }
+
+    public static function getRandCityByLetter(string $letter) : string
+    {
+        try {
+
+            $request = self::getConnect()->prepare("SELECT `name` FROM `cities` WHERE `name` LIKE 'а%' ORDER BY RAND() LIMIT 1");
+            $request->execute();
+
+            foreach ($request as $response) {
+                return $response['name'];
+            }
+        } catch (\PDOException $error) {
+            print_r($error->getMessage()); // todo ==============
+        }
+    }
+
+    public static function getCityByName(string $city) : array
+    {
+        try {
+
+            $request = self::getConnect()->prepare("SELECT * FROM cities WHERE `name` LIKE :city");
+            $request->execute([':city' => $city]);
+
+            foreach ($request as $response) {
+                return $response;
+            }
+
+            return [];
         } catch (\PDOException $error) {
             print_r($error->getMessage()); // todo ==============
         }
