@@ -25,7 +25,6 @@ final class VideoProperties
         $this->totalViews = null;
         $this->videoID = $this->fetchVideoID($this->youtubeURL);
         $this->fetchProperties();
-
     }
 
     public function getYoutubeURL() : string
@@ -52,7 +51,7 @@ final class VideoProperties
     {
         $properties = $this->getStatistic();
 
-        return ["Стрим начался в: {$properties['videoStarting']} —— Всего просмотров: {$properties['totalViews']}"];
+        return ["Стрим начался в: {$properties['videoStarting']} —— длительность: {$properties['duration']} —— Всего просмотров: {$properties['totalViews']}"];
     }
 
     public function getStatistic() : array
@@ -64,7 +63,8 @@ final class VideoProperties
         }
 
         return [
-            'videoStarting' => $this->videoStarting->format('H:i:s'),
+            'videoStarting' => $this->videoStarting->format('H:i:s T'),
+            'duration' => $this->videoStarting->diff(new \DateTime())->format('%H:%I:%S'),
             'totalViews' => $this->totalViews,
         ];
     }
