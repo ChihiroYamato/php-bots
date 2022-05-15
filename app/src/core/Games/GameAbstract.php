@@ -10,17 +10,15 @@ abstract class GameAbstract implements GameInterface
     protected const GAME_INIT_MESSAGE = '';
     private Helpers\TimeTracker $timeTracker;
     protected YouTubeHelpers\User $user;
-    protected int $expireTime;
     protected int $score;
 
     abstract protected function defeat(string $defeatMessage) : array;
 
     abstract protected function victory(string $victoryMessage) : array;
 
-    public function __construct(YouTubeHelpers\User $user, int $expireTime)
+    public function __construct(YouTubeHelpers\User $user)
     {
         $this->user = $user;
-        $this->expireTime = $expireTime;
         $this->score = 0;
 
         $this->timeTracker = new Helpers\TimeTracker();
@@ -30,7 +28,7 @@ abstract class GameAbstract implements GameInterface
     public function checkSession() : ?string
     {
         if ($this->checkExpire()) {
-            return $this->defeat('Время игры ' . static::GAME_NAME . ' вышло')['message'];
+            return $this->defeat('Время игры ' . static::NAME . ' вышло')['message'];
         }
 
         return null;
@@ -44,7 +42,7 @@ abstract class GameAbstract implements GameInterface
     public function getStatistic() : array
     {
         return [
-            ':game' => static::GAME_NAME,
+            ':game' => static::NAME,
             ':user_key' => $this->user->getId(),
             ':score' =>  $this->score,
             ':date' => (new \DateTime())->format('Y-m-d H:i:s'),
@@ -53,7 +51,7 @@ abstract class GameAbstract implements GameInterface
 
     protected function checkExpire() : bool
     {
-        return $this->timeTracker->trackerCheck(static::class, $this->expireTime);
+        return $this->timeTracker->trackerCheck(static::class, static::DEFAULT_EXPIRE_TIME);
     }
 
     protected function getStatisticMessage(int $rating) : string

@@ -6,19 +6,20 @@ use App\Anet\YouTubeHelpers;
 
 class Сasino extends GameAbstract
 {
-    public const GAME_NAME = 'CASINO';
+    public const NAME = 'CASINO';
+    public const COMMAND_HELP = '/play casino';
+    public const COMMAND_START = '/play casino s';
     public const MIN_POINT = 10;
     public const MAX_POINT = 300;
     public const BOARD_SIZE = 42;
     protected const GAME_INIT_MESSAGE = 'итак, выберите фишку';
-    private const DEFAULT_EXPIRE_TIME = 120;
 
     private array $board;
     private ?int $position;
 
-    public function __construct(YouTubeHelpers\User $user, int $expireTime = self::DEFAULT_EXPIRE_TIME)
+    public function __construct(YouTubeHelpers\User $user)
     {
-        parent::__construct($user, $expireTime);
+        parent::__construct($user);
 
         $this->board = $this->prepareBoard(self::MIN_POINT, self::MAX_POINT);
         $this->position = null;
@@ -27,7 +28,7 @@ class Сasino extends GameAbstract
     public function step(string $answer) : array
     {
         if ($this->checkExpire()) {
-            return $this->defeat('Время игры ' . self::GAME_NAME . ' вышло');
+            return $this->defeat('Время игры ' . self::NAME . ' вышло');
         }
 
         $value = (int) $answer;
@@ -77,5 +78,13 @@ class Сasino extends GameAbstract
         shuffle($result);
 
         return $result;
+    }
+
+    public static function getHelpMessage() : array
+    {
+        return [
+            '—— GAME ' . self::NAME . ' —— правила: игроку предлагается выбрать номер фишки от 1 до '. self::BOARD_SIZE . ', у каждой фишки есть сумма очков от ' . self::MIN_POINT . ' до ' . self::MAX_POINT . ', но половина фишек - выйгрышные, половина - проигрышные',
+            '—— старт: введите <' . self::COMMAND_START . '>. на игру отведено ' . self::DEFAULT_EXPIRE_TIME . ' секунд',
+        ];
     }
 }

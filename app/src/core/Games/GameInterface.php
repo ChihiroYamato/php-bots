@@ -5,9 +5,12 @@ namespace App\Anet\Games;
 use App\Anet\YouTubeHelpers;
 interface GameInterface
 {
-    public const GAME_NAME = 'GAME';
+    public const NAME = 'GAME';
+    public const COMMAND_HELP = '/play';
+    public const COMMAND_START = '/play';
+    public const DEFAULT_EXPIRE_TIME = 120;
 
-    public function __construct(YouTubeHelpers\UserInterface $user, int $expireTime);
+    public function __construct(YouTubeHelpers\UserInterface $user);
 
     public function step(string $answer) : array;
 
@@ -16,4 +19,6 @@ interface GameInterface
     public function getInitMessage() : string;
 
     public function getStatistic() : array;
+
+    public static function getHelpMessage() : array;
 }

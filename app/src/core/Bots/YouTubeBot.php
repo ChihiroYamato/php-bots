@@ -229,22 +229,21 @@ final class YouTubeBot extends ChatBotAbstract
                     $currentUser = $this->users->get($chatItem['authorId']);
 
                     switch (true) {
-                        case $chatItem['message'] === '/play roul':
-                            $largeSending[] = '—— GAME ' . Games\Roulette::GAME_NAME . ' —— правила: игроку предлагается угадать число от 1 до 6, в случае выигрыша - соц рейтинг удваивается, в случае проигрыша - уполовинивается';
-                            $largeSending[] = '—— старт: введите </play roul s>. Внимание! - каждое следующее сообщение игрока засчитывается как число, на игру отведено 2 минуты, по истечению засчитывается проигрыш';
+                        case $chatItem['message'] === Games\Roulette::COMMAND_HELP:
+                            $largeSending = Games\Roulette::getHelpMessage();
                             break;
-                        case $chatItem['message'] === '/play casino':
-                            $largeSending[] = '—— GAME ' . Games\Сasino::GAME_NAME . ' —— правила: игроку предлагается поставить на номер фишки от 1 до '. Games\Сasino::BOARD_SIZE . ', у каждой фишки есть сумма очков от ' . Games\Сasino::MIN_POINT . ' до ' . Games\Сasino::MAX_POINT . ', но половина фишек - выйгрышные, половина - проигрышные';
-                            $largeSending[] = '—— старт: введите </play casino s>. Внимание! - каждое следующее сообщение игрока засчитывается как число, на игру отведено 2 минуты, по истечению засчитывается проигрыш с максимумом очков';
+                        case $chatItem['message'] === Games\Сasino::COMMAND_HELP:
+                            $largeSending = Games\Сasino::getHelpMessage();
                             break;
-                        case $chatItem['message'] === '/play roul s':
+                        case $chatItem['message'] === Games\Roulette::COMMAND_START:
                             $largeSending = $this->games->validateAndStarting(new Games\Roulette($currentUser), $currentUser, 180);
                             break;
-                        case $chatItem['message'] === '/play casino s':
-                            $largeSending = $this->games->validateAndStarting(new Games\Сasino($currentUser), $currentUser, 300, 400);
+                        case $chatItem['message'] === Games\Сasino::COMMAND_START:
+                            $largeSending = $this->games->validateAndStarting(new Games\Сasino($currentUser), $currentUser, 300, 300);
                             break;
                         default:
-                            $largeSending[] = 'В настоящее время доступны следующие игры: —— русская рулетка </play roul> —— казино </play casino>';
+                            $largeSending[] = 'В настоящее время доступны следующие игры: —— русская рулетка <' . Games\Roulette::COMMAND_HELP . '> —— казино <' . Games\Сasino::COMMAND_HELP . '>';
+                            $largeSending[] = 'Внимание! - каждое следующее сообщение игрока после старта игры засчитывается как ход, на игру отводится определенное время, по истечению засчитывается проигрыш с максимумом очков';
                             break;
                     }
                     break;
