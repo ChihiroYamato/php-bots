@@ -2,7 +2,7 @@
 
 namespace App\Anet\YouTubeHelpers;
 
-final class User
+final class User implements UserInterface
 {
     private string $id;
     private string $name;

@@ -7,7 +7,7 @@ interface GameInterface
 {
     public const GAME_NAME = 'GAME';
 
-    public function __construct(object $user, int $expireTime);
+    public function __construct(YouTubeHelpers\UserInterface $user, int $expireTime);
 
     public function step(string $answer) : array;
 

@@ -15,11 +15,7 @@ final class Games
 
     public function validateAndStarting(Games\GameInterface $game, YouTubeHelpers\User $user, int $timeout, int $minRaiting = 1) : array
     {
-        if (
-            isset($this->restList[$user->getId()])
-            && isset($this->restList[$user->getId()][$game::class])
-            && Helpers\TimeTracker::calculateDuration($this->restList[$user][$game::class]) < $timeout
-        ) {
+        if (isset($this->restList[$user->getId()]) && isset($this->restList[$user->getId()][$game::class]) && Helpers\TimeTracker::calculateDuration($this->restList[$user->getId()][$game::class]) < $timeout) {
             unset($game);
             return [$user->getName() . " на игру установлен таймаут в $timeout секунд, попробуйте позже"];
         }
