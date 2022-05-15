@@ -9,6 +9,8 @@ final class TimeTracker
     private array $points;
     private array $bufferPoints;
     private array $tracker;
+    private ?float $minIteration;
+    private ?float $maxIteration;
 
     public function __construct()
     {
@@ -17,6 +19,8 @@ final class TimeTracker
         $this->points = [];
         $this->bufferPoints = [];
         $this->tracker = [];
+        $this->minIteration = null;
+        $this->maxIteration = null;
     }
 
     public function getTimeInit(string $format = 'H:i:s'): string
@@ -76,13 +80,57 @@ final class TimeTracker
 
     public function sumPointsAverage() : float
     {
-        if (empty($this->points)) {
+        $iterations = $this->fetchIterations();
+
+        if (empty($iterations)) {
             return 0;
+        }
+
+        return array_sum($iterations) / (count($this->points) * 1000000000);
+    }
+
+    public function fetchMinIteration() : float
+    {
+        $iterations = $this->fetchIterations();
+
+        if (empty($iterations)) {
+            return (float) $this->minIteration;
+        }
+
+        $min = min($iterations);
+
+        if ($this->minIteration === null || $min < $this->minIteration) {
+            $this->minIteration = $min;
+        }
+
+        return $this->minIteration;
+    }
+    public function fetchMaxIteration() : float
+    {
+        $iterations = $this->fetchIterations();
+
+        if (empty($iterations)) {
+            return (float) $this->maxIteration;
+        }
+
+        $max = max($iterations);
+
+        if ($this->maxIteration === null || $max > $this->maxIteration) {
+            $this->maxIteration = $max;
+        }
+
+        return $this->maxIteration;
+    }
+
+    private function fetchIterations() : array
+    {
+        if (empty($this->points)) {
+            return [];
         }
 
         $list = $this->points;
 
-        return array_sum(array_map(fn (array $tem) => array_pop($tem) - array_shift($tem), $list)) / (count($list) * 1000000000);
+        return array_map(fn (array $tem) => array_pop($tem) - array_shift($tem), $list);
     }
 
     public static function calculateDuration(int $baseTime) : int

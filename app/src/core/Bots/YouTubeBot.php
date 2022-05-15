@@ -488,6 +488,8 @@ final class YouTubeBot extends ChatBotAbstract
             'MessageSending' => $this->totalMessageSending,
             'Iterations' => $this->totalIterations,
             'IterationAverageTime' => $this->timeTracker->sumPointsAverage(),
+            'IterationMinTime' => $this->timeTracker->fetchMinIteration(),
+            'IterationMaxTime' => $this->timeTracker->fetchMaxIteration(),
             'YouTubeURL' => $this->video->getYoutubeURL(),
             'VideoID' => $this->video->getVideoID(),
             'VideoStarting' => $this->video->getVideoStarting(),
