@@ -235,14 +235,20 @@ final class YouTubeBot extends ChatBotAbstract
                         case $chatItem['message'] === Games\Сasino::COMMAND_HELP:
                             $largeSending = Games\Сasino::getHelpMessage();
                             break;
+                        case $chatItem['message'] === Games\Towns::COMMAND_HELP:
+                            $largeSending = Games\Towns::getHelpMessage();
+                            break;
                         case $chatItem['message'] === Games\Roulette::COMMAND_START:
                             $largeSending = $this->games->validateAndStarting(new Games\Roulette($currentUser), $currentUser, 180);
                             break;
                         case $chatItem['message'] === Games\Сasino::COMMAND_START:
                             $largeSending = $this->games->validateAndStarting(new Games\Сasino($currentUser), $currentUser, 300, 300);
                             break;
+                        case $chatItem['message'] === Games\Towns::COMMAND_START:
+                            $largeSending = $this->games->validateAndStarting(new Games\Towns($currentUser), $currentUser, 300, 55);
+                            break;
                         default:
-                            $largeSending[] = 'В настоящее время доступны следующие игры: —— русская рулетка <' . Games\Roulette::COMMAND_HELP . '> —— казино <' . Games\Сasino::COMMAND_HELP . '>';
+                            $largeSending[] = 'В настоящее время доступны следующие игры: —— русская рулетка <' . Games\Roulette::COMMAND_HELP . '> —— казино <' . Games\Сasino::COMMAND_HELP . '> —— города <' . Games\Towns::COMMAND_HELP . '>';
                             $largeSending[] = 'Внимание! - каждое следующее сообщение игрока после старта игры засчитывается как ход, на игру отводится определенное время, по истечению засчитывается проигрыш с максимумом очков';
                             break;
                     }
