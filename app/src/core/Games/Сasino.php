@@ -9,10 +9,10 @@ class Сasino extends GameAbstract
     public const NAME = 'CASINO';
     public const COMMAND_HELP = '/play casino';
     public const COMMAND_START = '/play casino s';
-    public const MIN_POINT = 10;
-    public const MAX_POINT = 300;
-    public const BOARD_SIZE = 42;
     protected const GAME_INIT_MESSAGE = 'итак, выберите фишку';
+    private const MIN_POINT = 10;
+    private const MAX_POINT = 300;
+    private const BOARD_SIZE = 42;
 
     private array $board;
     private ?int $position;
