@@ -16,18 +16,18 @@ trait FileSystemHelperTrait
      */
     protected static function makeDirectory(string $directory) : void
     {
-        if (! empty($directory) && ! is_dir($directory) && ! mkdir($directory)) {
+        if (! empty($directory) && ! is_dir($directory) && ! mkdir($directory, 0777, true)) {
             throw new \Exception("Can't create dir: $directory\n");
         }
     }
 
-    protected static function archiveFile(string $fileName) : bool
+    protected static function archiveFile(string $fileName, string $postfix) : bool
     {
-        if (! is_file($fileName) || mb_stripos($fileName, '-old') !== false) {
+        if (! is_file($fileName) || mb_stripos($fileName, $postfix) !== false) {
             return false;
         }
 
-        $newFileName = self::getFreeFileName($fileName, '-old');
+        $newFileName = self::getFreeFileName($fileName, $postfix);
 
         if (! rename($fileName, $newFileName)) {
             throw new \Exception("Can't rename file $fileName to $newFileName\n");
@@ -43,11 +43,10 @@ trait FileSystemHelperTrait
         $extension = $parseName['ext'] ?? '';
 
         $iteration = 0;
-        $modPrefix = '';
 
-        while (file_exists("{$baseName}{$prefix}{$modPrefix}{$extension}")) {
-            $modPrefix = $iterationPrefix . ++$iteration;
-        }
+        do {
+            $modPrefix = $iterationPrefix . $iteration++;
+        } while (file_exists("{$baseName}{$prefix}{$modPrefix}{$extension}"));
 
         return "{$baseName}{$prefix}{$modPrefix}{$extension}";
     }

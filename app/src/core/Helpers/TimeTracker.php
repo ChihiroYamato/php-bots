@@ -23,7 +23,7 @@ final class TimeTracker
         $this->maxIteration = null;
     }
 
-    public function getTimeInit(string $format = 'H:i:s'): string
+    public function getTimeInit(string $format = 'Y-m-d H:i:s'): string
     {
         return $this->DateTimeInit->format($format);
     }

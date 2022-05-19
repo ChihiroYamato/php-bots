@@ -253,4 +253,57 @@ final class DataBase
             print_r($error->getMessage()); // todo ==============
         }
     }
+
+    public static function saveBotStatistic(array $data) : void
+    {
+        try {
+            $inserts = '';
+            $values = '';
+            $requestData = [];
+
+            foreach ($data as $key => $value) {
+                $inserts .= "`$key`,";
+                $values .= ":$key,";
+                $requestData[":$key"] = $value;
+            }
+
+            $inserts = rtrim($inserts, ",");
+            $values = rtrim($values, ",");
+
+            $request = self::getConnect()->prepare("INSERT INTO bots_statisctic($inserts) VALUES ($values)");
+            $request->execute($requestData);
+
+        } catch (\PDOException $error) {
+            print_r($error->getMessage()); // todo ==============
+        }
+    }
+
+    public static function saveByTableName(string $table, array $data) : void
+    {
+        try {
+            $inserts = '';
+            $values = '';
+
+            foreach ($data[0] as $key => $value) {
+                $inserts .= "`$key`,";
+                $values .= ":$key,";
+            }
+
+            $inserts = rtrim($inserts, ",");
+            $values = rtrim($values, ",");
+
+            $request = self::getConnect()->prepare("INSERT INTO $table($inserts) VALUES ($values)");
+
+            foreach ($data as $items) {
+                $requestData = [];
+                foreach ($items as $key => $item) {
+                    $requestData[":$key"] = preg_replace('/[\x{10000}-\x{10FFFF}]/u', '', $item);
+                }
+                $request->execute($requestData);
+            }
+
+        } catch (\PDOException $error) {
+            print_r($error->getMessage()); // todo ==============
+        }
+    }
 }

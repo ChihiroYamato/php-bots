@@ -26,7 +26,7 @@ final class Buffer
     public function add(string $node, array $buffer) : void
     {
         $prepareBuffer = $buffer;
-        $prepareBuffer['time'] = (new \DateTime())->format('H:i:s');
+        $prepareBuffer['published'] = (new \DateTime())->format('Y-m-d H:i:s');
         $this->buffer[$node][] = $prepareBuffer;
     }
 }

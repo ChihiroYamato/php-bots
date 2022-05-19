@@ -25,9 +25,9 @@ trait ErrorHelperTrait
     protected function addError(string $category, string $message) : void
     {
         $this->errors[] = [
-            'Category' => $category,
-            'Time' => (new \DateTime())->format('H:i:s'),
-            'Message' => $message,
+            'category' => $category,
+            'time' => (new \DateTime())->format('H:i:s'),
+            'message' => $message,
         ];
         $this->errorCount++;
     }

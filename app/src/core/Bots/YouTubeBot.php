@@ -13,7 +13,6 @@ use App\Anet\Games;
 final class YouTubeBot extends ChatBotAbstract
 {
     private Service\YouTube $youtubeService;
-    private Helpers\TimeTracker $timeTracker;
     private YouTubeHelpers\VideoProperties $video;
     private YouTubeHelpers\UserStorage $users;
     private string $botUserEmail;
@@ -28,7 +27,6 @@ final class YouTubeBot extends ChatBotAbstract
         }
         parent::__construct();
 
-        $this->timeTracker = new Helpers\TimeTracker();
         $this->botUserEmail = APP_EMAIL;
         $this->botUserName = APP_USER_NAME;
 
@@ -42,16 +40,19 @@ final class YouTubeBot extends ChatBotAbstract
 
         $this->lastChatMessageID = null;
         $this->usersListerning = USER_LISTEN_LIST;
-
-        Helpers\LogerHelper::archiveLogs();
     }
 
     public function __destruct()
     {
-        Helpers\LogerHelper::loggingProccess($this->getStatistics(), $this->buffer->fetch('sendings'));
-        Helpers\LogerHelper::logging($this->buffer->fetch('messageList'), 'message'); // todo
+        Helpers\LogerHelper::loggingProccess($this->className, $this->getStatistics(), $this->buffer->fetch('sendings'));
+        Helpers\LogerHelper::logging($this->className, $this->buffer->fetch('messageList'), 'message'); // todo
 
-        print_r("Force termination of a script\n");
+        Helpers\LogerHelper::saveProccessToDB($this->className, $this->className);
+        Helpers\LogerHelper::saveToDB($this->className, 'message', 'youtube_messages');
+
+        Helpers\LogerHelper::archiveLogs();
+
+        Helpers\LogerHelper::print($this->className, 'Force termination of a script');
     }
 
     private static function createGoogleClient(bool $setRedirectUrl = false) : Google\Client
@@ -152,7 +153,7 @@ final class YouTubeBot extends ChatBotAbstract
                 continue;
             }
 
-            $this->buffer->add('messageList', $chatItem); // todo
+            $this->buffer->add('messageList', ['content' => $chatItem['message'], 'user_key' => $chatItem['authorId']]);
 
             $sendingDetail = [
                 'author' => $chatItem['authorName'],
@@ -420,18 +421,18 @@ final class YouTubeBot extends ChatBotAbstract
     {
         $sendingCount = 0;
         $sendingCount += $this->sendMessage('Всем привет, хорошего дня/вечера/ночи/утра'); // todo
+        Helpers\LogerHelper::print($this->className, 'Starting proccess');
 
         while ($this->getErrorCount() < 5 && $this->listeningFlag) {
             if ($this->timeTracker->trackerState('loggingProccess')) {
                 if ($this->timeTracker->trackerCheck('loggingProccess', 60 * 3)) {
                     $this->timeTracker->trackerStop('loggingProccess');
 
-                    Helpers\LogerHelper::loggingProccess($this->getStatistics(), $this->buffer->fetch('sendings'));
-                    Helpers\LogerHelper::logging($this->buffer->fetch('messageList'), 'message'); // todo
+                    Helpers\LogerHelper::loggingProccess($this->className, $this->getStatistics(), $this->buffer->fetch('sendings'));
+                    Helpers\LogerHelper::logging($this->className, $this->buffer->fetch('messageList'), 'message'); // todo
 
                     $this->timeTracker->clearPoints();
-
-                    printf('Logs saved. Current iteration is: %d Proccessing duration: %s' . PHP_EOL, $this->totalIterations, $this->timeTracker->getDuration());
+                    Helpers\LogerHelper::print($this->className, sprintf('Logs saved. Current iteration is: %d Proccessing duration: %s' . PHP_EOL, $this->totalIterations, $this->timeTracker->getDuration()));
                 }
             } else {
                 $this->timeTracker->trackerStart('loggingProccess');
@@ -456,7 +457,7 @@ final class YouTubeBot extends ChatBotAbstract
         }
 
         if (! empty($this->getErrors())) {
-            Helpers\LogerHelper::logging($this->getErrors());
+            Helpers\LogerHelper::logging($this->className, $this->getErrors(), 'error');
         }
     }
 
@@ -465,11 +466,9 @@ final class YouTubeBot extends ChatBotAbstract
         $this->fetchChatList();
 
         if ($this->lastChatMessageID !== null && empty($this->getErrors())) {
-            echo 'Chat request tested successfully, current last mess ID:' . PHP_EOL;
-            print_r($this->lastChatMessageID);
+            Helpers\LogerHelper::print($this->className, 'Chat request tested successfully, current last mess ID :' . $this->lastChatMessageID);
         } else {
-            echo 'Testing Failed, Current Errors:' . PHP_EOL;
-            print_r($this->getErrors());
+            Helpers\LogerHelper::print($this->className, "Testing Failed, Current Errors:\n" . print_r($this->getErrors(), true));
         }
     }
 
@@ -478,29 +477,21 @@ final class YouTubeBot extends ChatBotAbstract
         $testing = $this->sendMessage('Прогрев чата');
 
         if ($testing) {
-            echo 'Message sending test completed successfully' . PHP_EOL;
+            Helpers\LogerHelper::print($this->className, 'Message sending test completed successfully');
         } else {
-            echo 'Testing Failed, Current Errors:' . PHP_EOL;
-            print_r($this->getErrors());
+            Helpers\LogerHelper::print($this->className, "Testing Failed, Current Errors:\n" . print_r($this->getErrors(), true));
         }
     }
 
     public function getStatistics() : array
     {
-        return [
-            'TimeStarting' => $this->timeTracker->getTimeInit(),
-            'TimeProccessing' => $this->timeTracker->getDuration(),
-            'MessageReading' => $this->totalMessageReading,
-            'MessageSending' => $this->totalMessageSending,
-            'Iterations' => $this->totalIterations,
-            'IterationAverageTime' => $this->timeTracker->sumPointsAverage(),
-            'IterationMinTime' => $this->timeTracker->fetchMinIteration(),
-            'IterationMaxTime' => $this->timeTracker->fetchMaxIteration(),
-            'YouTubeURL' => $this->video->getYoutubeURL(),
-            'VideoID' => $this->video->getVideoID(),
-            'VideoStarting' => $this->video->getVideoStarting(),
-            'BotUserName' => $this->botUserName,
-            'BotUserEmail' => $this->botUserEmail,
-        ];
+        $result = parent::getStatistics();
+        $result['youTubeURL'] = $this->video->getYoutubeURL();
+        $result['videoID'] = $this->video->getVideoID();
+        $result['videoStarting'] = $this->video->getVideoStarting();
+        $result['botUserName'] = $this->botUserName;
+        $result['botUserEmail'] = $this->botUserEmail;
+
+        return $result;
     }
 }
