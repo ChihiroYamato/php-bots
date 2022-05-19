@@ -7,7 +7,7 @@ use App\Anet\YouTubeHelpers;
 
 class Towns extends GameAbstract
 {
-    public const DEFAULT_EXPIRE_TIME = 240;
+    public const DEFAULT_EXPIRE_TIME = 360;
     public const NAME = 'TOWNS';
     public const COMMAND_HELP = '/play towns';
     public const COMMAND_START = '/play towns s';
@@ -27,6 +27,7 @@ class Towns extends GameAbstract
         parent::__construct($user);
 
         $this->winLetters = $this->getLetters(Services\Cities::VOCABULARY);
+        $this->stopList = [];
         $this->steps = 0;
         $this->lastLetter = null;
     }
@@ -36,7 +37,7 @@ class Towns extends GameAbstract
         switch (true) {
             case $this->checkExpire():
                 return $this->defeat('Время игры ' . self::NAME . ' вышло');
-            case $this->lastLetter !== null && $this->lastLetter !== mb_strtolower(mb_strcut($answer, 0, 1)):
+            case $this->lastLetter !== null && $this->lastLetter !== mb_strtolower(mb_strcut($answer, 0, 2)):
                 return $this->defeat("Предыдущая буква была: <{$this->lastLetter}>, вы проиграли, а буквы были: "  . implode(', ', $this->winLetters));
             case ! Services\Cities::validate($answer):
                 return $this->defeat("Города <$answer> - не существует, вы проиграли, а буквы были: "  . implode(', ', $this->winLetters));

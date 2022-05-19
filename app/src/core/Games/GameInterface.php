@@ -10,8 +10,6 @@ interface GameInterface
     public const COMMAND_START = '/play';
     public const DEFAULT_EXPIRE_TIME = 120;
 
-    public function __construct(YouTubeHelpers\UserInterface $user);
-
     public function step(string $answer) : array;
 
     public function checkSession() : ?string;

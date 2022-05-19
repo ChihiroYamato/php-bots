@@ -69,6 +69,17 @@ final class UserStorage
         ];
     }
 
+    public function randomLottery(User $user, int $raiting) : string
+    {
+        if (random_int(0, 999999) !== 2022) {
+            return '';
+        }
+
+        $user->incrementRaiting($raiting);
+
+        return $user->getName() . " поздравляю! ты выбран случайным победителем приза в $raiting рейтинга! твой текущий рейтинг: " . $user->getRating();
+    }
+
     private function findUserByName(string $name) : ?User
     {
         foreach ($this->storage as $user) {
@@ -151,7 +162,7 @@ final class UserStorage
             ];
         } catch (Service\Exception $error) {
             $this->addError(__FUNCTION__, $error->getMessage());
-            Helpers\LogerHelper::logging($this->getErrors());
+            Helpers\LogerHelper::logging('YouTube', $this->getErrors(), 'error');
             return [];
         }
     }

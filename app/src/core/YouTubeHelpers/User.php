@@ -111,6 +111,13 @@ final class User implements UserInterface
         $this->rating += $count;
     }
 
+    public function incrementRaitingRandom(int $range, int $count = 1) : void
+    {
+        if ($range > 0 && random_int(0, $range) === 0) {
+            $this->rating += $count;
+        }
+    }
+
     public function updateName(string $name) : User
     {
         $this->name = $name;
@@ -118,21 +125,21 @@ final class User implements UserInterface
         return $this;
     }
 
-    public function updateSubscribers(int $subscribers) : User
+    public function updateSubscribers(?int $subscribers) : User
     {
         $this->subscribers = $subscribers;
 
         return $this;
     }
 
-    public function updateVideos(int $videos) : User
+    public function updateVideos(?int $videos) : User
     {
         $this->videos = $videos;
 
         return $this;
     }
 
-    public function updateViews(int $views) : User
+    public function updateViews(?int $views) : User
     {
         $this->views = $views;
 

@@ -97,7 +97,7 @@ final class TimeTracker
             return (float) $this->minIteration;
         }
 
-        $min = min($iterations);
+        $min = min($iterations) / 1000000000;
 
         if ($this->minIteration === null || $min < $this->minIteration) {
             $this->minIteration = $min;
@@ -113,7 +113,7 @@ final class TimeTracker
             return (float) $this->maxIteration;
         }
 
-        $max = max($iterations);
+        $max = max($iterations) / 1000000000;
 
         if ($this->maxIteration === null || $max > $this->maxIteration) {
             $this->maxIteration = $max;

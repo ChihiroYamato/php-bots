@@ -24,7 +24,7 @@ final class LogerHelper
 
             if (is_dir($path) && ! in_array($file, ['.', '..', trim(dirname(self::RUNTIME_LOGS_NAME), '/')])) {
                 self::archiveLogs($path);
-            } elseif (is_file($path)) {
+            } elseif (is_file($path) && $file !== '.gitkeep') {
                 self::archiveFile($path, self::ARCHIVE_POSTFIX);
             }
         }
@@ -68,19 +68,19 @@ final class LogerHelper
         $directory = self::LOGS_PATH . "/$category/{$logs}s";
 
         foreach (scandir($directory) as $file) {
-            if (mb_strpos($file, self::ARCHIVE_POSTFIX) === false) {
+            if (is_file("$directory/$file") && mb_strpos($file, self::ARCHIVE_POSTFIX) === false) {
                 self::saveXMLToDB("$directory/$file", $logs, $database);
             }
         }
     }
 
-    public static function saveProccessToDB(string $category, string $botName) : void
+    public static function saveProccessToDB(string $category) : void
     {
         $directory = dirname(self::LOGS_PATH . "/$category" . self::LOGS_PROCCESS_BASE_NAME);
 
         foreach (scandir($directory) as $file) {
-            if (mb_strpos($file, self::ARCHIVE_POSTFIX) === false) {
-                self::saveProccessGlobal("$directory/$file", $botName);
+            if (is_file("$directory/$file") && mb_strpos($file, self::ARCHIVE_POSTFIX) === false) {
+                self::saveProccessGlobal("$directory/$file", $category);
             }
         }
     }
@@ -121,14 +121,14 @@ final class LogerHelper
 
         $result = [
             'name' => $botName,
-            'start' => (string) $xml->{self::XML_PROCCESS_GLOBAL_TAG}->TimeStarting,
-            'proccessing' => (string) $xml->{self::XML_PROCCESS_GLOBAL_TAG}->TimeProccessing,
-            'reading' => (string) ($xml->{self::XML_PROCCESS_GLOBAL_TAG}->MessageReading ?? '0'),
-            'sending' => (string) ($xml->{self::XML_PROCCESS_GLOBAL_TAG}->MessageSending ?? '0'),
-            'iterations' => (string) ($xml->{self::XML_PROCCESS_GLOBAL_TAG}->Iterations ?? '0'),
-            'averageTime' => (string) ($xml->{self::XML_PROCCESS_GLOBAL_TAG}->IterationAverageTime ?? '0'),
-            'iterationMin' => (string) ($xml->{self::XML_PROCCESS_GLOBAL_TAG}->IterationMinTime ?? '0'),
-            'iterationMax' => (string) ($xml->{self::XML_PROCCESS_GLOBAL_TAG}->IterationMaxTime ?? '0'),
+            'start' => (string) $xml->{self::XML_PROCCESS_GLOBAL_TAG}->timeStarting,
+            'proccessing' => (string) $xml->{self::XML_PROCCESS_GLOBAL_TAG}->timeProccessing,
+            'reading' => (string) ($xml->{self::XML_PROCCESS_GLOBAL_TAG}->messageReading ?? '0'),
+            'sending' => (string) ($xml->{self::XML_PROCCESS_GLOBAL_TAG}->messageSending ?? '0'),
+            'iterations' => (string) ($xml->{self::XML_PROCCESS_GLOBAL_TAG}->iterations ?? '0'),
+            'averageTime' => (string) ($xml->{self::XML_PROCCESS_GLOBAL_TAG}->iterationAverageTime ?? '0'),
+            'iterationMin' => (string) ($xml->{self::XML_PROCCESS_GLOBAL_TAG}->iterationMinTime ?? '0'),
+            'iterationMax' => (string) ($xml->{self::XML_PROCCESS_GLOBAL_TAG}->iterationMaxTime ?? '0'),
         ];
 
         DB\DataBase::saveBotStatistic($result);

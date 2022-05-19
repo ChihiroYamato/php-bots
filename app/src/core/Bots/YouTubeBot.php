@@ -45,9 +45,9 @@ final class YouTubeBot extends ChatBotAbstract
     public function __destruct()
     {
         Helpers\LogerHelper::loggingProccess($this->className, $this->getStatistics(), $this->buffer->fetch('sendings'));
-        Helpers\LogerHelper::logging($this->className, $this->buffer->fetch('messageList'), 'message'); // todo
+        Helpers\LogerHelper::logging($this->className, $this->buffer->fetch('messageList'), 'message');
 
-        Helpers\LogerHelper::saveProccessToDB($this->className, $this->className);
+        Helpers\LogerHelper::saveProccessToDB($this->className);
         Helpers\LogerHelper::saveToDB($this->className, 'message', 'youtube_messages');
 
         Helpers\LogerHelper::archiveLogs();
@@ -140,6 +140,7 @@ final class YouTubeBot extends ChatBotAbstract
 
     protected function prepareSendings(array $chatlist) : array
     {
+        $usersList = [];
         $sendingList = [];
         $sendingDetail = [];
         $sending = '';
@@ -155,6 +156,7 @@ final class YouTubeBot extends ChatBotAbstract
 
             $this->buffer->add('messageList', ['content' => $chatItem['message'], 'user_key' => $chatItem['authorId']]);
 
+            $currentUser = $this->users->get($chatItem['authorId']);
             $sendingDetail = [
                 'author' => $chatItem['authorName'],
                 'message' => $chatItem['message'],
@@ -166,7 +168,9 @@ final class YouTubeBot extends ChatBotAbstract
             $matches = explode(' ', trim(str_replace(['!', ',', '.', '?'], '', $chatItem['message'])));
             $lastWord = mb_strtolower(array_pop($matches));
 
-            if ($this->users->get($chatItem['authorId'])->checkAdmin()) {
+            $currentUser->incrementRaitingRandom(2, random_int(1, 2));
+
+            if ($currentUser->checkAdmin()) {
                 switch (true) {
                     case $lastWord === '/help-admin':
                         $sendingDetail['sending'] = $sending . '</stop> —— завершить скрипт; </insert user> —— добавить юзера в список слежения ; </drop user> —— удалить юзера из списка слежения; </show-listern> —— список слежения;';
@@ -227,8 +231,6 @@ final class YouTubeBot extends ChatBotAbstract
                     break;
                 case mb_strpos($chatItem['message'], '/play') !== false:
                     // TODO =========== игры
-                    $currentUser = $this->users->get($chatItem['authorId']);
-
                     switch (true) {
                         case $chatItem['message'] === Games\Roulette::COMMAND_HELP:
                             $largeSending = Games\Roulette::getHelpMessage();
@@ -257,7 +259,7 @@ final class YouTubeBot extends ChatBotAbstract
             }
 
             if (! empty($largeSending)) {
-                $this->users->get($chatItem['authorId'])->incrementRaiting(rand(0, 4) * 5);
+                $currentUser->incrementRaiting(rand(0, 4) * 5);
 
                 foreach ($largeSending as $item) {
                     $sendingDetail['sending'] = $item;
@@ -294,7 +296,7 @@ final class YouTubeBot extends ChatBotAbstract
             }
 
             if (mb_stripos(mb_strtolower($chatItem['message']), $this->botUserName) !== false) {
-                $this->users->get($chatItem['authorId'])->incrementRaiting(rand(0, 4) * 5);
+                $currentUser->incrementRaiting(rand(0, 4) * 5);
 
                 $currentMessage = trim(mb_strtolower(preg_replace("/@?{$this->botUserName}/", '', $chatItem['message'])));
                 $sending = $sending . $this->prepareSmartAnswer($currentMessage);
@@ -309,7 +311,7 @@ final class YouTubeBot extends ChatBotAbstract
                     foreach ($item['request'] as $option) {
                         if (mb_stripos(mb_strtolower($chatItem['message']), $option) !== false) {
                             if ($key === 'say_foul') {
-                                $this->users->get($chatItem['authorId'])->incrementRaiting(rand(0, 2) * (-5));
+                                $currentUser->incrementRaiting(rand(0, 2) * (-5));
                             }
                             $sendingDetail['sending'] = $sending . $this->vocabulary->getRandItem($key);
                             $sendingList[] = $sendingDetail;
@@ -323,8 +325,6 @@ final class YouTubeBot extends ChatBotAbstract
                 }
             }
 
-
-
             if (in_array($chatItem['authorName'], $this->usersListerning)) {
                 $answer = $this->prepareSmartAnswer($chatItem['message'], true);
 
@@ -334,6 +334,8 @@ final class YouTubeBot extends ChatBotAbstract
                     continue;
                 }
             }
+
+            $usersList[] = $currentUser;
         }
 
         $sendingDetail = [
@@ -350,6 +352,19 @@ final class YouTubeBot extends ChatBotAbstract
                 $sendingList[] = $sendingDetail;
             }
         }
+
+        if (! empty($usersList)) {
+            foreach ($usersList as $user) {
+                $lotery = $this->users->randomLottery($user, 5000);
+
+                if (!empty($lotery)) {
+                    $sendingDetail['sending'] = $lotery;
+                    $sendingList[] = $sendingDetail;
+                    break;
+                }
+            }
+        }
+
 
         return $sendingList;
     }
