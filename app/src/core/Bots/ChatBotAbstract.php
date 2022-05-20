@@ -2,16 +2,25 @@
 
 namespace App\Anet\Bots;
 
+use App\Anet;
+use App\Anet\Helpers;
+use App\Anet\GoogleModules;
+use App\Anet\Storages;
+
 abstract class ChatBotAbstract implements BotInterface, BotDebugInterface, StatisticsInterface
 {
-    use SmallTalkModuleTrait;
+    use Helpers\UrlHelperTrait, Helpers\ErrorHelperTrait;
 
-    protected int $totalMessageReading = 0;
-    protected int $totalMessageSending = 0;
-    protected int $totalIterations = 0;
-    protected ?array $vocabulary = null;
-    protected array $buffer = [];
-    protected bool $listeningFlag = true;
+    protected string $className;
+    protected int $totalMessageReading;
+    protected int $totalMessageSending;
+    protected int $totalIterations;
+    protected bool $listeningFlag;
+    protected GoogleModules\SmallTalkModule $smallTalk;
+    protected Helpers\TimeTracker $timeTracker;
+    protected Storages\Vocabulary $vocabulary;
+    protected Storages\Buffer $buffer;
+    protected Anet\Games $games;
 
     abstract protected function prepareSendings(array $chatlist) : array;
 
@@ -19,49 +28,42 @@ abstract class ChatBotAbstract implements BotInterface, BotDebugInterface, Stati
 
     abstract protected function sendMessage(string $message) : bool;
 
+    public function __construct()
+    {
+        $this->className = basename(str_replace('\\', '/', static::class), 'Bot');
+        $this->totalMessageReading = 0;
+        $this->totalMessageSending = 0;
+        $this->totalIterations = 0;
+        $this->listeningFlag = true;
+        $this->smallTalk = new GoogleModules\SmallTalkModule();
+        $this->timeTracker = new Helpers\TimeTracker();
+        $this->buffer = new Storages\Buffer();
+        $this->vocabulary = new Storages\Vocabulary();
+        $this->games = new Anet\Games();
+    }
+
+    public function getStatistics() : array
+    {
+        return [
+            'timeStarting' => $this->timeTracker->getTimeInit(),
+            'timeProccessing' => $this->timeTracker->getDuration(),
+            'messageReading' => $this->totalMessageReading,
+            'messageSending' => $this->totalMessageSending,
+            'iterations' => $this->totalIterations,
+            'iterationAverageTime' => $this->timeTracker->sumPointsAverage(),
+            'iterationMinTime' => $this->timeTracker->fetchMinIteration(),
+            'iterationMaxTime' => $this->timeTracker->fetchMaxIteration(),
+        ];
+    }
+
     protected function prepareSmartAnswer(string $message, bool $setDefault = true) : string
     {
-        $answer = $this->fetchAnswerFromSmallTalk($message);
+        $answer = $this->smallTalk->fetchAnswerFromSmallTalk($message);
 
         if (empty($answer) && $setDefault) {
-            $answer = $this->getVocabulary()['no_answer']['response'][random_int(0, count($this->getVocabulary()['no_answer']['response']) - 1)];
+            $answer = $this->vocabulary->getRandItem('no_answer');
         }
 
         return $answer;
-    }
-
-    protected function getVocabulary() : array
-    {
-        if ($this->vocabulary === null) {
-            $this->vocabulary = [
-                'standart' => require_once VOC_STANDART,
-                'no_answer' => require_once VOC_NO_ANSWER,
-                'no_care' => require_once VOC_NO_CARE,
-                'dead_chat' => require_once VOC_DEAD_CHAT,
-                'dead_inside' => require_once VOC_DEAD_INSIDE,
-                'another' => require_once VOC_ANOTHER,
-            ];
-        }
-
-        return $this->vocabulary;
-    }
-
-    protected function fetchBuffer(string $node) : array
-    {
-        if (! array_key_exists($node, $this->buffer)) {
-            return [];
-        }
-
-        $buffer = $this->buffer[$node];
-        $this->buffer[$node] = [];
-
-        return $buffer;
-    }
-
-    protected function addBuffer(string $node, array $buffer) : void
-    {
-        $prepareBuffer = $buffer;
-        $prepareBuffer['time'] = (new \DateTime())->format('H:i:s');
-        $this->buffer[$node][] = $prepareBuffer;
     }
 }

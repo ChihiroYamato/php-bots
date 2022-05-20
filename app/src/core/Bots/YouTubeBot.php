@@ -2,33 +2,31 @@
 
 namespace App\Anet\Bots;
 
-use App\Anet\Helpers;
 use Google;
 use Google\Service;
 use Google\Service\YouTube;
+use App\Anet\Services;
+use App\Anet\YouTubeHelpers;
+use App\Anet\Helpers;
+use App\Anet\Games;
 
 final class YouTubeBot extends ChatBotAbstract
 {
-    use Helpers\UrlHelperTrait, Helpers\ErrorHelperTrait;
-
     private Service\YouTube $youtubeService;
-    private Helpers\TimeTracker $timeTracker;
-    private string $youtubeURL;
-    private string $videoID;
+    private YouTubeHelpers\VideoProperties $video;
+    private YouTubeHelpers\UserStorage $users;
     private string $botUserEmail;
     private string $botUserName;
-    private string $liveChatID;
     private ?string $lastChatMessageID;
+    private array $usersListerning;
 
     public function __construct(string $youtubeURL)
     {
         if (! file_exists(OAUTH_TOKEN_JSON)) {
             throw new Service\Exception('Create file with oAuth tokken');
         }
+        parent::__construct();
 
-        $this->timeTracker = new Helpers\TimeTracker();
-        $this->youtubeURL = $this->validateYoutubeURL($youtubeURL);
-        $this->videoID = $this->getVideoID($this->youtubeURL);
         $this->botUserEmail = APP_EMAIL;
         $this->botUserName = APP_USER_NAME;
 
@@ -37,19 +35,24 @@ final class YouTubeBot extends ChatBotAbstract
         $client->setAccessToken(json_decode(file_get_contents(OAUTH_TOKEN_JSON), true));
 
         $this->youtubeService = new Service\YouTube($client);
+        $this->video = new YouTubeHelpers\VideoProperties($this->youtubeService, $youtubeURL);
+        $this->users = new YouTubeHelpers\UserStorage($this->youtubeService);
 
-        $this->liveChatID = $this->getLiveChatID($this->videoID);
         $this->lastChatMessageID = null;
-
-        Helpers\LogerHelper::archiveLogs();
+        $this->usersListerning = USER_LISTEN_LIST;
     }
 
     public function __destruct()
     {
-        Helpers\LogerHelper::loggingProccess($this->getStatistics(), $this->fetchBuffer('sendings'));
-        Helpers\LogerHelper::logging($this->fetchBuffer('messageList'), 'message'); // todo
+        Helpers\LogerHelper::loggingProccess($this->className, $this->getStatistics(), $this->buffer->fetch('sendings'));
+        Helpers\LogerHelper::logging($this->className, $this->buffer->fetch('messageList'), 'message');
 
-        print_r("Force termination of a script\n");
+        Helpers\LogerHelper::saveProccessToDB($this->className);
+        Helpers\LogerHelper::saveToDB($this->className, 'message', 'youtube_messages');
+
+        Helpers\LogerHelper::archiveLogsByCategory($this->className);
+
+        Helpers\LogerHelper::print($this->className, 'Force termination of a script');
     }
 
     private static function createGoogleClient(bool $setRedirectUrl = false) : Google\Client
@@ -93,23 +96,10 @@ final class YouTubeBot extends ChatBotAbstract
         return true;
     }
 
-    private function getLiveChatID(string $videoID) : string
-    {
-        $response = $this->youtubeService->videos->listVideos('liveStreamingDetails', ['id' => $videoID]);
-
-        $liveChatID = $response['items'][0]['liveStreamingDetails']['activeLiveChatId'] ?? null;
-
-        if ($liveChatID === null) {
-            throw new Service\Exception('Error response with live chat ID');
-        }
-
-        return $liveChatID;
-    }
-
     private function fetchChatList() : array
     {
         try {
-            $response = $this->youtubeService->liveChatMessages->listLiveChatMessages($this->liveChatID, 'snippet', ['maxResults' => 100]); // todo
+            $response = $this->youtubeService->liveChatMessages->listLiveChatMessages($this->video->getLiveChatID(), 'snippet', ['maxResults' => 100]); // todo
 
             $chatList = $response['items'];
             $actualChat = [];
@@ -119,13 +109,18 @@ final class YouTubeBot extends ChatBotAbstract
                 if ($chatItem['id'] === $this->lastChatMessageID) {
                     $writeMod = true;
                 } elseif ($writeMod) {
-                    // todo ===================== Реализовать запрос и хранение юзеров в БД
-                    $responseChannelID = $this->youtubeService->channels->listChannels('snippet', ['id' => $chatItem['snippet']['authorChannelId']]);
+                    $currentUser = $this->users->fetch($chatItem['snippet']['authorChannelId']);
+
+                    if ($currentUser->getName() === $this->botUserName) {
+                        continue;
+                    }
+
+                    $currentUser->incrementMessage();
 
                     $actualChat[] = [
                         'id' => $chatItem['id'],
                         'authorId' => $chatItem['snippet']['authorChannelId'],
-                        'authorName' => $responseChannelID['items'][0]['snippet']['title'] ?? '',
+                        'authorName' => $currentUser->getName(),
                         'message' => $chatItem['snippet']['displayMessage'],
                         'published' => $chatItem['snippet']['publishedAt'],
                     ];
@@ -145,6 +140,7 @@ final class YouTubeBot extends ChatBotAbstract
 
     protected function prepareSendings(array $chatlist) : array
     {
+        $usersList = [];
         $sendingList = [];
         $sendingDetail = [];
         $sending = '';
@@ -154,38 +150,131 @@ final class YouTubeBot extends ChatBotAbstract
         }
 
         foreach ($chatlist as $chatItem) {
-            $this->addBuffer('messageList', $chatItem); // todo
-
             if ($chatItem['authorName'] === $this->botUserName) {
                 continue;
             }
 
+            $this->buffer->add('messageList', ['content' => $chatItem['message'], 'user_key' => $chatItem['authorId']]);
+
+            $currentUser = $this->users->get($chatItem['authorId']);
             $sendingDetail = [
                 'author' => $chatItem['authorName'],
                 'message' => $chatItem['message'],
                 'published' => $chatItem['published'],
             ];
             $sending = "@{$chatItem['authorName']} ";
+            $largeSending = [];
 
             $matches = explode(' ', trim(str_replace(['!', ',', '.', '?'], '', $chatItem['message'])));
             $lastWord = mb_strtolower(array_pop($matches));
 
-            if ($chatItem['authorName'] === '大和千ひろ') { // todo == chech with DB
-                switch ($lastWord) {
-                    case '/stop':
+            $currentUser->incrementRaitingRandom(2, random_int(1, 2));
+
+            if ($currentUser->checkAdmin()) {
+                switch (true) {
+                    case $lastWord === '/help-admin':
+                        $sendingDetail['sending'] = $sending . '</stop> —— завершить скрипт; </insert user> —— добавить юзера в список слежения ; </drop user> —— удалить юзера из списка слежения; </show-listern> —— список слежения;';
+                        break;
+                    case $lastWord === '/stop':
                         $sendingDetail['sending'] = $sending . 'Завершаю свою работу.';
                         $sendingList[] = $sendingDetail;
                         $this->listeningFlag = false;
                         break 2;
+                    case mb_stripos($chatItem['message'], '/insert') !== false:
+                        $listernUser = preg_replace('/\/insert /', '', $chatItem['message']);
+                        $this->usersListerning[$listernUser] = $listernUser;
+
+                        $sendingDetail['sending'] = $sending . "Начинаю слушать пользователя <$listernUser>";
+                        break;
+                    case mb_stripos($chatItem['message'], '/drop') !== false:
+                        $listernUser = preg_replace('/\/drop /', '', $chatItem['message']);
+                        unset($this->usersListerning[$listernUser]);
+
+                        $sendingDetail['sending'] = $sending . "Прекращаю слушать пользователя <$listernUser>";
+                        break;
+                    case mb_stripos($chatItem['message'], '/show-listern') !== false:
+                        $sendingDetail['sending'] = $sending . 'Список прослушиваемых: ' . implode(',', $this->usersListerning);
+                        break;
                 }
+
+                if (array_key_exists('sending', $sendingDetail)) {
+                    $sendingList[] = $sendingDetail;
+                    continue;
+                }
+            }
+
+            if ($this->games->checkUserActiveSession($chatItem['authorId'])) {
+                $sendingDetail['sending'] = $this->games->checkGame($chatItem['authorId'], $lastWord);
+                $sendingList[] = $sendingDetail;
+                continue;
+            }
+
+            switch (true) {
+                case in_array($chatItem['message'], ['/help', '/справка']):
+                    $largeSending[] = $sending . 'приветствую, в данном чате доступны следующие команды: </stat (/стата) "@user"> получить статистику по себе (или по указанному юзеру); —— </joke (/шутка)> получить баянистый анекдот;';
+                    $largeSending[] = '—— </fact (/факт)> получить забавный (или не очень) факт; —— </stream (/стрим)> получить информацию о стриме; —— </play> раздел игр';
+                    break;
+                case mb_ereg_match('.*(\/stat|\/стата) @', $chatItem['message']):
+                    $largeSending = $this->users->showUserStatistic(mb_ereg_replace('.*(\/stat|\/стата) @', '', $chatItem['message']));
+                    break;
+                case in_array($chatItem['message'], ['/stat', '/стата']):
+                    $largeSending = $this->users->showUserStatistic($chatItem['authorName']);
+                    break;
+                case in_array($chatItem['message'], ['/stream', '/стрим']):
+                    $largeSending = $this->video->showStatistic();
+                    break;
+                case in_array($chatItem['message'], ['/факт', '/fact']):
+                    $largeSending = Services\Facts::fetchRand();
+                    break;
+                case in_array($chatItem['message'], ['/шутка', '/joke']):
+                    $largeSending = Services\Jokes::fetchRand();
+                    break;
+                case mb_strpos($chatItem['message'], '/play') !== false:
+                    // TODO =========== игры
+                    switch (true) {
+                        case $chatItem['message'] === Games\Roulette::COMMAND_HELP:
+                            $largeSending = Games\Roulette::getHelpMessage();
+                            break;
+                        case $chatItem['message'] === Games\Сasino::COMMAND_HELP:
+                            $largeSending = Games\Сasino::getHelpMessage();
+                            break;
+                        case $chatItem['message'] === Games\Towns::COMMAND_HELP:
+                            $largeSending = Games\Towns::getHelpMessage();
+                            break;
+                        case $chatItem['message'] === Games\Roulette::COMMAND_START:
+                            $largeSending = $this->games->validateAndStarting(new Games\Roulette($currentUser), $currentUser, 180);
+                            break;
+                        case $chatItem['message'] === Games\Сasino::COMMAND_START:
+                            $largeSending = $this->games->validateAndStarting(new Games\Сasino($currentUser), $currentUser, 300, 300);
+                            break;
+                        case $chatItem['message'] === Games\Towns::COMMAND_START:
+                            $largeSending = $this->games->validateAndStarting(new Games\Towns($currentUser), $currentUser, 300, 55);
+                            break;
+                        default:
+                            $largeSending[] = 'В настоящее время доступны следующие игры: —— русская рулетка <' . Games\Roulette::COMMAND_HELP . '> —— казино <' . Games\Сasino::COMMAND_HELP . '> —— города <' . Games\Towns::COMMAND_HELP . '>';
+                            $largeSending[] = 'Внимание! - каждое следующее сообщение игрока после старта игры засчитывается как ход, на игру отводится определенное время, по истечению засчитывается проигрыш с максимумом очков';
+                            break;
+                    }
+                    break;
+            }
+
+            if (! empty($largeSending)) {
+                $currentUser->incrementRaiting(rand(0, 4) * 5);
+
+                foreach ($largeSending as $item) {
+                    $sendingDetail['sending'] = $item;
+                    $sendingList[] = $sendingDetail;
+                }
+
+                continue;
             }
 
             // todo ================= NEED TESTING
             if (! $this->timeTracker->trackerState('standart_responce') || $this->timeTracker->trackerCheck('standart_responce', 30)) {
                 $this->timeTracker->trackerStop('standart_responce');
 
-                foreach ($this->getVocabulary()['standart']['request'] as $category) {
-                    foreach ($category as $option) {
+                foreach ($this->vocabulary->getCategoriesGroup('standart', ['greetings', 'parting']) as $category) {
+                    foreach ($category['request'] as $option) {
                         if (mb_stripos(mb_strtolower($chatItem['message']), $option) !== false) {
                             $answer = $this->prepareSmartAnswer($option, false);
 
@@ -200,49 +289,45 @@ final class YouTubeBot extends ChatBotAbstract
                 }
             }
 
-            foreach ($this->getVocabulary()['another'] as $key => $item) {
-                if (in_array($key, ['hah', 'mmm', 'three'])) {
-                    foreach ($item['request'] as $option) {
-                        if (mb_stripos(mb_strtolower($chatItem['message']), $option) !== false) {
-                            $sendingDetail['sending'] = $sending . $item['response'][random_int(0, count($item['response']) - 1)];
-                            $sendingList[] = $sendingDetail;
-                            continue 3;
-                        }
-                    }
-                } elseif (in_array($chatItem['authorName'], USER_LISTEN_LIST) && in_array($lastWord, $item['request'])) {
-                    $sendingDetail['sending'] = $sending . $item['response'][random_int(0, count($item['response']) - 1)];
-                    $sendingList[] = $sendingDetail;
-                    continue 2;
-                }
+            if (in_array($lastWord, $this->vocabulary->getCategoryType('dead_inside', 'request'))) {
+                $sendingDetail['sending'] = $sending . "сколько будет {$lastWord}-7?";
+                $sendingList[] = $sendingDetail;
+                continue;
             }
 
-
             if (mb_stripos(mb_strtolower($chatItem['message']), $this->botUserName) !== false) {
-                $currentMessage = trim(mb_strtolower(preg_replace("/@?{$this->botUserName}/", '', $chatItem['message'])));
+                $currentUser->incrementRaiting(rand(0, 4) * 5);
 
-                switch (true) {
-                    case in_array($currentMessage, ['help', 'справка']):
-                        $sending .= 'приветствую, в настоящий момент функционал дорабатывается, список команд будет доступен позднее';
-                        break;
-                    // TODO =========== анекдоты
-                    // TODO =========== проверить корректность переноса блока с анализом адрессованных сообщений
-                    default:
-                        $sending .= $this->prepareSmartAnswer($currentMessage);
-                        break;
-                }
+                $currentMessage = trim(mb_strtolower(preg_replace("/@?{$this->botUserName}/", '', $chatItem['message'])));
+                $sending = $sending . $this->prepareSmartAnswer($currentMessage);
 
                 $sendingDetail['sending'] = $sending;
                 $sendingList[] = $sendingDetail;
                 continue;
             }
 
-            if (in_array($lastWord, $this->getVocabulary()['dead_inside']['response'])) {
-                $sendingDetail['sending'] = $sending . "сколько будет {$lastWord}-7?";
-                $sendingList[] = $sendingDetail;
-                continue;
+            foreach ($this->vocabulary->getCategoriesGroup('another', ['say_yes', 'say_no', 'say_haha', 'say_foul', 'say_three']) as $key => $item) {
+                if (in_array($key, ['say_haha', 'say_foul', 'say_three'])) {
+                    foreach ($item['request'] as $option) {
+                        if (mb_stripos(mb_strtolower($chatItem['message']), $option) !== false) {
+                            if ($key === 'say_foul') {
+                                $currentUser->incrementRaiting(rand(0, 2) * (-5));
+                                var_dump($option);              // todo ==== testing !!
+                                var_dump($chatItem['message']); // todo ==== testing !!
+                            }
+                            $sendingDetail['sending'] = $sending . $this->vocabulary->getRandItem($key);
+                            $sendingList[] = $sendingDetail;
+                            continue 3;
+                        }
+                    }
+                } elseif (in_array($lastWord, $item['request'])) {
+                    $sendingDetail['sending'] = $sending . $this->vocabulary->getRandItem($key);
+                    $sendingList[] = $sendingDetail;
+                    continue 2;
+                }
             }
 
-            if (in_array($chatItem['authorName'], USER_LISTEN_LIST)) {
+            if (in_array($chatItem['authorName'], $this->usersListerning)) {
                 $answer = $this->prepareSmartAnswer($chatItem['message'], true);
 
                 if (! empty($answer)) {
@@ -251,7 +336,37 @@ final class YouTubeBot extends ChatBotAbstract
                     continue;
                 }
             }
+
+            $usersList[] = $currentUser;
         }
+
+        $sendingDetail = [
+            'author' => 'System',
+            'message' => 'none',
+            'published' => (new \DateTime())->format('Y-m-d H:i:s'),
+        ];
+
+        $gamesReport = $this->games->checkSessionsTimeOut();
+
+        if (! empty($gamesReport)) {
+            foreach ($gamesReport as $systemMess) {
+                $sendingDetail['sending'] = $systemMess;
+                $sendingList[] = $sendingDetail;
+            }
+        }
+
+        if (! empty($usersList)) {
+            foreach ($usersList as $user) {
+                $lotery = $this->users->randomLottery($user, 5000);
+
+                if (!empty($lotery)) {
+                    $sendingDetail['sending'] = $lotery;
+                    $sendingList[] = $sendingDetail;
+                    break;
+                }
+            }
+        }
+
 
         return $sendingList;
     }
@@ -265,7 +380,7 @@ final class YouTubeBot extends ChatBotAbstract
         $sendCount = 0;
 
         foreach ($sending as $sendItem) {
-            $this->addBuffer('sendings', $sendItem);
+            $this->buffer->add('sendings', $sendItem);
             $sendCount += $this->sendMessage($sendItem['sending']);
             sleep(1);
         }
@@ -282,7 +397,7 @@ final class YouTubeBot extends ChatBotAbstract
 
             $liveChatTextMessageDetails->setMessageText($message);
 
-            $liveChatMessageSnippet->setLiveChatId($this->liveChatID);
+            $liveChatMessageSnippet->setLiveChatId($this->video->getLiveChatID());
             $liveChatMessageSnippet->setType('textMessageEvent');
             $liveChatMessageSnippet->setTextMessageDetails($liveChatTextMessageDetails);
 
@@ -298,26 +413,6 @@ final class YouTubeBot extends ChatBotAbstract
         }
     }
 
-    private function validateYoutubeURL(string $url) : string
-    {
-        if (! preg_match('/https:\/\/www\.youtube\.com.*/', $url)) {
-            throw new Service\Exception('Incorrect YouTube url');
-        }
-
-        return $url;
-    }
-
-    private function getVideoID(string $url) : string
-    {
-        preg_match('/youtube\.com\/watch\?.*v=([^&]+)/',  $url, $matches);
-
-        if (empty($matches[1])) {
-            throw new Service\Exception('Incorrect YouTube video ID');
-        }
-
-        return $matches[1];
-    }
-
     private function checkingMessageSendEvent(bool $event, int $sec, string $vocabularyKey) : bool
     {
         $sendStatus = false;
@@ -327,7 +422,7 @@ final class YouTubeBot extends ChatBotAbstract
                 if ($this->timeTracker->trackerCheck($vocabularyKey, $sec)) {
                     $this->timeTracker->trackerStop($vocabularyKey);
 
-                    $sendStatus = $this->sendMessage($this->getVocabulary()[$vocabularyKey]['response'][random_int(0, count($this->getVocabulary()[$vocabularyKey]['response']) - 1)]);
+                    $sendStatus = $this->sendMessage($this->vocabulary->getRandItem($vocabularyKey));
                 }
             } else {
                 $this->timeTracker->trackerStart($vocabularyKey);
@@ -343,18 +438,18 @@ final class YouTubeBot extends ChatBotAbstract
     {
         $sendingCount = 0;
         $sendingCount += $this->sendMessage('Всем привет, хорошего дня/вечера/ночи/утра'); // todo
+        Helpers\LogerHelper::print($this->className, 'Starting proccess');
 
         while ($this->getErrorCount() < 5 && $this->listeningFlag) {
             if ($this->timeTracker->trackerState('loggingProccess')) {
                 if ($this->timeTracker->trackerCheck('loggingProccess', 60 * 3)) {
                     $this->timeTracker->trackerStop('loggingProccess');
 
-                    Helpers\LogerHelper::loggingProccess($this->getStatistics(), $this->fetchBuffer('sendings'));
-                    Helpers\LogerHelper::logging($this->fetchBuffer('messageList'), 'message'); // todo
+                    Helpers\LogerHelper::loggingProccess($this->className, $this->getStatistics(), $this->buffer->fetch('sendings'));
+                    Helpers\LogerHelper::logging($this->className, $this->buffer->fetch('messageList'), 'message'); // todo
 
                     $this->timeTracker->clearPoints();
-
-                    printf('Logs saved. Current iteration is: %d Proccessing duration: %s' . PHP_EOL, $this->totalIterations, $this->timeTracker->getDuration());
+                    Helpers\LogerHelper::print($this->className, sprintf('Logs saved. Current iteration is: %d Proccessing duration: %s' . PHP_EOL, $this->totalIterations, $this->timeTracker->getDuration()));
                 }
             } else {
                 $this->timeTracker->trackerStart('loggingProccess');
@@ -365,36 +460,9 @@ final class YouTubeBot extends ChatBotAbstract
             $chatList = $this->fetchChatList();
             $this->timeTracker->setPoint('fetchChatList');
 
-            // if (empty($chatList)) {
-            //     if ($this->timeTracker->trackerState('dead_chat')) {
-            //         if ($this->timeTracker->trackerCheck('dead_chat', 5 * 60)) {
-            //             $this->timeTracker->trackerStop('dead_chat');
-
-            //             $sendingCount += $this->sendMessage($this->getVocabulary()['dead_chat']['response'][random_int(0, count($this->getVocabulary()['dead_chat']['response']) - 1)]);
-            //         }
-            //     } else {
-            //         $this->timeTracker->trackerStart('dead_chat');
-            //     }
-            // } else {
-            //     $this->timeTracker->trackerStop('dead_chat');
-            // }
-            $sendingCount += $this->checkingMessageSendEvent(empty($chatList), 5 * 60, 'dead_chat');
             $sendingCount += $this->sendingMessages($this->prepareSendings($chatList));
-            $sendingCount += $this->checkingMessageSendEvent($sendingCount < 1 && $this->totalIterations > 1, 2 * 60, 'no_care');
-
-            // if ($sendingCount < 1 && $this->totalIterations > 1) {
-            //     if ($this->timeTracker->trackerState('no_care')) {
-            //         if ($this->timeTracker->trackerCheck('no_care', 2* 60)) {
-            //             $this->timeTracker->trackerStop('no_care');
-
-            //             $sendingCount += $this->sendMessage($this->getVocabulary()['no_care']['response'][random_int(0, count($this->getVocabulary()['no_care']['response']) - 1)]);
-            //         }
-            //     } else {
-            //         $this->timeTracker->trackerStart('no_care');
-            //     }
-            // } else {
-            //     $this->timeTracker->trackerStop('no_care');
-            // }
+            $sendingCount += $this->checkingMessageSendEvent($sendingCount < 1 && $this->totalIterations > 1, 10 * 60, 'no_care');
+            $sendingCount += $this->checkingMessageSendEvent(empty($chatList), 15 * 60, 'dead_chat');
 
             $this->timeTracker->setPoint('sendingMessage');
             $this->timeTracker->finishPointTracking();
@@ -406,7 +474,7 @@ final class YouTubeBot extends ChatBotAbstract
         }
 
         if (! empty($this->getErrors())) {
-            Helpers\LogerHelper::logging($this->getErrors());
+            Helpers\LogerHelper::logging($this->className, $this->getErrors(), 'error');
         }
     }
 
@@ -415,11 +483,9 @@ final class YouTubeBot extends ChatBotAbstract
         $this->fetchChatList();
 
         if ($this->lastChatMessageID !== null && empty($this->getErrors())) {
-            echo 'Chat request tested successfully, current last mess ID:' . PHP_EOL;
-            print_r($this->lastChatMessageID);
+            Helpers\LogerHelper::print($this->className, 'Chat request tested successfully, current last mess ID :' . $this->lastChatMessageID);
         } else {
-            echo 'Testing Failed, Current Errors:' . PHP_EOL;
-            print_r($this->getErrors());
+            Helpers\LogerHelper::print($this->className, "Testing Failed, Current Errors:\n" . print_r($this->getErrors(), true));
         }
     }
 
@@ -428,26 +494,21 @@ final class YouTubeBot extends ChatBotAbstract
         $testing = $this->sendMessage('Прогрев чата');
 
         if ($testing) {
-            echo 'Message sending test completed successfully' . PHP_EOL;
+            Helpers\LogerHelper::print($this->className, 'Message sending test completed successfully');
         } else {
-            echo 'Testing Failed, Current Errors:' . PHP_EOL;
-            print_r($this->getErrors());
+            Helpers\LogerHelper::print($this->className, "Testing Failed, Current Errors:\n" . print_r($this->getErrors(), true));
         }
     }
 
     public function getStatistics() : array
     {
-        return [
-            'TimeStarting' => $this->timeTracker->getTimeInit(),
-            'TimeProccessing' => $this->timeTracker->getDuration(),
-            'MessageReading' => $this->totalMessageReading,
-            'MessageSending' => $this->totalMessageSending,
-            'Iterations' => $this->totalIterations,
-            'IterationAverageTime' => $this->timeTracker->sumPointsAverage(),
-            'YouTubeURL' => $this->youtubeURL,
-            'VideoID' => $this->videoID,
-            'BotUserName' => $this->botUserName,
-            'BotUserEmail' => $this->botUserEmail,
-        ];
+        $result = parent::getStatistics();
+        $result['youTubeURL'] = $this->video->getYoutubeURL();
+        $result['videoID'] = $this->video->getVideoID();
+        $result['videoStarting'] = $this->video->getVideoStarting();
+        $result['botUserName'] = $this->botUserName;
+        $result['botUserEmail'] = $this->botUserEmail;
+
+        return $result;
     }
 }

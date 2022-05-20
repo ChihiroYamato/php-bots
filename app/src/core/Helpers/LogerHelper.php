@@ -2,57 +2,128 @@
 
 namespace App\Anet\Helpers;
 
+use App\Anet\DB;
+
 final class LogerHelper
 {
     use FileSystemHelperTrait;
 
     private const LOGS_PATH = LOGS_PATH;
-    private const LOGS_ERRORS_BASE_NAME = '/errors/error_report';
     private const LOGS_PROCCESS_BASE_NAME = '/proccess/proccess_report';
-    private const LOGS_DEFAULT_BASE_NAME = '/default/report';
-    private const XML_ROOT_TAG = 'Body';
-    private const XML_PROCCESS_GLOBAL_TAG = 'Global';
-    private const XML_PROCCESS_DETAIL_TAG = 'Detail';
-    private const XML_PROCCESS_NODE_TAG = 'Proccessing';
-    private const XML_ERROR_NODE_TAG = 'Error';
+    private const RUNTIME_LOGS_NAME = '/runtime/logs';
+    private const XML_ROOT_TAG = 'body';
+    private const XML_PROCCESS_GLOBAL_TAG = 'global';
+    private const XML_PROCCESS_DETAIL_TAG = 'detail';
+    private const XML_PROCCESS_NODE_TAG = 'proccessing';
+    private const ARCHIVE_POSTFIX = '-old';
 
-    public static function archiveLogs() : void
+    public static function archiveLogsByCategory(string $category) : void
     {
-        foreach (scandir(self::LOGS_PATH) as $dir) {
-            $path = self::LOGS_PATH . "/$dir";
-
-            if (is_dir($path) && ! in_array($dir, ['.', '..'])) {
-                foreach (scandir($path) as $file) {
-                    self::archiveFile("$path/$file");
-                }
-            }
-        }
+        self::archiveLogsRecursive(self::LOGS_PATH . "/$category");
     }
 
-    public static function loggingProccess(array $globalProccess, array $detailProccess) : bool
+    public static function print(string $category, string $message) : void
+    {
+        $logsFile = self::LOGS_PATH . "/$category" . self::RUNTIME_LOGS_NAME;
+        self::makeDirectory(dirname($logsFile));
+        file_put_contents($logsFile, ((new \DateTime())->format('Y-m-d H:i:s')) . " -- $message\n", FILE_APPEND);
+    }
+
+    public static function loggingProccess(string $category, array $globalProccess, array $detailProccess) : bool
     {
         if (empty($globalProccess) || empty($detailProccess)) {
             return false;
         }
 
-        $fileName = self::initialLogsXML(self::LOGS_PROCCESS_BASE_NAME);
+        $fileName = self::initialLogsXML("/$category" . self::LOGS_PROCCESS_BASE_NAME);
         self::saveProccessToXML($fileName, $globalProccess, $detailProccess);
         self::formatLogsXML($fileName);
 
         return true;
     }
 
-    public static function logging(array $data, ?string $mode = null) : bool
+    public static function logging(string $category, array $data, string $mode) : bool
     {
         if (empty($data)) {
             return false;
         }
 
-        $fileName = self::initialLogsXML(($mode !== null) ? self::LOGS_DEFAULT_BASE_NAME : self::LOGS_ERRORS_BASE_NAME);
-        self::saveToXML($fileName, $data, $mode ?? self::XML_ERROR_NODE_TAG);
+        $fileName = self::initialLogsXML("/$category/{$mode}s/report");
+        self::saveToXML($fileName, $data, $mode);
         self::formatLogsXML($fileName);
 
         return true;
+    }
+
+    public static function saveToDB(string $category, string $logs, string $database) : void
+    {
+        $directory = self::LOGS_PATH . "/$category/{$logs}s";
+
+        foreach (scandir($directory) as $file) {
+            if (is_file("$directory/$file") && mb_strpos($file, self::ARCHIVE_POSTFIX) === false) {
+                self::saveXMLToDB("$directory/$file", $logs, $database);
+            }
+        }
+    }
+
+    public static function saveProccessToDB(string $category) : void
+    {
+        $directory = dirname(self::LOGS_PATH . "/$category" . self::LOGS_PROCCESS_BASE_NAME);
+
+        foreach (scandir($directory) as $file) {
+            if (is_file("$directory/$file") && mb_strpos($file, self::ARCHIVE_POSTFIX) === false) {
+                self::saveProccessGlobal("$directory/$file", $category);
+            }
+        }
+    }
+
+    private static function openXMLFromFile(string $logsName) : \SimpleXMLElement
+    {
+        $xmlFile = file_get_contents($logsName);
+
+        if ($xmlFile === false) {
+            throw new \Exception("Ошибка загрузки xml из $logsName");
+        }
+
+        return new \SimpleXMLElement($xmlFile);
+    }
+
+    private static function saveXMLToDB(string $file, string $root, string $database) : void
+    {
+        $result = [];
+        $xml = self::openXMLFromFile($file);
+
+        foreach ($xml->$root as $item)
+        {
+            $buffer = [];
+
+            foreach ($item as $tag => $value) {
+                $buffer[$tag] = (string) $value;
+            }
+
+            $result[] = $buffer;
+        }
+
+        DB\DataBase::saveByTableNameOp($database, $result); // todo testing
+    }
+
+    private static function saveProccessGlobal(string $file, string $botName) : void
+    {
+        $xml = self::openXMLFromFile($file);
+
+        $result = [
+            'name' => $botName,
+            'start' => (string) $xml->{self::XML_PROCCESS_GLOBAL_TAG}->timeStarting,
+            'proccessing' => (string) $xml->{self::XML_PROCCESS_GLOBAL_TAG}->timeProccessing,
+            'reading' => (string) ($xml->{self::XML_PROCCESS_GLOBAL_TAG}->messageReading ?? '0'),
+            'sending' => (string) ($xml->{self::XML_PROCCESS_GLOBAL_TAG}->messageSending ?? '0'),
+            'iterations' => (string) ($xml->{self::XML_PROCCESS_GLOBAL_TAG}->iterations ?? '0'),
+            'averageTime' => (string) ($xml->{self::XML_PROCCESS_GLOBAL_TAG}->iterationAverageTime ?? '0'),
+            'iterationMin' => (string) ($xml->{self::XML_PROCCESS_GLOBAL_TAG}->iterationMinTime ?? '0'),
+            'iterationMax' => (string) ($xml->{self::XML_PROCCESS_GLOBAL_TAG}->iterationMaxTime ?? '0'),
+        ];
+
+        DB\DataBase::saveBotStatistic($result);
     }
 
     private static function initialLogsXML(string $logsBaseName) : string
@@ -63,8 +134,7 @@ final class LogerHelper
             return $logsName;
         }
 
-        self::makeDirectory(self::LOGS_PATH);
-        self::makeDirectory(preg_replace('/\/[^\/]+$/', '', $logsName));
+        self::makeDirectory(dirname($logsName));
 
         $xml = new \DOMDocument('1.0', 'utf-8');
         $xml->appendChild($xml->createElement(self::XML_ROOT_TAG));
@@ -90,22 +160,20 @@ final class LogerHelper
         }
     }
 
-    private static function saveToXML(string $logsName, array $errors, string $nodeName) : void
+    private static function saveToXML(string $logsName, array $logs, string $nodeName) : void
     {
-        $xmlFile = file_get_contents($logsName);
+        $xml = self::openXMLFromFile($logsName);
 
-        if ($xmlFile === false) {
-            throw new \Exception("Ошибка загрузки xml из $logsName");
-        }
-
-        $xml = new \SimpleXMLElement($xmlFile);
-
-        foreach ($errors as $error) {
+        foreach ($logs as $log) {
             $xmlNode = $xml->addChild($nodeName);
             $xmlNode->addAttribute('id', uniqid('', true));
 
-            foreach ($error as $tag => $note) {
-                $xmlNode->{$tag} = $note;
+            if (is_array($log)) {
+                foreach ($log as $tag => $note) {
+                    $xmlNode->{$tag} = $note;
+                }
+            } else {
+                $xmlNode = $log;
             }
         }
 
@@ -116,13 +184,7 @@ final class LogerHelper
 
     private static function saveProccessToXML(string $logsName, array $globalProccess, array $detailProccess) : void
     {
-        $xmlFile = file_get_contents($logsName);
-
-        if ($xmlFile === false) {
-            throw new \Exception("Ошибка загрузки xml из $logsName");
-        }
-
-        $xml = new \SimpleXMLElement($xmlFile);
+        $xml = self::openXMLFromFile($logsName);
 
         foreach ($globalProccess as $tag => $note) {
             $xml->{self::XML_PROCCESS_GLOBAL_TAG}->{$tag} = $note;
@@ -143,6 +205,19 @@ final class LogerHelper
 
         if ($xml->asXML($logsName) === false) {
             throw new \Exception("Ошибка сохранения xml в $logsName");
+        }
+    }
+
+    private static function archiveLogsRecursive(string $baseDir) : void
+    {
+        foreach (scandir($baseDir) as $file) {
+            $path = $baseDir . "/$file";
+
+            if (is_dir($path) && ! in_array($file, ['.', '..', trim(dirname(self::RUNTIME_LOGS_NAME), '/')])) {
+                self::archiveLogsRecursive($path);
+            } elseif (is_file($path) && $file !== '.gitkeep') {
+                self::archiveFile($path, self::ARCHIVE_POSTFIX);
+            }
         }
     }
 }
