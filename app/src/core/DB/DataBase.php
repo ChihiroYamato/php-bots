@@ -283,6 +283,9 @@ final class DataBase
         }
     }
 
+    /**
+     * @deprecated
+     */
     public static function saveByTableName(string $table, array $data) : void
     {
         try {
@@ -307,6 +310,35 @@ final class DataBase
                 $request->execute($requestData);
             }
 
+        } catch (\PDOException $error) {
+            Helpers\LogerHelper::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
+        }
+    }
+
+    public static function saveByTableNameOp(string $table, array $data) : void // todo testing
+    {
+        try {
+            $inserts = '';
+            $values = '';
+
+            foreach ($data[0] as $key => $value) {
+                $inserts .= "`$key`,";
+            }
+
+            foreach ($data as $notes) {
+                $value = '';
+                foreach ($notes as $item) {
+                    $value .= '\'' . str_replace('\'', ' ', preg_replace('/[\x{10000}-\x{10FFFF}]/u', '', $item)) . '\',';
+                }
+                $value = rtrim($values, ",");
+                $values .= "($value),";
+            }
+
+            $inserts = rtrim($inserts, ",");
+            $values = rtrim($values, ",");
+
+            $request = self::getConnect()->prepare("INSERT INTO $table($inserts) VALUES $values");
+            $request->execute();
         } catch (\PDOException $error) {
             Helpers\LogerHelper::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
         }

@@ -104,7 +104,7 @@ final class LogerHelper
             $result[] = $buffer;
         }
 
-        DB\DataBase::saveByTableName($database, $result);
+        DB\DataBase::saveByTableNameOp($database, $result); // todo testing
     }
 
     private static function saveProccessGlobal(string $file, string $botName) : void

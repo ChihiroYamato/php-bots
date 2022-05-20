@@ -25,7 +25,7 @@ final class UserStorage
     public function __destruct()
     {
         $this->savedUsers();
-        print_r("Users saved\n");
+        Helpers\LogerHelper::print('YouTube', 'Users saved');
     }
 
     public function fetch(string $id) : ?User

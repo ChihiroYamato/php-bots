@@ -312,6 +312,8 @@ final class YouTubeBot extends ChatBotAbstract
                         if (mb_stripos(mb_strtolower($chatItem['message']), $option) !== false) {
                             if ($key === 'say_foul') {
                                 $currentUser->incrementRaiting(rand(0, 2) * (-5));
+                                var_dump($option);              // todo ==== testing !!
+                                var_dump($chatItem['message']); // todo ==== testing !!
                             }
                             $sendingDetail['sending'] = $sending . $this->vocabulary->getRandItem($key);
                             $sendingList[] = $sendingDetail;
