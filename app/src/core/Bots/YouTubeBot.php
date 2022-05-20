@@ -50,7 +50,7 @@ final class YouTubeBot extends ChatBotAbstract
         Helpers\LogerHelper::saveProccessToDB($this->className);
         Helpers\LogerHelper::saveToDB($this->className, 'message', 'youtube_messages');
 
-        Helpers\LogerHelper::archiveLogs();
+        Helpers\LogerHelper::archiveLogsByCategory($this->className);
 
         Helpers\LogerHelper::print($this->className, 'Force termination of a script');
     }

@@ -17,17 +17,9 @@ final class LogerHelper
     private const XML_PROCCESS_NODE_TAG = 'proccessing';
     private const ARCHIVE_POSTFIX = '-old';
 
-    public static function archiveLogs(string $baseDir = self::LOGS_PATH) : void
+    public static function archiveLogsByCategory(string $category) : void
     {
-        foreach (scandir($baseDir) as $file) {
-            $path = $baseDir . "/$file";
-
-            if (is_dir($path) && ! in_array($file, ['.', '..', trim(dirname(self::RUNTIME_LOGS_NAME), '/')])) {
-                self::archiveLogs($path);
-            } elseif (is_file($path) && $file !== '.gitkeep') {
-                self::archiveFile($path, self::ARCHIVE_POSTFIX);
-            }
-        }
+        self::archiveLogsRecursive(self::LOGS_PATH . "/$category");
     }
 
     public static function print(string $category, string $message) : void
@@ -168,16 +160,20 @@ final class LogerHelper
         }
     }
 
-    private static function saveToXML(string $logsName, array $errors, string $nodeName) : void
+    private static function saveToXML(string $logsName, array $logs, string $nodeName) : void
     {
         $xml = self::openXMLFromFile($logsName);
 
-        foreach ($errors as $error) {
+        foreach ($logs as $log) {
             $xmlNode = $xml->addChild($nodeName);
             $xmlNode->addAttribute('id', uniqid('', true));
 
-            foreach ($error as $tag => $note) {
-                $xmlNode->{$tag} = $note;
+            if (is_array($log)) {
+                foreach ($log as $tag => $note) {
+                    $xmlNode->{$tag} = $note;
+                }
+            } else {
+                $xmlNode = $log;
             }
         }
 
@@ -209,6 +205,19 @@ final class LogerHelper
 
         if ($xml->asXML($logsName) === false) {
             throw new \Exception("Ошибка сохранения xml в $logsName");
+        }
+    }
+
+    private static function archiveLogsRecursive(string $baseDir) : void
+    {
+        foreach (scandir($baseDir) as $file) {
+            $path = $baseDir . "/$file";
+
+            if (is_dir($path) && ! in_array($file, ['.', '..', trim(dirname(self::RUNTIME_LOGS_NAME), '/')])) {
+                self::archiveLogsRecursive($path);
+            } elseif (is_file($path) && $file !== '.gitkeep') {
+                self::archiveFile($path, self::ARCHIVE_POSTFIX);
+            }
         }
     }
 }
