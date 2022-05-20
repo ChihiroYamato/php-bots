@@ -87,7 +87,7 @@ class Towns extends GameAbstract
             $city = Services\Cities::getRandByLetter($letter);
         } while (in_array($city, $this->stopList));
 
-        return $city;
+        return (! empty($city)) ? $city : '----';
     }
 
     private function getLetters(array $vocabulary) : array
