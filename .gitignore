@@ -14,6 +14,7 @@ vendor/
 settings/
 pre_const.php
 another_close.php
+.env
 
 # Project logs
 project_logs/*
@@ -22,3 +23,7 @@ project_logs/*
 # DB
 project_database/*
 !project_database/.gitkeep
+
+# Docker logs
+docker_logs/*
+!docker_logs/.gitkeep

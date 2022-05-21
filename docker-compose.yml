@@ -1,40 +1,74 @@
-version: '3.7'
+version: '3.9'
+
 services:
-    app:
-      build: ./images/php-web
-      container_name: bots-app
-      environment:
-        APACHE_RUN_USER: www-data
-      volumes:
-        - ${APP_PATH_HOST}:${APP_PATH_CONTAINER}
-        - ${PROJECT_LOGS_HOST}:${PROJECT_LOGS_CONTAINER}
-      ports:
-        - 8080:80
-      working_dir: ${APP_PATH_CONTAINER}
     db:
       image: mysql:8.0
       container_name: bots-db
       command: --default-authentication-plugin=mysql_native_password
-      restart: always
+      restart: unless-stopped
       ports:
         - 3309:3306
       environment:
-        MYSQL_ROOT_PASSWORD: 123456
+        MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
         MYSQL_DATABASE: bots
       volumes:
         - ${DB_PATH_HOST}:/var/lib/mysql
+      networks:
+        - backend
+
+    redis:
+      image: redis:7.0
+      container_name: bots-redis
+      restart: unless-stopped
+      ports:
+        - "6379:6379"
+      networks:
+        - backend
+
     adminer:
-      image: adminer
+      image: adminer:latest
       container_name: bots-adminer
-      restart: always
+      restart: unless-stopped
       ports:
         - 8081:8080
-    composer:
-      image: composer:2.3
-      stdin_open: true
-      tty: true
-      container_name: bots-composer
+      networks:
+        - backend
+      depends_on:
+        - db
+
+    app:
+      image: app
+      container_name: bots-app
+      build: ./images/php-fpm
+      restart: unless-stopped
+      working_dir: ${APP_PATH_CONTAINER}
       volumes:
         - ${APP_PATH_HOST}:${APP_PATH_CONTAINER}
+        - ${PHP_INI_HOST}:${PHP_INI_CONTAINER}
+        - ${PROJECT_LOGS_HOST}:${PROJECT_LOGS_CONTAINER}
+      networks:
+        - backend
+      depends_on:
+        - db
+        - redis
+
+    nginx:
+      image: nginx:1.21
+      container_name: bots-nginx
+      restart: unless-stopped
       working_dir: ${APP_PATH_CONTAINER}
-      command: composer install
+      ports:
+        - 8080:80
+      volumes:
+        - ${APP_PATH_HOST}:${APP_PATH_CONTAINER}
+        - ${NGINX_SETTINGS_HOST}:${NGINX_SETTINGS_CONTAINER}
+        - ${NGINX_LOGS_HOST}:${NGINX_LOGS_CONTAINER}
+      links:
+          - app
+      networks:
+        - backend
+
+networks:
+  backend:
+    name: bots-backend
+    driver: bridge
