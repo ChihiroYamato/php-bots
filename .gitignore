@@ -11,7 +11,8 @@ test/
 vendor/
 
 # Project
-settings/
+secrets/*
+!secrets/.gitkeep
 pre_const.php
 another_close.php
 .env
