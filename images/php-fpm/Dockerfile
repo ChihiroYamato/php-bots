@@ -1,10 +1,7 @@
 FROM php:8.1-fpm
-
 ARG user=www-data
 ARG uid=1000
-
 WORKDIR /var/www
-
 RUN apt-get update && apt-get install -y \
     curl \
     zip \
@@ -27,13 +24,8 @@ RUN apt-get update && apt-get install -y \
     && apt-get -y --no-install-recommends install php-gd php8.0-gd php-mysql php-xml php-zip php8.0-mbstring php8.0-gd php8.0-mysql php-redis php8.0-sqlite php8.0-pdo_mysql php8.0-soap \
     && apt-get clean; rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/* \
     && pecl install redis && docker-php-ext-enable redis
-
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
 RUN mkdir -p /home/$user/.composer && chown -R $user:$user /home/$user
-
 USER $user
-
 EXPOSE 9000
-
 CMD ["php-fpm"]

@@ -16,6 +16,7 @@ secrets/*
 pre_const.php
 another_close.php
 .env
+redis.conf
 
 # Project logs
 project_logs/*

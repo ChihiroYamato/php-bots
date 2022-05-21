@@ -17,8 +17,9 @@ services:
         - backend
 
     redis:
-      image: redis:7.0
+      image: redis
       container_name: bots-redis
+      build: ./images/redis
       restart: unless-stopped
       ports:
         - "6379:6379"
