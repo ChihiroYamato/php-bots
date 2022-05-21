@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Anet\Services;
+namespace App\Anet;
 
 use GuzzleHttp;
 use PHPHtmlParser;
 
-abstract class AbstractContent
+abstract class Contents
 {
     protected GuzzleHttp\Client $client;
     protected PHPHtmlParser\Dom $DomDocument;
@@ -15,7 +15,7 @@ abstract class AbstractContent
 
     abstract protected function fetchContent(array $selectorsParam) : void;
 
-    abstract public function setPagination(array $paginationParams) : ?AbstractContent;
+    abstract public function setPagination(array $paginationParams) : ?Contents;
 
     abstract public function saveToDB() : void;
 
@@ -28,7 +28,7 @@ abstract class AbstractContent
         $this->pageBody = null;
     }
 
-    public function parseContentByPagination(string $url, array $selectorsParam) : AbstractContent
+    public function parseContentByPagination(string $url, array $selectorsParam) : Contents
     {
         if (! (array_key_exists('page', $this->pagination) && array_key_exists('prefix', $this->pagination))) {
             throw new \Exception('pagination params is\'t set');
@@ -41,7 +41,7 @@ abstract class AbstractContent
         return $this;
     }
 
-    public function parsePageBody(string $url) : ?AbstractContent
+    public function parsePageBody(string $url) : ?Contents
     {
         try {
             $response = $this->client->request('GET' , $url);

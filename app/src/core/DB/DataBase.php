@@ -19,7 +19,7 @@ final class DataBase
             try {
                 self::$connectPDO = new \PDO('mysql:host=' . DB_HOST . ';dbname=' . DB_BASE, DB_USER_NAME, DB_PASSWORD);
             } catch (\PDOException $error) {
-                Helpers\LogerHelper::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
+                Helpers\Loger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
                 exit;
             }
         }
@@ -40,7 +40,7 @@ final class DataBase
                 $result[] = $response;
             }
         } catch (\PDOException $error) {
-            Helpers\LogerHelper::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
+            Helpers\Loger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
             exit;
         }
 
@@ -71,7 +71,7 @@ final class DataBase
             self::getConnect()->commit();
         }   catch (\PDOException $error) {
             self::getConnect()->rollBack();
-            Helpers\LogerHelper::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
+            Helpers\Loger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
         }
     }
 
@@ -88,7 +88,7 @@ final class DataBase
                 $result[] = $response;
             }
         } catch (\PDOException $error) {
-            Helpers\LogerHelper::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
+            Helpers\Loger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
             exit;
         }
 
@@ -136,7 +136,7 @@ final class DataBase
             self::getConnect()->commit();
         } catch (\PDOException $error) {
             self::getConnect()->rollBack();
-            Helpers\LogerHelper::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
+            Helpers\Loger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
         }
     }
 
@@ -151,7 +151,7 @@ final class DataBase
             self::getConnect()->commit();
         } catch (\PDOException $error) {
             self::getConnect()->rollBack();
-            Helpers\LogerHelper::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
+            Helpers\Loger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
         }
     }
 
@@ -167,7 +167,7 @@ final class DataBase
                 return $response['content'];
             }
         } catch (\PDOException $error) {
-            Helpers\LogerHelper::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
+            Helpers\Loger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
             return '';
         }
     }
@@ -193,7 +193,7 @@ final class DataBase
             self::getConnect()->commit();
         } catch (\PDOException $error) {
             self::getConnect()->rollBack();
-            Helpers\LogerHelper::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
+            Helpers\Loger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
         }
     }
 
@@ -206,7 +206,7 @@ final class DataBase
             $request = self::getConnect()->prepare('INSERT INTO games_statistic(`user_key`, `game`, `score`, `date`) VALUES (:user_key, :game, :score, :date)');
             $request->execute($params);
         } catch (\PDOException $error) {
-            Helpers\LogerHelper::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
+            Helpers\Loger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
         }
     }
 
@@ -224,7 +224,7 @@ final class DataBase
             $request = self::getConnect()->prepare($sqlQuery);
             $request->execute();
         } catch (\PDOException $error) {
-            Helpers\LogerHelper::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
+            Helpers\Loger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
         }
     }
 
@@ -239,7 +239,7 @@ final class DataBase
                 return $response['name'] ?? '';
             }
         } catch (\PDOException $error) {
-            Helpers\LogerHelper::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
+            Helpers\Loger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
             return '';
         }
     }
@@ -257,7 +257,7 @@ final class DataBase
 
             return [];
         } catch (\PDOException $error) {
-            Helpers\LogerHelper::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
+            Helpers\Loger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
             return [];
         }
     }
@@ -282,7 +282,7 @@ final class DataBase
             $request->execute($requestData);
 
         } catch (\PDOException $error) {
-            Helpers\LogerHelper::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
+            Helpers\Loger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
         }
     }
 
@@ -314,7 +314,7 @@ final class DataBase
             }
 
         } catch (\PDOException $error) {
-            Helpers\LogerHelper::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
+            Helpers\Loger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
         }
     }
 
@@ -343,7 +343,7 @@ final class DataBase
             $request = self::getConnect()->prepare("INSERT INTO $table($inserts) VALUES $values");
             $request->execute();
         } catch (\PDOException $error) {
-            Helpers\LogerHelper::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
+            Helpers\Loger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
         }
     }
 }

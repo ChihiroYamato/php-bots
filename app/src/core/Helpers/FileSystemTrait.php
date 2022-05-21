@@ -7,7 +7,7 @@ namespace App\Anet\Helpers;
  *
  * @method  makeDirectory :void string $directory
  */
-trait FileSystemHelperTrait
+trait FileSystemTrait
 {
     /**
      *

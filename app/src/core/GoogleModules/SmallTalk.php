@@ -6,9 +6,9 @@ use App\Anet\Helpers;
 use Google\ApiCore;
 use Google\Cloud\Dialogflow\V2;
 
-final class SmallTalkModule
+final class SmallTalk
 {
-    use Helpers\ErrorHelperTrait;
+    use Helpers\ErrorTrait;
 
     private ?string $smallTalkSession = null;
     private ?V2\SessionsClient $smallTalkClient = null;
@@ -38,7 +38,7 @@ final class SmallTalkModule
             return $queryResult->getFulfillmentText();
         } catch (ApiCore\ApiException $error) {
             $this->addError(__FUNCTION__, $error->getMessage());
-            Helpers\LogerHelper::logging($this->getErrors());
+            Helpers\Loger::logging('YouTube', $this->getErrors(), 'error');
             return '';
         }
     }

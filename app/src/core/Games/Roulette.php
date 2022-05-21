@@ -4,7 +4,7 @@ namespace App\Anet\Games;
 
 use App\Anet\YouTubeHelpers;
 
-class Roulette extends GameAbstract
+class Roulette extends Game
 {
     public const NAME = 'ROULETTE';
     public const COMMAND_HELP = '/play roul';

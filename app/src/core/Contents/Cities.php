@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Anet\Services;
+namespace App\Anet\Contents;
 
+use App\Anet;
 use App\Anet\DB;
 use PHPHtmlParser;
 
-class Cities extends AbstractContent
+class Cities extends Anet\Contents
 {
     public const VOCABULARY = ['А', 'Б', 'В', 'Г', 'Д', 'Е', 'Ж', 'З', 'И', 'Й', 'К', 'Л', 'М', 'Н', 'О', 'П', 'Р', 'С', 'Т', 'У', 'Ф', 'Х', 'Ц', 'Ч', 'Ш', 'Щ', 'Э', 'Ю', 'Я',];
 

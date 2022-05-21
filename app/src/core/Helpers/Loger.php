@@ -4,9 +4,9 @@ namespace App\Anet\Helpers;
 
 use App\Anet\DB;
 
-final class LogerHelper
+final class Loger
 {
-    use FileSystemHelperTrait;
+    use FileSystemTrait;
 
     private const LOGS_PATH = LOGS_PATH;
     private const LOGS_PROCCESS_BASE_NAME = '/proccess/proccess_report';

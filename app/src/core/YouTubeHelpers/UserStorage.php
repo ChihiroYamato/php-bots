@@ -8,7 +8,7 @@ use App\Anet\DB;
 
 final class UserStorage
 {
-    use Helpers\ErrorHelperTrait;
+    use Helpers\ErrorTrait;
 
     private const DAYS_WITHOUT_UPDATE = 4;
     private const DAYS_WITHOUT_ACTIVE = 365;
@@ -25,7 +25,7 @@ final class UserStorage
     public function __destruct()
     {
         $this->savedUsers();
-        Helpers\LogerHelper::print('YouTube', 'Users saved');
+        Helpers\Loger::print('YouTube', 'Users saved');
     }
 
     public function fetch(string $id) : ?User
@@ -162,7 +162,7 @@ final class UserStorage
             ];
         } catch (Service\Exception $error) {
             $this->addError(__FUNCTION__, $error->getMessage());
-            Helpers\LogerHelper::logging('YouTube', $this->getErrors(), 'error');
+            Helpers\Loger::logging('YouTube', $this->getErrors(), 'error');
             return [];
         }
     }

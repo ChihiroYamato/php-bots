@@ -9,14 +9,14 @@ use App\Anet\Storages;
 
 abstract class ChatBotAbstract implements BotInterface, BotDebugInterface, StatisticsInterface
 {
-    use Helpers\UrlHelperTrait, Helpers\ErrorHelperTrait;
+    use Helpers\UrlTrait, Helpers\ErrorTrait;
 
     protected string $className;
     protected int $totalMessageReading;
     protected int $totalMessageSending;
     protected int $totalIterations;
     protected bool $listeningFlag;
-    protected GoogleModules\SmallTalkModule $smallTalk;
+    protected GoogleModules\SmallTalk $smallTalk;
     protected Helpers\TimeTracker $timeTracker;
     protected Storages\Vocabulary $vocabulary;
     protected Storages\Buffer $buffer;
@@ -35,7 +35,7 @@ abstract class ChatBotAbstract implements BotInterface, BotDebugInterface, Stati
         $this->totalMessageSending = 0;
         $this->totalIterations = 0;
         $this->listeningFlag = true;
-        $this->smallTalk = new GoogleModules\SmallTalkModule();
+        $this->smallTalk = new GoogleModules\SmallTalk();
         $this->timeTracker = new Helpers\TimeTracker();
         $this->buffer = new Storages\Buffer();
         $this->vocabulary = new Storages\Vocabulary();

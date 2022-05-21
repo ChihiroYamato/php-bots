@@ -2,7 +2,7 @@
 
 namespace App\Anet\Helpers;
 
-trait ErrorHelperTrait
+trait ErrorTrait
 {
     private int $errorCount = 0;
     private array $errors = [];

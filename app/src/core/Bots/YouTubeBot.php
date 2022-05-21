@@ -5,7 +5,7 @@ namespace App\Anet\Bots;
 use Google;
 use Google\Service;
 use Google\Service\YouTube;
-use App\Anet\Services;
+use App\Anet\Contents;
 use App\Anet\YouTubeHelpers;
 use App\Anet\Helpers;
 use App\Anet\Games;
@@ -44,15 +44,15 @@ final class YouTubeBot extends ChatBotAbstract
 
     public function __destruct()
     {
-        Helpers\LogerHelper::loggingProccess($this->className, $this->getStatistics(), $this->buffer->fetch('sendings'));
-        Helpers\LogerHelper::logging($this->className, $this->buffer->fetch('messageList'), 'message');
+        Helpers\Loger::loggingProccess($this->className, $this->getStatistics(), $this->buffer->fetch('sendings'));
+        Helpers\Loger::logging($this->className, $this->buffer->fetch('messageList'), 'message');
 
-        Helpers\LogerHelper::saveProccessToDB($this->className);
-        Helpers\LogerHelper::saveToDB($this->className, 'message', 'youtube_messages');
+        Helpers\Loger::saveProccessToDB($this->className);
+        Helpers\Loger::saveToDB($this->className, 'message', 'youtube_messages');
 
-        Helpers\LogerHelper::archiveLogsByCategory($this->className);
+        Helpers\Loger::archiveLogsByCategory($this->className);
 
-        Helpers\LogerHelper::print($this->className, 'Force termination of a script');
+        Helpers\Loger::print($this->className, 'Force termination of a script');
     }
 
     private static function createGoogleClient(bool $setRedirectUrl = false) : Google\Client
@@ -224,10 +224,10 @@ final class YouTubeBot extends ChatBotAbstract
                     $largeSending = $this->video->showStatistic();
                     break;
                 case in_array($chatItem['message'], ['/факт', '/fact']):
-                    $largeSending = Services\Facts::fetchRand();
+                    $largeSending = Contents\Facts::fetchRand();
                     break;
                 case in_array($chatItem['message'], ['/шутка', '/joke']):
-                    $largeSending = Services\Jokes::fetchRand();
+                    $largeSending = Contents\Jokes::fetchRand();
                     break;
                 case mb_strpos($chatItem['message'], '/play') !== false:
                     // TODO =========== игры
@@ -438,18 +438,18 @@ final class YouTubeBot extends ChatBotAbstract
     {
         $sendingCount = 0;
         $sendingCount += $this->sendMessage('Всем привет, хорошего дня/вечера/ночи/утра'); // todo
-        Helpers\LogerHelper::print($this->className, 'Starting proccess');
+        Helpers\Loger::print($this->className, 'Starting proccess');
 
         while ($this->getErrorCount() < 5 && $this->listeningFlag) {
             if ($this->timeTracker->trackerState('loggingProccess')) {
                 if ($this->timeTracker->trackerCheck('loggingProccess', 60 * 3)) {
                     $this->timeTracker->trackerStop('loggingProccess');
 
-                    Helpers\LogerHelper::loggingProccess($this->className, $this->getStatistics(), $this->buffer->fetch('sendings'));
-                    Helpers\LogerHelper::logging($this->className, $this->buffer->fetch('messageList'), 'message'); // todo
+                    Helpers\Loger::loggingProccess($this->className, $this->getStatistics(), $this->buffer->fetch('sendings'));
+                    Helpers\Loger::logging($this->className, $this->buffer->fetch('messageList'), 'message'); // todo
 
                     $this->timeTracker->clearPoints();
-                    Helpers\LogerHelper::print($this->className, sprintf('Logs saved. Current iteration is: %d Proccessing duration: %s' . PHP_EOL, $this->totalIterations, $this->timeTracker->getDuration()));
+                    Helpers\Loger::print($this->className, sprintf('Logs saved. Current iteration is: %d Proccessing duration: %s' . PHP_EOL, $this->totalIterations, $this->timeTracker->getDuration()));
                 }
             } else {
                 $this->timeTracker->trackerStart('loggingProccess');
@@ -474,7 +474,7 @@ final class YouTubeBot extends ChatBotAbstract
         }
 
         if (! empty($this->getErrors())) {
-            Helpers\LogerHelper::logging($this->className, $this->getErrors(), 'error');
+            Helpers\Loger::logging($this->className, $this->getErrors(), 'error');
         }
     }
 
@@ -483,9 +483,9 @@ final class YouTubeBot extends ChatBotAbstract
         $this->fetchChatList();
 
         if ($this->lastChatMessageID !== null && empty($this->getErrors())) {
-            Helpers\LogerHelper::print($this->className, 'Chat request tested successfully, current last mess ID :' . $this->lastChatMessageID);
+            Helpers\Loger::print($this->className, 'Chat request tested successfully, current last mess ID :' . $this->lastChatMessageID);
         } else {
-            Helpers\LogerHelper::print($this->className, "Testing Failed, Current Errors:\n" . print_r($this->getErrors(), true));
+            Helpers\Loger::print($this->className, "Testing Failed, Current Errors:\n" . print_r($this->getErrors(), true));
         }
     }
 
@@ -494,9 +494,9 @@ final class YouTubeBot extends ChatBotAbstract
         $testing = $this->sendMessage('Прогрев чата');
 
         if ($testing) {
-            Helpers\LogerHelper::print($this->className, 'Message sending test completed successfully');
+            Helpers\Loger::print($this->className, 'Message sending test completed successfully');
         } else {
-            Helpers\LogerHelper::print($this->className, "Testing Failed, Current Errors:\n" . print_r($this->getErrors(), true));
+            Helpers\Loger::print($this->className, "Testing Failed, Current Errors:\n" . print_r($this->getErrors(), true));
         }
     }
 

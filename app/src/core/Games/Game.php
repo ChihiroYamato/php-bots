@@ -5,7 +5,7 @@ namespace App\Anet\Games;
 use App\Anet\Helpers;
 use App\Anet\YouTubeHelpers;
 
-abstract class GameAbstract implements GameInterface
+abstract class Game implements GameInterface
 {
     protected const GAME_INIT_MESSAGE = '';
     private Helpers\TimeTracker $timeTracker;

@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Anet\Services;
+namespace App\Anet\Contents;
 
+use App\Anet;
 use App\Anet\DB;
-use GuzzleHttp;
 use PHPHtmlParser;
 
-abstract class AbstractTexts extends AbstractContent
+abstract class Texts extends Anet\Contents
 {
     protected const CATEGORY_NAME = '%';
     protected const WARNING_MESSAGE = 'Сорри, что-то пошло не так';

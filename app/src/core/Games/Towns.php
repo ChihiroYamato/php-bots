@@ -2,10 +2,10 @@
 
 namespace App\Anet\Games;
 
-use App\Anet\Services;
+use App\Anet\Contents;
 use App\Anet\YouTubeHelpers;
 
-class Towns extends GameAbstract
+class Towns extends Game
 {
     public const DEFAULT_EXPIRE_TIME = 360;
     public const NAME = 'TOWNS';
@@ -26,7 +26,7 @@ class Towns extends GameAbstract
     {
         parent::__construct($user);
 
-        $this->winLetters = $this->getLetters(Services\Cities::VOCABULARY);
+        $this->winLetters = $this->getLetters(Contents\Cities::VOCABULARY);
         $this->stopList = [];
         $this->steps = 0;
         $this->lastLetter = null;
@@ -39,7 +39,7 @@ class Towns extends GameAbstract
                 return $this->defeat('Время игры ' . self::NAME . ' вышло');
             case $this->lastLetter !== null && $this->lastLetter !== mb_strtolower(mb_strcut($answer, 0, 2)):
                 return $this->defeat("Предыдущая буква была: <{$this->lastLetter}>, вы проиграли, а буквы были: "  . implode(', ', $this->winLetters));
-            case ! Services\Cities::validate($answer):
+            case ! Contents\Cities::validate($answer):
                 return $this->defeat("Города <$answer> - не существует, вы проиграли, а буквы были: "  . implode(', ', $this->winLetters));
             case in_array($answer, $this->stopList):
                 return $this->defeat('Такой город уже был, вы проиграли, а буквы были: '  . implode(', ', $this->winLetters));
@@ -84,7 +84,7 @@ class Towns extends GameAbstract
     private function getCity(string $letter) : string
     {
         do {
-            $city = Services\Cities::getRandByLetter($letter);
+            $city = Contents\Cities::getRandByLetter($letter);
         } while (in_array($city, $this->stopList));
 
         return (! empty($city)) ? $city : '----';

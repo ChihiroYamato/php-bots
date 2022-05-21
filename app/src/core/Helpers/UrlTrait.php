@@ -2,7 +2,7 @@
 
 namespace App\Anet\Helpers;
 
-trait UrlHelperTrait
+trait UrlTrait
 {
     protected static function fetchCurrentUrl() : string
     {
