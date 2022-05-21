@@ -13,6 +13,11 @@ final class Games
         $this->restList = [];
     }
 
+    public function __destruct()
+    {
+        DB\DataBase::saveByTableNameOp('games_statistic', DB\Redis::fetch('game*'));
+    }
+
     public function validateAndStarting(Games\GameInterface $game, YouTubeHelpers\User $user, int $timeout, int $minRaiting = 1) : array
     {
         if (isset($this->restList[$user->getId()]) && isset($this->restList[$user->getId()][$game::class]) && Helpers\TimeTracker::calculateDuration($this->restList[$user->getId()][$game::class]) < $timeout) {
@@ -76,7 +81,7 @@ final class Games
     private function closeUserSession(string $userId) : void
     {
         $this->restList[$userId][$this->storage[$userId]::class] = hrtime(true);
-        DB\DataBase::saveGameStatistic($this->storage[$userId]->getStatistic());
+        DB\Redis::set('game', $this->storage[$userId]->getStatistic());
         unset($this->storage[$userId]);
     }
 }

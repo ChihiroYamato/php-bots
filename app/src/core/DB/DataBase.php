@@ -197,6 +197,9 @@ final class DataBase
         }
     }
 
+    /**
+     * @deprecated use saveByTableNameOp
+     */
     public static function saveGameStatistic(array $params) : void
     {
         try {

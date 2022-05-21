@@ -42,10 +42,10 @@ abstract class GameAbstract implements GameInterface
     public function getStatistic() : array
     {
         return [
-            ':game' => static::NAME,
-            ':user_key' => $this->user->getId(),
-            ':score' =>  $this->score,
-            ':date' => (new \DateTime())->format('Y-m-d H:i:s'),
+            'user_key' => $this->user->getId(),
+            'game' => static::NAME,
+            'score' =>  $this->score,
+            'date' => (new \DateTime())->format('Y-m-d H:i:s'),
         ];
     }
 
