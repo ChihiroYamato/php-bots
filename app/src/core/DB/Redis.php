@@ -16,4 +16,25 @@ final class Redis
 
         return self::$connect;
     }
+
+    public static function set(string $key, mixed $data) : string
+    {
+        do {
+            $currentKey = $key . '_' . uniqid(more_entropy: true);
+        } while (self::getConnect()->exists($currentKey));
+
+        self::getConnect()->set($currentKey, json_encode($data, JSON_FORCE_OBJECT));
+
+        return $currentKey;
+    }
+
+    public static function fetch(string $keys) : array
+    {
+        $keyList = self::getConnect()->keys($keys);
+        $result = self::getConnect()->mGet($keyList);
+        $result = array_map(fn (string $item) => json_decode($item, true), $result);
+        self::getConnect()->del($keyList);
+
+        return $result;
+    }
 }
