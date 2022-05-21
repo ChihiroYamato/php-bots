@@ -1,6 +1,6 @@
 {
-    "name": "youtube/chatbot",
-    "description": "YouTube ChatBot",
+    "name": "anet/chatbot",
+    "description": "PHP ChatBots",
     "autoload": {
         "psr-4": {
             "App\\Anet\\": "src/core/"

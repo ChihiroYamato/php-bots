@@ -229,7 +229,7 @@ final class DataBase
     {
         try {
 
-            $request = self::getConnect()->prepare("SELECT `name` FROM `cities` WHERE `name` LIKE 'а%' ORDER BY RAND() LIMIT 1");
+            $request = self::getConnect()->prepare("SELECT `name` FROM `cities` WHERE `name` LIKE '$letter%' ORDER BY RAND() LIMIT 1");
             $request->execute();
 
             foreach ($request as $response) {
