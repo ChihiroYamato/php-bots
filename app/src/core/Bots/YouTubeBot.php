@@ -312,8 +312,6 @@ final class YouTubeBot extends ChatBotAbstract
                         if (mb_stripos(mb_strtolower($chatItem['message']), $option) !== false) {
                             if ($key === 'say_foul') {
                                 $currentUser->incrementRaiting(rand(0, 2) * (-5));
-                                var_dump($option);              // todo ==== testing !!
-                                var_dump($chatItem['message']); // todo ==== testing !!
                             }
                             $sendingDetail['sending'] = $sending . $this->vocabulary->getRandItem($key);
                             $sendingList[] = $sendingDetail;
@@ -449,7 +447,7 @@ final class YouTubeBot extends ChatBotAbstract
                     Helpers\Loger::logging($this->className, $this->buffer->fetch('messageList'), 'message'); // todo
 
                     $this->timeTracker->clearPoints();
-                    Helpers\Loger::print($this->className, sprintf('Logs saved. Current iteration is: %d Proccessing duration: %s' . PHP_EOL, $this->totalIterations, $this->timeTracker->getDuration()));
+                    Helpers\Loger::print($this->className, sprintf('Logs saved. Current iteration is: %d Proccessing duration: %s', $this->totalIterations, $this->timeTracker->getDuration()));
                 }
             } else {
                 $this->timeTracker->trackerStart('loggingProccess');

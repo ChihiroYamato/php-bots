@@ -31,6 +31,11 @@ final class Redis
     public static function fetch(string $keys) : array
     {
         $keyList = self::getConnect()->keys($keys);
+
+        if (empty($keyList)) {
+            return [];
+        }
+
         $result = self::getConnect()->mGet($keyList);
         $result = array_map(fn (string $item) => json_decode($item, true), $result);
         self::getConnect()->del($keyList);

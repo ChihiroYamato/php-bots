@@ -198,7 +198,7 @@ final class DataBase
     }
 
     /**
-     * @deprecated use saveByTableNameOp
+     * @deprecated use saveByTableName
      */
     public static function saveGameStatistic(array $params) : void
     {
@@ -286,40 +286,12 @@ final class DataBase
         }
     }
 
-    /**
-     * @deprecated
-     */
     public static function saveByTableName(string $table, array $data) : void
     {
-        try {
-            $inserts = '';
-            $values = '';
-
-            foreach ($data[0] as $key => $value) {
-                $inserts .= "`$key`,";
-                $values .= ":$key,";
-            }
-
-            $inserts = rtrim($inserts, ",");
-            $values = rtrim($values, ",");
-
-            $request = self::getConnect()->prepare("INSERT INTO $table($inserts) VALUES ($values)");
-
-            foreach ($data as $items) {
-                $requestData = [];
-                foreach ($items as $key => $item) {
-                    $requestData[":$key"] = preg_replace('/[\x{10000}-\x{10FFFF}]/u', '', $item);
-                }
-                $request->execute($requestData);
-            }
-
-        } catch (\PDOException $error) {
-            Helpers\Loger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
+        if (empty($data) || empty($data[0]) || ! is_array($data[0])) {
+            return;
         }
-    }
 
-    public static function saveByTableNameOp(string $table, array $data) : void // todo testing
-    {
         try {
             $inserts = '';
             $values = '';
@@ -333,7 +305,7 @@ final class DataBase
                 foreach ($notes as $item) {
                     $value .= '\'' . str_replace('\'', ' ', preg_replace('/[\x{10000}-\x{10FFFF}]/u', '', $item)) . '\',';
                 }
-                $value = rtrim($values, ",");
+                $value = rtrim($value, ",");
                 $values .= "($value),";
             }
 
