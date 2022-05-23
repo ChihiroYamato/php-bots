@@ -7,7 +7,7 @@ use App\Anet\YouTubeHelpers;
 
 class Towns extends Game
 {
-    public const DEFAULT_EXPIRE_TIME = 360;
+    public const DEFAULT_EXPIRE_TIME = 480;
     public const NAME = 'TOWNS';
     public const COMMAND_HELP = '/play towns';
     public const COMMAND_START = '/play towns s';
@@ -19,7 +19,7 @@ class Towns extends Game
     /**
      * @var int `private` count of victory letters
      */
-    private const LETTERS_COUNT = 3;
+    private const LETTERS_COUNT = 4;
     /**
      * @var int `private` score of victory
      */
@@ -58,7 +58,12 @@ class Towns extends Game
         }
 
         $this->stopList[] = $answer;
-        $letter = mb_strtolower(mb_strcut($answer, -1));
+        $letter = mb_strtolower(mb_strcut($answer, -2));
+
+        if (in_array($letter, ['ь', 'ы', 'ъ'])) {
+            $letter = mb_strtolower(mb_strcut($answer, -4, 2));
+        }
+
         $this->steps++;
 
         if (in_array($letter, $this->winLetters)) {
@@ -73,6 +78,7 @@ class Towns extends Game
         $this->stopList[] = $response;
         $this->lastLetter = mb_strtolower(mb_strcut($response, -1));
 
+        var_dump($response); // todo ====================== bug с некоторыми городами - не отправляются
         return [
             'message' => $this->user->getName() . " продолжаем, $response, тебе на <{$this->lastLetter}>",
             'end' => false,
