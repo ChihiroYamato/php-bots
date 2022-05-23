@@ -3,16 +3,15 @@
 namespace App\Anet\Helpers;
 
 /**
- *
- *
- * @method  makeDirectory :void string $directory
+ * **FileSystemTrait** -- contains any methods for work with file system og project
  */
 trait FileSystemTrait
 {
     /**
-     *
-     * @param string $directory
-     * @throw SimpleException
+     * Method create new directory by path if it isn't exist
+     * @param string $directory path to new directory
+     * @return void
+     * @throw `\Exception`
      */
     protected static function makeDirectory(string $directory) : void
     {
@@ -21,6 +20,14 @@ trait FileSystemTrait
         }
     }
 
+    /**
+     * Method add postfix to name of file that means file is already worked out
+     * as well as checked if new file name occupied
+     * @param string $fileName absolute path to file
+     * @param string $postfix postfix to file
+     * @return bool return false if fileName isn't correct file name of has postfix otherwise return true
+     * @throw `\Exception`
+     */
     protected static function archiveFile(string $fileName, string $postfix) : bool
     {
         if (! is_file($fileName) || mb_stripos($fileName, $postfix) !== false) {
@@ -36,6 +43,13 @@ trait FileSystemTrait
         return true;
     }
 
+    /**
+     * Method get new file name that isn't occupied
+     * @param string $fileName old file name
+     * @param string $prefix `[optional]` prefix to new file name
+     * @param string $iterationPrefix `[optional]` separator of iteration existing files
+     * @return string new file name
+     */
     protected static function getFreeFileName(string $fileName, string $prefix = '', string $iterationPrefix = '-') : string
     {
         preg_match('/(?<base>[^\.]+)(?<ext>\.[^\.]+)?$/', $fileName, $parseName);

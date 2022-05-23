@@ -7,15 +7,42 @@ use App\Anet\YouTubeHelpers;
 
 abstract class Game implements GameInterface
 {
+    /**
+     * @var string `protected` base init message
+     */
     protected const GAME_INIT_MESSAGE = '';
+    /**
+     * @var \App\Anet\Helpers\TimeTracker $timeTracker `private` instance of TimeTracker class
+     */
     private Helpers\TimeTracker $timeTracker;
+    /**
+     * @var \App\Anet\YouTubeHelpers\User $user `protected` instance of User class
+     */
     protected YouTubeHelpers\User $user;
+    /**
+     * @var int $score final score of game
+     */
     protected int $score;
 
+    /**
+     * **Method** for setup defeat scenario
+     * @param string $defeatMessage defeating message of game
+     * @return array return params of game session, include 'message' - answer to user, 'end' - flag of game over
+     */
     abstract protected function defeat(string $defeatMessage) : array;
 
+    /**
+     * **Method** for setup victory scenario
+     * @param string $victoryMessage victorying message of game
+     * @return array return params of game session, include 'message' - answer to user, 'end' - flag of game over
+     */
     abstract protected function victory(string $victoryMessage) : array;
 
+    /**
+     * Initialize game session
+     * @param \App\Anet\YouTubeHelpers\User $user instance of current user
+     * @return void
+     */
     public function __construct(YouTubeHelpers\User $user)
     {
         $this->user = $user;
@@ -49,16 +76,30 @@ abstract class Game implements GameInterface
         ];
     }
 
+    /**
+     * **Method** check if game is expired
+     * @return bool return true if game is expired, else - false
+     */
     protected function checkExpire() : bool
     {
         return $this->timeTracker->trackerCheck(static::class, static::DEFAULT_EXPIRE_TIME);
     }
 
+    /**
+     * **Method** get message with current statistic of game session
+     * @param int $rating current rating of user
+     * @return string current statistic of game session
+     */
     protected function getStatisticMessage(int $rating) : string
     {
         return " —— очки: {$this->score} —— текущий соц рейтинг: $rating";
     }
 
+    /**
+     * **Method** setup game over
+     * @param string $endMessage message of game over
+     * @return array return params of game session, include 'message' - answer to user, 'end' - flag of game over
+     */
     protected function end(string $endMessage) : array
     {
         $this->user->incrementRaiting($this->score);

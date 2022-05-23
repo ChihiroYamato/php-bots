@@ -2,8 +2,19 @@
 
 namespace App\Anet\Helpers;
 
+/**
+ * **Timer** -- class for setup general proccesing of time in script
+ */
 final class Timer
 {
+    /**
+     * Method set sleep for script for specified secunds with specified message on each iteration
+     * @param int $sec time of sleep in secunds
+     * @param bool $showMess `[optional]` flag if need show message on each iteration
+     * @param ?int $iterator `[optional]` set int if need to divide sleep time for more interval with showing message on each of it
+     * @param string $message `[optional]` message for divided intervals
+     * @return void
+     */
     public static function setSleep(int $sec, bool $showMess = false, ?int $iterator = null, string $message = 'Wait...') : void
     {
         if ($showMess) {

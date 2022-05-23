@@ -11,6 +11,9 @@ class Roulette extends Game
     public const COMMAND_START = '/play roul s';
     protected const GAME_INIT_MESSAGE = 'введите число от 1 до 6';
 
+    /**
+     * @var int $trueValue value for victory
+     */
     private int $trueValue;
 
     public function __construct(YouTubeHelpers\User $user)

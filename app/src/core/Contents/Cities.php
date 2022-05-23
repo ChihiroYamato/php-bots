@@ -8,6 +8,9 @@ use PHPHtmlParser;
 
 class Cities extends Anet\Contents
 {
+    /**
+     * @var array `public` vocabulary of base pagination
+     */
     public const VOCABULARY = ['А', 'Б', 'В', 'Г', 'Д', 'Е', 'Ж', 'З', 'И', 'Й', 'К', 'Л', 'М', 'Н', 'О', 'П', 'Р', 'С', 'Т', 'У', 'Ф', 'Х', 'Ц', 'Ч', 'Ш', 'Щ', 'Э', 'Ю', 'Я',];
 
     protected function fetchContent(array $selectorsParam) : void
@@ -53,11 +56,21 @@ class Cities extends Anet\Contents
         DB\DataBase::saveCities(array_unique($this->buffer));
     }
 
+    /**
+     * **Method** checked if city is exist in DB by name
+     * @param string $city name of city
+     * @return bool return true if city is exist else - false
+     */
     public static function validate(string $city) : bool
     {
         return (! empty(DB\DataBase::getCityByName($city)));
     }
 
+    /**
+     * **Method** get from DB rand city by first letter
+     * @param string $letter first letter of city
+     * @return string name of city
+     */
     public static function getRandByLetter(string $letter) : string
     {
         return DB\DataBase::getRandCityByLetter($letter);
