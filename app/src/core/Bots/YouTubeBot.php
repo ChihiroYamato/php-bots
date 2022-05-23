@@ -108,7 +108,7 @@ final class YouTubeBot extends ChatBotAbstract
     {
         $sendingCount = 0;
         $sendingCount += $this->sendMessage('Всем привет, хорошего дня/вечера/ночи/утра'); // todo
-        Helpers\Loger::print($this->className, "\nStarting proccess");
+        Helpers\Loger::print($this->className, 'Starting proccess');
 
         while ($this->getErrorCount() < 5 && $this->listeningFlag) {
             if ($this->timeTracker->trackerState('loggingProccess')) {

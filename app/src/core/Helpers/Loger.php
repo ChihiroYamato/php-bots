@@ -62,9 +62,9 @@ final class Loger
      */
     public static function print(string $category, string $message) : void
     {
-        $logsFile = self::LOGS_PATH . "/$category" . self::RUNTIME_LOGS_NAME;
+        $logsFile = self::LOGS_PATH . self::RUNTIME_LOGS_NAME;
         self::makeDirectory(dirname($logsFile));
-        file_put_contents($logsFile, ((new \DateTime())->format('Y-m-d H:i:s')) . " -- $message\n", FILE_APPEND);
+        file_put_contents($logsFile, ((new \DateTime())->format('Y-m-d H:i:s')) . " -- $category -- $message\n", FILE_APPEND);
     }
 
     /**
@@ -181,7 +181,7 @@ final class Loger
             $result[] = $buffer;
         }
 
-        DB\DataBase::saveByTableName($database, $result); // todo testing
+        DB\DataBase::saveByTableName($database, $result);
     }
 
     /**
@@ -268,15 +268,16 @@ final class Loger
         $xml = self::openXMLFromFile($logsName);
 
         foreach ($logs as $log) {
-            $xmlNode = $xml->addChild($nodeName);
-            $xmlNode->addAttribute('id', uniqid('', true));
-
             if (is_array($log)) {
+                $xmlNode = $xml->addChild($nodeName);
+                $xmlNode->addAttribute('id', uniqid('', true));
+
                 foreach ($log as $tag => $note) {
                     $xmlNode->{$tag} = $note;
                 }
             } else {
-                $xmlNode = $log;
+                $xmlNode = $xml->addChild($nodeName,  $log);
+                $xmlNode->addAttribute('id', uniqid('', true));
             }
         }
 
@@ -329,9 +330,9 @@ final class Loger
         foreach (scandir($baseDir) as $file) {
             $path = $baseDir . "/$file";
 
-            if (is_dir($path) && ! in_array($file, ['.', '..', trim(dirname(self::RUNTIME_LOGS_NAME), '/')])) {
+            if (is_dir($path) && ! in_array($file, ['.', '..'])) {
                 self::archiveLogsRecursive($path);
-            } elseif (is_file($path) && $file !== '.gitkeep') {
+            } elseif (is_file($path)) {
                 self::archiveFile($path, self::ARCHIVE_POSTFIX);
             }
         }

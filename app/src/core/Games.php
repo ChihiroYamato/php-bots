@@ -31,6 +31,7 @@ final class Games
     public function __destruct()
     {
         DB\DataBase::saveByTableName('games_statistic', DB\Redis::fetch('game*'));
+        Helpers\Loger::print('System', 'Games statistics saved');
     }
 
     /**

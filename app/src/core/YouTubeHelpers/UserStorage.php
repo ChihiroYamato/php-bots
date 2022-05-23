@@ -48,7 +48,7 @@ final class UserStorage
     public function __destruct()
     {
         $this->savedUsers();
-        Helpers\Loger::print('YouTube', 'Users saved');
+        Helpers\Loger::print('System', 'Users saved');
     }
 
     /**
