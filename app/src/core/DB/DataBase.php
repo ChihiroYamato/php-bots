@@ -29,16 +29,13 @@ final class DataBase
 
     public static function fetchVocabulary() : array
     {
-        $result = [];
         $sqlString = 'SELECT v.content, vc.name AS category, vt.name AS type FROM vocabulary AS v JOIN vocabulary_types AS vt ON vt.id=v.type_id JOIN vocabulary_categories AS vc ON vc.id=v.category_id ORDER BY category DESC';
 
         try {
             $request = self::getConnect()->prepare($sqlString);
             $request->execute();
 
-            foreach ($request as $response) {
-                $result[] = $response;
-            }
+            $result = $request->fetchAll(\PDO::FETCH_ASSOC);
         } catch (\PDOException $error) {
             Helpers\Loger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
             exit;
@@ -77,16 +74,13 @@ final class DataBase
 
     public static function fetchYouTubeUsers() : array
     {
-        $result = [];
         $sqlString = 'SELECT yu.key, yu.name, yu.active, yu.isAdmin, yus.last_published, yus.message_count, yus.social_rating, yus.registation_date, yus.subscriber_count, yus.video_count, yus.view_count, yus.last_update FROM youtube_users AS yu JOIN youtube_users_statisctics AS yus ON yus.user_key=yu.key';
 
         try {
             $request = self::getConnect()->prepare($sqlString);
             $request->execute();
 
-            foreach ($request as $response) {
-                $result[] = $response;
-            }
+            $result = $request->fetchAll(\PDO::FETCH_ASSOC);
         } catch (\PDOException $error) {
             Helpers\Loger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
             exit;
@@ -163,9 +157,7 @@ final class DataBase
             $request = self::getConnect()->prepare($sqlString);
             $request->execute();
 
-            foreach ($request as $response) {
-                return $response['content'];
-            }
+            return $request->fetch(\PDO::FETCH_ASSOC)['content'] ?? '';
         } catch (\PDOException $error) {
             Helpers\Loger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
             return '';
@@ -180,9 +172,7 @@ final class DataBase
             $request = self::getConnect()->prepare("SELECT `id` FROM text_categories WHERE `name` LIKE '$category' LIMIT 1");
             $request->execute();
 
-            foreach ($request as $response) {
-                $id = $response['id'];
-            }
+            $id = $request->fetch(\PDO::FETCH_ASSOC)['id'];
 
             $request = self::getConnect()->prepare("INSERT INTO texts(`content`, `category_id`) VALUES (:content, $id)");
 
@@ -235,9 +225,7 @@ final class DataBase
             $request = self::getConnect()->prepare("SELECT `name` FROM `cities` WHERE `name` LIKE '$letter%' ORDER BY RAND() LIMIT 1");
             $request->execute();
 
-            foreach ($request as $response) {
-                return $response['name'] ?? '';
-            }
+            return $request->fetch(\PDO::FETCH_ASSOC)['name'] ?? '';
         } catch (\PDOException $error) {
             Helpers\Loger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
             return '';
@@ -248,11 +236,13 @@ final class DataBase
     {
         try {
 
-            $request = self::getConnect()->prepare("SELECT * FROM cities WHERE `name` LIKE :city");
+            $request = self::getConnect()->prepare("SELECT * FROM cities WHERE `name` LIKE :city LIMIT 1");
             $request->execute([':city' => $city]);
 
-            foreach ($request as $response) {
-                return $response;
+            $result = $request->fetch(\PDO::FETCH_ASSOC);
+
+            if (is_array($result)) {
+                return $result;
             }
 
             return [];
