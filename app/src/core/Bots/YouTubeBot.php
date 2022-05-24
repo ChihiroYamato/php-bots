@@ -257,11 +257,11 @@ final class YouTubeBot extends ChatBotAbstract
                         continue;
                     }
 
-                    $currentUser->incrementMessage();
+                    $this->users->handler($currentUser->getId(), 'incrementMessage');
 
                     $actualChat[] = [
                         'id' => $chatItem['id'],
-                        'authorId' => $chatItem['snippet']['authorChannelId'],
+                        'authorId' => $currentUser->getId(),
                         'authorName' => $currentUser->getName(),
                         'message' => $chatItem['snippet']['displayMessage'],
                         'published' => $chatItem['snippet']['publishedAt'],
@@ -311,7 +311,7 @@ final class YouTubeBot extends ChatBotAbstract
             $matches = explode(' ', trim(str_replace(['!', ',', '.', '?'], '', $chatItem['message'])));
             $lastWord = mb_strtolower(array_pop($matches));
 
-            $currentUser->incrementRaitingRandom(2, random_int(1, 2));
+            $this->users->handler($currentUser->getId(), 'incrementRaitingRandom', 2, random_int(1, 2));
 
             if ($currentUser->checkAdmin()) {
                 switch (true) {
@@ -402,7 +402,7 @@ final class YouTubeBot extends ChatBotAbstract
             }
 
             if (! empty($largeSending)) {
-                $currentUser->incrementRaiting(rand(0, 4) * 5);
+                $this->users->handler($currentUser->getId(), 'incrementRaiting', rand(0, 4) * 5);
 
                 foreach ($largeSending as $item) {
                     $sendingDetail['sending'] = $item;
@@ -439,7 +439,7 @@ final class YouTubeBot extends ChatBotAbstract
             }
 
             if (mb_stripos(mb_strtolower($chatItem['message']), $this->botUserName) !== false) {
-                $currentUser->incrementRaiting(rand(0, 4) * 5);
+                $this->users->handler($currentUser->getId(), 'incrementRaiting', rand(0, 4) * 5);
 
                 $currentMessage = trim(mb_strtolower(preg_replace("/@?{$this->botUserName}/", '', $chatItem['message'])));
                 $sending = $sending . $this->prepareSmartAnswer($currentMessage);
@@ -454,7 +454,7 @@ final class YouTubeBot extends ChatBotAbstract
                     foreach ($item['request'] as $option) {
                         if (mb_stripos(mb_strtolower($chatItem['message']), $option) !== false) {
                             if ($key === 'say_foul') {
-                                $currentUser->incrementRaiting(rand(0, 2) * (-5));
+                                $this->users->handler($currentUser->getId(), 'incrementRaiting', rand(0, 2) * (-5));
                             }
                             $sendingDetail['sending'] = $sending . $this->vocabulary->getRandItem($key);
                             $sendingList[] = $sendingDetail;

@@ -49,7 +49,7 @@ final class Redis
      * **Method** set serialized PHP object to redis storage
      * @param string $key name of redis key
      * @param object $object saving PHP object
-     * @return string
+     * @return string redis key of current value
      */
     public static function setObject(string $key, object $object) : string
     {
@@ -61,9 +61,10 @@ final class Redis
     /**
      * **Method** fetch values with deleting from redis storage
      * @param string $keys key name, support mask 'name*' whitch return all suitable keys
+     * @param bool $isObjects `[optional]` set true if return values are objects and it's needed to unserialize, default false
      * @return array list of values
      */
-    public static function fetch(string $keys) : array
+    public static function fetch(string $keys, bool $isObjects = false) : array
     {
         $keyList = self::getConnect()->keys($keys);
 
@@ -72,26 +73,9 @@ final class Redis
         }
 
         $result = self::getConnect()->mGet($keyList);
-        $result = array_map(fn (string $item) => json_decode($item, true), $result);
+        $result = array_map(fn (string $item) => $isObjects ? unserialize($item) : json_decode($item, true), $result);
         self::getConnect()->del($keyList);
 
         return $result;
-    }
-
-    /**
-     * **Method** fetch php object with deleting from redis storage
-     * @param string $key key of object in storage
-     * @return null|object if object exist - return object, else - null
-     */
-    public static function fetchObject(string $key) : ?object
-    {
-        if (! self::getConnect()->exists($key)) {
-            return null;
-        }
-
-        $object = unserialize(self::getConnect()->get($key));
-        self::getConnect()->del($key);
-
-        return is_object($object) ? $object : null;
     }
 }

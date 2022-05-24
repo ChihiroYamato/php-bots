@@ -18,9 +18,13 @@ final class UserStorage
      */
     private const DAYS_WITHOUT_UPDATE = 4;
     /**
-     * @var int max days for users without active
+     * @var int `private` max days for users without active
      */
     private const DAYS_WITHOUT_ACTIVE = 365;
+    /**
+     * @var string `private` prefix of redis storage keys
+     */
+    private const REDIS_PREFIX = 'youtube_user_';
 
     /**
      * @var \Google\Service\YouTube $youtube `private` instance of Yotube Service class
@@ -69,6 +73,7 @@ final class UserStorage
 
         $this->storage[$id] = new User($id, $responseUser);
         $this->insert($this->storage[$id]);
+        DB\Redis::setObject(self::REDIS_PREFIX . $id, $this->storage[$id]);
 
         return $this->storage[$id];
     }
@@ -108,6 +113,24 @@ final class UserStorage
     }
 
     /**
+     * **Method** handle specified User method with specified params in current user
+     * with updating user to redis storage
+     * @param string $id current user's id
+     * @param string $method existing method of User class
+     * @param mixed ...$params specified list of params for User method
+     * @return void
+     */
+    public function handler(string $id, string $method, ...$params) : void
+    {
+        $user = $this->get($id);
+
+        if ($user !== null && method_exists($user, $method)) {
+            $user->{$method}(...$params);
+            DB\Redis::setObject(self::REDIS_PREFIX . $id, $user);
+        }
+    }
+
+    /**
      * **Method** checked user by insance for possibility to "win random" if success - return congratulation message
      * @param \App\Anet\YouTubeHelpers\User $user instance of current user
      * @param int $raiting rating which will increment current rating on success
@@ -119,7 +142,7 @@ final class UserStorage
             return '';
         }
 
-        $user->incrementRaiting($raiting);
+        $this->handler($user->getId(), 'incrementRaiting', $raiting);
 
         return $user->getName() . " поздравляю! ты выбран случайным победителем приза в $raiting рейтинга! твой текущий рейтинг: " . $user->getRating();
     }
@@ -276,7 +299,8 @@ final class UserStorage
                 $this->updateGlobal($user);
             }
 
-            $this->storage[$item['key']] = $user;
+            DB\Redis::setObject(self::REDIS_PREFIX . $user->getId(), $user);
+            $this->storage[$user->getId()] = $user;
         }
     }
 
@@ -286,7 +310,7 @@ final class UserStorage
      */
     private function savedUsers() : void
     {
-        foreach ($this->storage as $user) {
+        foreach (DB\Redis::fetch(self::REDIS_PREFIX . '*', true) as $user) {
             $this->updateLocal($user);
         }
     }
