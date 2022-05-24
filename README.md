@@ -29,7 +29,7 @@ ____
         - core >> директория пользовательских классов
         - secrets >> директория с файлами токенов
         - [const.php](./app/src/const.php) >> файл с основными константами
-        - `env_const.php` >> *(нужно создать)* файл с константами настроек. [Подробнее](#env_const.php)
+        - `env_const.php` >> *(нужно создать)* файл с константами настроек. [Подробнее](#env_constphp)
     - vendor
     - [composer.json](./app/composer.json)
     - [composer.lock](./app/composer.lock)
@@ -39,7 +39,7 @@ ____
 - images >> директория докер образов
 - project_database >> хранилище бд
 - project_logs >> логи проекта
-- `.env` >> *(нужно создать)* файл с настройками путей для сборки docker. [Подробнее](#.env)
+- `.env` >> *(нужно создать)* файл с настройками путей для сборки docker. [Подробнее](#env)
 - [docker-compose.yml](./docker-compose.yml) >> сборка docker
 ## **Install and config**
 ____
