@@ -5,18 +5,51 @@ namespace App\Anet\YouTubeHelpers;
 use Google\Service;
 use App\Anet\Helpers;
 
+/**
+ * **VideoProperties** -- class storage of youtube video properties
+ */
 final class VideoProperties
 {
+    /**
+     * @var string `public` current timezone
+     */
     public const TIME_ZONE = 'Europe/Moscow';
 
+    /**
+     * @var \Google\Service\YouTube $youtube `private` instance of Youtube Service class
+     */
     private Service\YouTube $youtube;
+    /**
+     * @var \App\Anet\Helpers\TimeTracker $timeTracker `private` instance of TimeTracker class
+     */
     private Helpers\TimeTracker $timeTracker;
+    /**
+     * @var \DateTime $videoStarting `private` timestamp of video starting
+     */
     private \DateTime $videoStarting;
+    /**
+     * @var string $youtubeURL `private` link to youtube video
+     */
     private string $youtubeURL;
+    /**
+     * @var string $videoID `private` youtube video id
+     */
     private string $videoID;
+    /**
+     * @var string $liveChatID `private` id of youtube video live chat
+     */
     private string $liveChatID;
+    /**
+     * @var null|string $totalViews `private` total count of current video view
+     */
     private ?string $totalViews;
 
+    /**
+     * Initialized VideoProperties
+     * @param \Google\Service\YouTube $youtube instance of YouTube Service class
+     * @param string $youtubeURL link to youtube video
+     * @return void
+     */
     public function __construct(Service\YouTube $youtube, string $youtubeURL)
     {
         $this->youtube = $youtube;
@@ -27,26 +60,47 @@ final class VideoProperties
         $this->fetchProperties();
     }
 
+    /**
+     * **Method** get youtube video link
+     * @return string youtube video link
+     */
     public function getYoutubeURL() : string
     {
         return $this->youtubeURL;
     }
 
+    /**
+     * **Method** get youtube video id
+     * @return string youtube video id
+     */
     public function getVideoID() : string
     {
         return $this->videoID;
     }
 
+    /**
+     * **Method** get youtube video live chat id
+     * @return string youtube video live chat id
+     */
     public function getLiveChatID() : string
     {
         return $this->liveChatID;
     }
 
+    /**
+     * **Method** get formated timestamp of video starting
+     * @param string $format `[optional]` format of timestamp
+     * @return string formated timestamp of video starting
+     */
     public function getVideoStarting(string $format = 'Y-m-d H:i:s') : string
     {
         return $this->videoStarting->format($format);
     }
 
+    /**
+     * **Method** get readble statistic of video
+     * @return array list of message to show
+     */
     public function showStatistic() : array
     {
         $properties = $this->getStatistic();
@@ -54,6 +108,10 @@ final class VideoProperties
         return ["Стрим начался в: {$properties['videoStarting']} —— длительность: {$properties['duration']} —— Всего просмотров: {$properties['totalViews']}"];
     }
 
+    /**
+     * **Method** get statistic of video, fetch info from youtube server with interval of 10 minutes
+     * @return array list of statistic properties
+     */
     public function getStatistic() : array
     {
         if (! $this->timeTracker->trackerState(__FUNCTION__) || $this->timeTracker->trackerCheck(__FUNCTION__, 60 * 10)) {
@@ -69,6 +127,10 @@ final class VideoProperties
         ];
     }
 
+    /**
+     * **Method** fetch general properties of video from youtube server and setup to class vars
+     * @return void
+     */
     private function fetchProperties() : void
     {
         $response = $this->youtube->videos->listVideos('liveStreamingDetails', ['id' => $this->videoID]);
@@ -89,6 +151,10 @@ final class VideoProperties
         $this->videoStarting->setTimezone(new \DateTimeZone(self::TIME_ZONE));
     }
 
+    /**
+     * **Method** fetch video views from youtube server
+     * @return string video views
+     */
     private function fetchViews() : string
     {
         $response = $this->youtube->videos->listVideos('statistics', ['id' => $this->videoID]);
@@ -96,6 +162,12 @@ final class VideoProperties
         return $response['items'][0]['statistics']['viewCount'] ?? '';
     }
 
+    /**
+     * **Method** validate youtube url from params
+     * @param string $url youtube url
+     * @return string validated youtube url
+     * @throw `Google\Service\Exception`
+     */
     private function validateYoutubeURL(string $url) : string
     {
         if (! preg_match('/https:\/\/www\.youtube\.com.*/', $url)) {
@@ -105,6 +177,11 @@ final class VideoProperties
         return $url;
     }
 
+    /**
+     * **Method** fetch video id from youtube video link
+     * @param string $url youtube video link
+     * @return string video id
+     */
     private function fetchVideoID(string $url) : string
     {
         preg_match('/youtube\.com\/watch\?.*v=([^&]+)/',  $url, $matches);

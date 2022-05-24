@@ -1,6 +1,6 @@
 {
-    "name": "youtube/chatbot",
-    "description": "YouTube ChatBot",
+    "name": "anet/chatbot",
+    "description": "PHP ChatBots",
     "autoload": {
         "psr-4": {
             "App\\Anet\\": "src/core/"
@@ -8,7 +8,7 @@
         "classmap": [],
         "files": [
             "./src/const.php",
-            "./src/pre_const.php"
+            "./src/env_const.php"
         ]
     },
     "authors": [

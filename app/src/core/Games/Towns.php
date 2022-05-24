@@ -2,19 +2,31 @@
 
 namespace App\Anet\Games;
 
-use App\Anet\Services;
+use App\Anet\Contents;
 use App\Anet\YouTubeHelpers;
 
-class Towns extends GameAbstract
+class Towns extends Game
 {
-    public const DEFAULT_EXPIRE_TIME = 360;
+    public const DEFAULT_EXPIRE_TIME = 480;
     public const NAME = 'TOWNS';
     public const COMMAND_HELP = '/play towns';
     public const COMMAND_START = '/play towns s';
     protected const GAME_INIT_MESSAGE = 'назовите город';
+    /**
+     * @var int `private` max step of game
+     */
     private const MAX_TURN = 15;
-    private const LETTERS_COUNT = 3;
+    /**
+     * @var int `private` count of victory letters
+     */
+    private const LETTERS_COUNT = 4;
+    /**
+     * @var int `private` score of victory
+     */
     private const WIN_SCORE = 300;
+    /**
+     * @var int `private` score of defeat
+     */
     private const LOSE_SCORE = 50;
 
     private array $winLetters;
@@ -26,7 +38,7 @@ class Towns extends GameAbstract
     {
         parent::__construct($user);
 
-        $this->winLetters = $this->getLetters(Services\Cities::VOCABULARY);
+        $this->winLetters = $this->getLetters(Contents\Cities::VOCABULARY);
         $this->stopList = [];
         $this->steps = 0;
         $this->lastLetter = null;
@@ -39,14 +51,19 @@ class Towns extends GameAbstract
                 return $this->defeat('Время игры ' . self::NAME . ' вышло');
             case $this->lastLetter !== null && $this->lastLetter !== mb_strtolower(mb_strcut($answer, 0, 2)):
                 return $this->defeat("Предыдущая буква была: <{$this->lastLetter}>, вы проиграли, а буквы были: "  . implode(', ', $this->winLetters));
-            case ! Services\Cities::validate($answer):
+            case ! Contents\Cities::validate($answer):
                 return $this->defeat("Города <$answer> - не существует, вы проиграли, а буквы были: "  . implode(', ', $this->winLetters));
             case in_array($answer, $this->stopList):
                 return $this->defeat('Такой город уже был, вы проиграли, а буквы были: '  . implode(', ', $this->winLetters));
         }
 
         $this->stopList[] = $answer;
-        $letter = mb_strtolower(mb_strcut($answer, -1));
+        $letter = mb_strtolower(mb_strcut($answer, -2));
+
+        if (in_array($letter, ['ь', 'ы', 'ъ'])) {
+            $letter = mb_strtolower(mb_strcut($answer, -4, 2));
+        }
+
         $this->steps++;
 
         if (in_array($letter, $this->winLetters)) {
@@ -61,9 +78,18 @@ class Towns extends GameAbstract
         $this->stopList[] = $response;
         $this->lastLetter = mb_strtolower(mb_strcut($response, -1));
 
+        var_dump($response); // todo ====================== bug с некоторыми городами - не отправляются
         return [
             'message' => $this->user->getName() . " продолжаем, $response, тебе на <{$this->lastLetter}>",
             'end' => false,
+        ];
+    }
+
+    public static function getHelpMessage() : array
+    {
+        return [
+            '—— GAME ' . self::NAME . ' —— правила: классическая игра в города с модификацией: игра ограничена ' . self::MAX_TURN . ' ходами игрока, за это время нужно угадать случайную букву, на которую город не должен заканчиваться',
+            'Таких букв всего: ' . self::LETTERS_COUNT . ' —— старт: введите <' . self::COMMAND_START . '>. на игру отведено ' . self::DEFAULT_EXPIRE_TIME . ' секунд, очков за победу: +' . self::WIN_SCORE . ', очков за поражение: -' . self::LOSE_SCORE,
         ];
     }
 
@@ -81,15 +107,25 @@ class Towns extends GameAbstract
         return $this->end($defeatMessage);
     }
 
+    /**
+     * **Method** fetch city by letter from Cities service until geting unique city
+     * @param string $letter first letter of city
+     * @return string name of city
+     */
     private function getCity(string $letter) : string
     {
         do {
-            $city = Services\Cities::getRandByLetter($letter);
+            $city = Contents\Cities::getRandByLetter($letter);
         } while (in_array($city, $this->stopList));
 
         return (! empty($city)) ? $city : '----';
     }
 
+    /**
+     * **Method** init victory letters
+     * @param array $vocabulary current vocabulary for victory letters
+     * @return array victory letters
+     */
     private function getLetters(array $vocabulary) : array
     {
         $result = [];
@@ -103,13 +139,5 @@ class Towns extends GameAbstract
         }
 
         return $result;
-    }
-
-    public static function getHelpMessage() : array
-    {
-        return [
-            '—— GAME ' . self::NAME . ' —— правила: классическая игра в города с модификацией: игра ограничена ' . self::MAX_TURN . ' ходами игрока, за это время нужно угадать случайную букву, на которую город не должен заканчиваться',
-            'Таких букв всего: ' . self::LETTERS_COUNT . ' —— старт: введите <' . self::COMMAND_START . '>. на игру отведено ' . self::DEFAULT_EXPIRE_TIME . ' секунд, очков за победу: +' . self::WIN_SCORE . ', очков за поражение: -' . self::LOSE_SCORE,
-        ];
     }
 }

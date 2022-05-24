@@ -6,28 +6,61 @@ use Google\Service;
 use App\Anet\Helpers;
 use App\Anet\DB;
 
+/**
+ * **UserStorage** class storage of User
+ */
 final class UserStorage
 {
-    use Helpers\ErrorHelperTrait;
+    use Helpers\ErrorTrait;
 
+    /**
+     * @var int `private` max days for users without update
+     */
     private const DAYS_WITHOUT_UPDATE = 4;
+    /**
+     * @var int `private` max days for users without active
+     */
     private const DAYS_WITHOUT_ACTIVE = 365;
+    /**
+     * @var string `private` prefix of redis storage keys
+     */
+    private const REDIS_PREFIX = 'youtube_user_';
 
+    /**
+     * @var \Google\Service\YouTube $youtube `private` instance of Yotube Service class
+     */
     private Service\YouTube $youtube;
+    /**
+     * @var array $storage `private` storage of users
+     */
     private array $storage;
 
+    /**
+     * Initialize users from DB
+     * @param \Google\Service\YouTube $youtube instance of Yotube Service class
+     * @return void
+     */
     public function __construct(Service\YouTube $youtube)
     {
         $this->youtube = $youtube;
+        $this->savedUsers();
         $this->downloadUsers();
     }
 
+    /**
+     * Saving Users to DB
+     */
     public function __destruct()
     {
         $this->savedUsers();
-        Helpers\LogerHelper::print('YouTube', 'Users saved');
+        Helpers\Logger::print('System', 'Users saved');
     }
 
+    /**
+     * **Method** get instance of user from storage by id (or if it doesn't exist - fetch from youtube server)
+     * @param string $id id of needed user
+     * @return null|\App\Anet\YouTubeHelpers\User instance of user or null if user doesn't exist and response from youtube server is empty
+     */
     public function fetch(string $id) : ?User
     {
         if (array_key_exists($id, $this->storage)) {
@@ -41,10 +74,16 @@ final class UserStorage
 
         $this->storage[$id] = new User($id, $responseUser);
         $this->insert($this->storage[$id]);
+        DB\Redis::setObject(self::REDIS_PREFIX . $id, $this->storage[$id]);
 
         return $this->storage[$id];
     }
 
+    /**
+     * **Method** get instance of user only from local storage
+     * @param string $id id of needed user
+     * @return null|\App\Anet\YouTubeHelpers\User instance of user or null if user doesn't exist
+     */
     public function get(string $id) : ?User
     {
         if (! array_key_exists($id, $this->storage)) {
@@ -54,6 +93,11 @@ final class UserStorage
         return $this->storage[$id];
     }
 
+    /**
+     * **Method** get readnle messages with user statistic by user name
+     * @param string $name user name
+     * @return array list of messages
+     */
     public function showUserStatistic(string $name) : array
     {
         $mess = "Пользователь: $name —— ";
@@ -69,17 +113,46 @@ final class UserStorage
         ];
     }
 
+    /**
+     * **Method** handle specified User method with specified params in current user
+     * with updating user to redis storage
+     * @param string $id current user's id
+     * @param string $method existing method of User class
+     * @param mixed ...$params specified list of params for User method
+     * @return void
+     */
+    public function handler(string $id, string $method, ...$params) : void
+    {
+        $user = $this->get($id);
+
+        if ($user !== null && method_exists($user, $method)) {
+            $user->{$method}(...$params);
+            DB\Redis::setObject(self::REDIS_PREFIX . $id, $user);
+        }
+    }
+
+    /**
+     * **Method** checked user by insance for possibility to "win random" if success - return congratulation message
+     * @param \App\Anet\YouTubeHelpers\User $user instance of current user
+     * @param int $raiting rating which will increment current rating on success
+     * @return string if success - congratulation message else - empty string
+     */
     public function randomLottery(User $user, int $raiting) : string
     {
         if (random_int(0, 999999) !== 2022) {
             return '';
         }
 
-        $user->incrementRaiting($raiting);
+        $this->handler($user->getId(), 'incrementRaiting', $raiting);
 
         return $user->getName() . " поздравляю! ты выбран случайным победителем приза в $raiting рейтинга! твой текущий рейтинг: " . $user->getRating();
     }
 
+    /**
+     * **Method** find user by name in storage
+     * @param string $name user name
+     * @return null|User instance of user if it's exist else - null
+     */
     private function findUserByName(string $name) : ?User
     {
         foreach ($this->storage as $user) {
@@ -91,6 +164,11 @@ final class UserStorage
         return null;
     }
 
+    /**
+     * **Method** add new user to DB
+     * @param \App\Anet\YouTubeHelpers\User $user instance of user
+     * @return void
+     */
     private function insert(User $user) : void
     {
         $request = [
@@ -104,14 +182,26 @@ final class UserStorage
         ];
 
         DB\DataBase::insertYoutubeUser($request);
+        Helpers\Logger::print('System', 'saving user: ' . $user->getId());
     }
 
+    /**
+     * **Method** delete user from DB
+     * @param \App\Anet\YouTubeHelpers\User $user instance of user
+     * @return void
+     */
     private function delete(User $user) : void
     {
         DB\DataBase::deleteYouTubeUser($user->getId());
+        Helpers\Logger::print('System', 'delete user: ' . $user->getId());
         unset($user);
     }
 
+    /**
+     * **Method** update user to DB with general properties from request to youtube server
+     * @param \App\Anet\YouTubeHelpers\User $user instance of current user
+     * @return \App\Anet\YouTubeHelpers\User $user instance of current user
+     */
     private function updateGlobal(User $user) : User
     {
         $responseUser = $this->requestUser($user->getId());
@@ -135,6 +225,11 @@ final class UserStorage
         return $user;
     }
 
+    /**
+     * **Method** update user to DB with local properties
+     * @param \App\Anet\YouTubeHelpers\User $user instance of current user
+     * @return \App\Anet\YouTubeHelpers\User $user instance of current user
+     */
     private function updateLocal(User $user) : User
     {
         $newParams = [
@@ -148,6 +243,11 @@ final class UserStorage
         return $user;
     }
 
+    /**
+     * **Method** fetch user properties from youtube server
+     * @param string $id user id
+     * @return array list of user properties
+     */
     private function requestUser(string $id) : array
     {
         try {
@@ -162,11 +262,15 @@ final class UserStorage
             ];
         } catch (Service\Exception $error) {
             $this->addError(__FUNCTION__, $error->getMessage());
-            Helpers\LogerHelper::logging('YouTube', $this->getErrors(), 'error');
+            Helpers\Logger::logging('YouTube', $this->getErrors(), 'error');
             return [];
         }
     }
 
+    /**
+     * **Method** download users from DB with activity and publishing checks, save to local storage
+     * @return void
+     */
     private function downloadUsers() : void
     {
         $responseDB = DB\DataBase::fetchYouTubeUsers();
@@ -198,13 +302,18 @@ final class UserStorage
                 $this->updateGlobal($user);
             }
 
-            $this->storage[$item['key']] = $user;
+            DB\Redis::setObject(self::REDIS_PREFIX . $user->getId(), $user);
+            $this->storage[$user->getId()] = $user;
         }
     }
 
+    /**
+     * **Method** save all stored in redis users to DB with local properties
+     * @return void
+     */
     private function savedUsers() : void
     {
-        foreach ($this->storage as $user) {
+        foreach (DB\Redis::fetch(self::REDIS_PREFIX . '*', true) as $user) {
             $this->updateLocal($user);
         }
     }

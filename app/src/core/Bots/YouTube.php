@@ -4,22 +4,59 @@ namespace App\Anet\Bots;
 
 use Google;
 use Google\Service;
-use Google\Service\YouTube;
-use App\Anet\Services;
+use App\Anet\Contents;
 use App\Anet\YouTubeHelpers;
 use App\Anet\Helpers;
 use App\Anet\Games;
 
-final class YouTubeBot extends ChatBotAbstract
-{
-    private Service\YouTube $youtubeService;
-    private YouTubeHelpers\VideoProperties $video;
-    private YouTubeHelpers\UserStorage $users;
-    private string $botUserEmail;
-    private string $botUserName;
-    private ?string $lastChatMessageID;
-    private array $usersListerning;
+/**
+ * Realization of YouTube ChatBot.
+ * To work you need to setup Google API project https://console.cloud.google.com/apis/api/youtube.googleapis.com
+ *
+ * And set constant with oAuth tokens for connect to youtube servers
+ *
+ * Basic usage means create instance of class with youtube video link and call listen() method
 
+ * For more information about working and examples read README.md
+ *
+ * @author Mironov Alexander https://github.com/ChihiroYamato
+ */
+final class YouTube extends ChatBotAbstract
+{
+    /**
+     * @var \Google\Service\YouTube $youtubeService `private` instance of Youtube Servise class
+     */
+    private Service\YouTube $youtubeService;
+    /**
+     * @var \App\Anet\YouTubeHelpers\VideoProperties $video `private` instance of VideoProperties class
+     */
+    private YouTubeHelpers\VideoProperties $video;
+    /**
+     * @var \App\Anet\YouTubeHelpers\UserStorage $users `private` instance of UserStorage class
+     */
+    private YouTubeHelpers\UserStorage $users;
+    /**
+     * @var string $botUserEmail `private` email of current bot user
+     */
+    private string $botUserEmail;
+    /**
+     * @var string $botUserName `private` name of current bot user
+     */
+    private string $botUserName;
+    /**
+     * @var null|string $lastChatMessageID `private` id of last reading message
+     */
+    private ?string $lastChatMessageID;
+    /**
+     * @var array $usersListening `private` list of users which are listened
+     */
+    private array $usersListening;
+
+    /**
+     * Initialize YouTube ChatBot
+     * @param string $youtubeURL link to active youtube video
+     * @return void
+     */
     public function __construct(string $youtubeURL)
     {
         if (! file_exists(OAUTH_TOKEN_JSON)) {
@@ -39,22 +76,141 @@ final class YouTubeBot extends ChatBotAbstract
         $this->users = new YouTubeHelpers\UserStorage($this->youtubeService);
 
         $this->lastChatMessageID = null;
-        $this->usersListerning = USER_LISTEN_LIST;
+        $this->usersListening = USER_LISTEN_LIST;
     }
 
+    /**
+     * Destruct class with all logging poccesses and saving statistics to DB
+     */
     public function __destruct()
     {
-        Helpers\LogerHelper::loggingProccess($this->className, $this->getStatistics(), $this->buffer->fetch('sendings'));
-        Helpers\LogerHelper::logging($this->className, $this->buffer->fetch('messageList'), 'message');
+        Helpers\Logger::loggingProccess($this->className, $this->getStatistics(), $this->buffer->fetch('sendings'));
+        Helpers\Logger::logging($this->className, $this->buffer->fetch('messageList'), 'message');
 
-        Helpers\LogerHelper::saveProccessToDB($this->className);
-        Helpers\LogerHelper::saveToDB($this->className, 'message', 'youtube_messages');
+        Helpers\Logger::saveProccessToDB($this->className);
+        Helpers\Logger::saveToDB($this->className, 'message', 'youtube_messages');
 
-        Helpers\LogerHelper::archiveLogsByCategory($this->className);
+        Helpers\Logger::archiveLogsByCategory($this->className);
 
-        Helpers\LogerHelper::print($this->className, 'Force termination of a script');
+        Helpers\Logger::print($this->className, 'Force termination of a script');
     }
 
+    /**
+     * **Method** is main proccess of bot working: execute parsing, analyzing and sending data
+     * from and to youtube server
+     *
+     * During the working - save logs at a certain interval and send system message under certain conditions
+     * @param int $interval interval for script sleeping
+     * @return void
+     */
+    public function listen(int $interval) : void
+    {
+        $sendingCount = 0;
+        $sendingCount += $this->sendMessage('Всем привет, хорошего дня/вечера/ночи/утра'); // todo
+        Helpers\Logger::print($this->className, 'Starting proccess');
+
+        while ($this->getErrorCount() < 5 && $this->listeningFlag) {
+            if ($this->timeTracker->trackerState('loggingProccess')) {
+                if ($this->timeTracker->trackerCheck('loggingProccess', 60 * 3)) {
+                    $this->timeTracker->trackerStop('loggingProccess');
+
+                    Helpers\Logger::loggingProccess($this->className, $this->getStatistics(), $this->buffer->fetch('sendings'));
+                    Helpers\Logger::logging($this->className, $this->buffer->fetch('messageList'), 'message');
+
+                    $this->timeTracker->clearPoints();
+                    Helpers\Logger::print($this->className, sprintf('Logs saved. Current iteration is: %d Proccessing duration: %s', $this->totalIterations, $this->timeTracker->getDuration()));
+                }
+            } else {
+                $this->timeTracker->trackerStart('loggingProccess');
+            }
+
+            $this->timeTracker->startPointTracking();
+
+            $chatList = $this->fetchChatList();
+            $this->timeTracker->setPoint('fetchChatList');
+
+            $sendingCount += $this->sendingMessages($this->prepareSendings($chatList));
+            $sendingCount += $this->checkingMessageSendEvent($sendingCount < 1 && $this->totalIterations > 1, 10 * 60, 'no_care');
+            $sendingCount += $this->checkingMessageSendEvent(empty($chatList), 15 * 60, 'dead_chat');
+
+            $this->timeTracker->setPoint('sendingMessage');
+            $this->timeTracker->finishPointTracking();
+
+            $this->totalMessageSending += $sendingCount;
+            $sendingCount = 0;
+            $this->totalIterations++;
+            Helpers\Timer::setSleep($interval);
+        }
+
+        if (! empty($this->getErrors())) {
+            Helpers\Logger::logging($this->className, $this->getErrors(), 'error');
+        }
+    }
+
+    public function testConnect() : void
+    {
+        $this->fetchChatList();
+
+        if ($this->lastChatMessageID !== null && empty($this->getErrors())) {
+            Helpers\Logger::print($this->className, 'Chat request tested successfully, current last mess ID :' . $this->lastChatMessageID);
+        } else {
+            Helpers\Logger::print($this->className, "Testing Failed, Current Errors:\n" . print_r($this->getErrors(), true));
+        }
+    }
+
+    public function testSend() : void
+    {
+        $testing = $this->sendMessage('Прогрев чата');
+
+        if ($testing) {
+            Helpers\Logger::print($this->className, 'Message sending test completed successfully');
+        } else {
+            Helpers\Logger::print($this->className, "Testing Failed, Current Errors:\n" . print_r($this->getErrors(), true));
+        }
+    }
+
+    public function getStatistics() : array
+    {
+        $result = parent::getStatistics();
+        $result['youTubeURL'] = $this->video->getYoutubeURL();
+        $result['videoID'] = $this->video->getVideoID();
+        $result['videoStarting'] = $this->video->getVideoStarting();
+        $result['botUserName'] = $this->botUserName;
+        $result['botUserEmail'] = $this->botUserEmail;
+
+        return $result;
+    }
+
+    /**
+     * **Method** create Google auth token for connect to server
+     * need to execute in isolated page including to google oAuth list
+     * @return bool true if token is creating succussful
+     */
+    public static function createAuthTokken() : bool
+    {
+        if (file_exists(OAUTH_TOKEN_JSON)) {
+            return false;
+        }
+
+        $client = self::createGoogleClient(true);
+
+        if (! isset($_GET['code'])) {
+            header('Location: ' . $client->createAuthUrl());
+
+            return false;
+        }
+
+        $client->fetchAccessTokenWithAuthCode($_GET['code']);
+        file_put_contents(OAUTH_TOKEN_JSON, json_encode($client->getAccessToken(), JSON_FORCE_OBJECT));
+
+        return true;
+    }
+
+    /**
+     * **Method** create Google API client connection with specified params
+     * @param bool $setRedirectUrl set true if needed to setup reditect url for oAuth token, default false
+     * @return \Google\Client instance of client connection
+     */
     private static function createGoogleClient(bool $setRedirectUrl = false) : Google\Client
     {
         $client = new Google\Client();
@@ -76,26 +232,11 @@ final class YouTubeBot extends ChatBotAbstract
         return $client;
     }
 
-    public static function createAuthTokken() : bool
-    {
-        if (file_exists(OAUTH_TOKEN_JSON)) {
-            return false;
-        }
-
-        $client = self::createGoogleClient(true);
-
-        if (! isset($_GET['code'])) {
-            header('Location: ' . $client->createAuthUrl());
-
-            return false;
-        }
-
-        $client->fetchAccessTokenWithAuthCode($_GET['code']);
-        file_put_contents(OAUTH_TOKEN_JSON, json_encode($client->getAccessToken(), JSON_FORCE_OBJECT));
-
-        return true;
-    }
-
+    /**
+     * **Method** fetch actual message list from video chat with request to youtube server.
+     * for the first fetching method setup last message and controls the relevance of the chat with that param
+     * @return array actual message list
+     */
     private function fetchChatList() : array
     {
         try {
@@ -115,11 +256,11 @@ final class YouTubeBot extends ChatBotAbstract
                         continue;
                     }
 
-                    $currentUser->incrementMessage();
+                    $this->users->handler($currentUser->getId(), 'incrementMessage');
 
                     $actualChat[] = [
                         'id' => $chatItem['id'],
-                        'authorId' => $chatItem['snippet']['authorChannelId'],
+                        'authorId' => $currentUser->getId(),
                         'authorName' => $currentUser->getName(),
                         'message' => $chatItem['snippet']['displayMessage'],
                         'published' => $chatItem['snippet']['publishedAt'],
@@ -140,6 +281,7 @@ final class YouTubeBot extends ChatBotAbstract
 
     protected function prepareSendings(array $chatlist) : array
     {
+        // TODO ============ restruct by modules
         $usersList = [];
         $sendingList = [];
         $sendingDetail = [];
@@ -168,7 +310,7 @@ final class YouTubeBot extends ChatBotAbstract
             $matches = explode(' ', trim(str_replace(['!', ',', '.', '?'], '', $chatItem['message'])));
             $lastWord = mb_strtolower(array_pop($matches));
 
-            $currentUser->incrementRaitingRandom(2, random_int(1, 2));
+            $this->users->handler($currentUser->getId(), 'incrementRaitingRandom', 2, random_int(1, 2));
 
             if ($currentUser->checkAdmin()) {
                 switch (true) {
@@ -182,18 +324,18 @@ final class YouTubeBot extends ChatBotAbstract
                         break 2;
                     case mb_stripos($chatItem['message'], '/insert') !== false:
                         $listernUser = preg_replace('/\/insert /', '', $chatItem['message']);
-                        $this->usersListerning[$listernUser] = $listernUser;
+                        $this->usersListening[$listernUser] = $listernUser;
 
                         $sendingDetail['sending'] = $sending . "Начинаю слушать пользователя <$listernUser>";
                         break;
                     case mb_stripos($chatItem['message'], '/drop') !== false:
                         $listernUser = preg_replace('/\/drop /', '', $chatItem['message']);
-                        unset($this->usersListerning[$listernUser]);
+                        unset($this->usersListening[$listernUser]);
 
                         $sendingDetail['sending'] = $sending . "Прекращаю слушать пользователя <$listernUser>";
                         break;
                     case mb_stripos($chatItem['message'], '/show-listern') !== false:
-                        $sendingDetail['sending'] = $sending . 'Список прослушиваемых: ' . implode(',', $this->usersListerning);
+                        $sendingDetail['sending'] = $sending . 'Список прослушиваемых: ' . implode(',', $this->usersListening);
                         break;
                 }
 
@@ -224,10 +366,10 @@ final class YouTubeBot extends ChatBotAbstract
                     $largeSending = $this->video->showStatistic();
                     break;
                 case in_array($chatItem['message'], ['/факт', '/fact']):
-                    $largeSending = Services\Facts::fetchRand();
+                    $largeSending = Contents\Facts::fetchRand();
                     break;
                 case in_array($chatItem['message'], ['/шутка', '/joke']):
-                    $largeSending = Services\Jokes::fetchRand();
+                    $largeSending = Contents\Jokes::fetchRand();
                     break;
                 case mb_strpos($chatItem['message'], '/play') !== false:
                     // TODO =========== игры
@@ -248,7 +390,7 @@ final class YouTubeBot extends ChatBotAbstract
                             $largeSending = $this->games->validateAndStarting(new Games\Сasino($currentUser), $currentUser, 300, 300);
                             break;
                         case $chatItem['message'] === Games\Towns::COMMAND_START:
-                            $largeSending = $this->games->validateAndStarting(new Games\Towns($currentUser), $currentUser, 300, 55);
+                            $largeSending = $this->games->validateAndStarting(new Games\Towns($currentUser), $currentUser, 120, 55);
                             break;
                         default:
                             $largeSending[] = 'В настоящее время доступны следующие игры: —— русская рулетка <' . Games\Roulette::COMMAND_HELP . '> —— казино <' . Games\Сasino::COMMAND_HELP . '> —— города <' . Games\Towns::COMMAND_HELP . '>';
@@ -259,7 +401,7 @@ final class YouTubeBot extends ChatBotAbstract
             }
 
             if (! empty($largeSending)) {
-                $currentUser->incrementRaiting(rand(0, 4) * 5);
+                $this->users->handler($currentUser->getId(), 'incrementRaiting', rand(0, 4) * 5);
 
                 foreach ($largeSending as $item) {
                     $sendingDetail['sending'] = $item;
@@ -296,7 +438,7 @@ final class YouTubeBot extends ChatBotAbstract
             }
 
             if (mb_stripos(mb_strtolower($chatItem['message']), $this->botUserName) !== false) {
-                $currentUser->incrementRaiting(rand(0, 4) * 5);
+                $this->users->handler($currentUser->getId(), 'incrementRaiting', rand(0, 4) * 5);
 
                 $currentMessage = trim(mb_strtolower(preg_replace("/@?{$this->botUserName}/", '', $chatItem['message'])));
                 $sending = $sending . $this->prepareSmartAnswer($currentMessage);
@@ -311,9 +453,7 @@ final class YouTubeBot extends ChatBotAbstract
                     foreach ($item['request'] as $option) {
                         if (mb_stripos(mb_strtolower($chatItem['message']), $option) !== false) {
                             if ($key === 'say_foul') {
-                                $currentUser->incrementRaiting(rand(0, 2) * (-5));
-                                var_dump($option);              // todo ==== testing !!
-                                var_dump($chatItem['message']); // todo ==== testing !!
+                                $this->users->handler($currentUser->getId(), 'incrementRaiting', rand(0, 2) * (-5));
                             }
                             $sendingDetail['sending'] = $sending . $this->vocabulary->getRandItem($key);
                             $sendingList[] = $sendingDetail;
@@ -327,7 +467,7 @@ final class YouTubeBot extends ChatBotAbstract
                 }
             }
 
-            if (in_array($chatItem['authorName'], $this->usersListerning)) {
+            if (in_array($chatItem['authorName'], $this->usersListening)) {
                 $answer = $this->prepareSmartAnswer($chatItem['message'], true);
 
                 if (! empty($answer)) {
@@ -391,9 +531,9 @@ final class YouTubeBot extends ChatBotAbstract
     protected function sendMessage(string $message) : bool
     {
         try {
-            $liveChatMessage = new YouTube\LiveChatMessage();
-            $liveChatMessageSnippet = new YouTube\LiveChatMessageSnippet();
-            $liveChatTextMessageDetails = new YouTube\LiveChatTextMessageDetails();
+            $liveChatMessage = new Service\YouTube\LiveChatMessage();
+            $liveChatMessageSnippet = new Service\YouTube\LiveChatMessageSnippet();
+            $liveChatTextMessageDetails = new Service\YouTube\LiveChatTextMessageDetails();
 
             $liveChatTextMessageDetails->setMessageText($message);
 
@@ -413,6 +553,13 @@ final class YouTubeBot extends ChatBotAbstract
         }
     }
 
+    /**
+     * **Method** setup timer for any event and send message if timer is expired
+     * @param bool $event any bool event
+     * @param int $sec event expired in seconds
+     * @param string $vocabularyKey key in vocabulary for set answer
+     * @return bool
+     */
     private function checkingMessageSendEvent(bool $event, int $sec, string $vocabularyKey) : bool
     {
         $sendStatus = false;
@@ -432,83 +579,5 @@ final class YouTubeBot extends ChatBotAbstract
         }
 
         return $sendStatus;
-    }
-
-    public function listen(int $interval) : void
-    {
-        $sendingCount = 0;
-        $sendingCount += $this->sendMessage('Всем привет, хорошего дня/вечера/ночи/утра'); // todo
-        Helpers\LogerHelper::print($this->className, 'Starting proccess');
-
-        while ($this->getErrorCount() < 5 && $this->listeningFlag) {
-            if ($this->timeTracker->trackerState('loggingProccess')) {
-                if ($this->timeTracker->trackerCheck('loggingProccess', 60 * 3)) {
-                    $this->timeTracker->trackerStop('loggingProccess');
-
-                    Helpers\LogerHelper::loggingProccess($this->className, $this->getStatistics(), $this->buffer->fetch('sendings'));
-                    Helpers\LogerHelper::logging($this->className, $this->buffer->fetch('messageList'), 'message'); // todo
-
-                    $this->timeTracker->clearPoints();
-                    Helpers\LogerHelper::print($this->className, sprintf('Logs saved. Current iteration is: %d Proccessing duration: %s' . PHP_EOL, $this->totalIterations, $this->timeTracker->getDuration()));
-                }
-            } else {
-                $this->timeTracker->trackerStart('loggingProccess');
-            }
-
-            $this->timeTracker->startPointTracking();
-
-            $chatList = $this->fetchChatList();
-            $this->timeTracker->setPoint('fetchChatList');
-
-            $sendingCount += $this->sendingMessages($this->prepareSendings($chatList));
-            $sendingCount += $this->checkingMessageSendEvent($sendingCount < 1 && $this->totalIterations > 1, 10 * 60, 'no_care');
-            $sendingCount += $this->checkingMessageSendEvent(empty($chatList), 15 * 60, 'dead_chat');
-
-            $this->timeTracker->setPoint('sendingMessage');
-            $this->timeTracker->finishPointTracking();
-
-            $this->totalMessageSending += $sendingCount;
-            $sendingCount = 0;
-            $this->totalIterations++;
-            Helpers\Timer::setSleep($interval);
-        }
-
-        if (! empty($this->getErrors())) {
-            Helpers\LogerHelper::logging($this->className, $this->getErrors(), 'error');
-        }
-    }
-
-    public function testConnect() : void
-    {
-        $this->fetchChatList();
-
-        if ($this->lastChatMessageID !== null && empty($this->getErrors())) {
-            Helpers\LogerHelper::print($this->className, 'Chat request tested successfully, current last mess ID :' . $this->lastChatMessageID);
-        } else {
-            Helpers\LogerHelper::print($this->className, "Testing Failed, Current Errors:\n" . print_r($this->getErrors(), true));
-        }
-    }
-
-    public function testSend() : void
-    {
-        $testing = $this->sendMessage('Прогрев чата');
-
-        if ($testing) {
-            Helpers\LogerHelper::print($this->className, 'Message sending test completed successfully');
-        } else {
-            Helpers\LogerHelper::print($this->className, "Testing Failed, Current Errors:\n" . print_r($this->getErrors(), true));
-        }
-    }
-
-    public function getStatistics() : array
-    {
-        $result = parent::getStatistics();
-        $result['youTubeURL'] = $this->video->getYoutubeURL();
-        $result['videoID'] = $this->video->getVideoID();
-        $result['videoStarting'] = $this->video->getVideoStarting();
-        $result['botUserName'] = $this->botUserName;
-        $result['botUserEmail'] = $this->botUserEmail;
-
-        return $result;
     }
 }

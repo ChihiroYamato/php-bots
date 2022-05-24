@@ -1,14 +1,20 @@
 <?php
 
-namespace App\Anet\Services;
+namespace App\Anet\Contents;
 
+use App\Anet;
 use App\Anet\DB;
-use GuzzleHttp;
 use PHPHtmlParser;
 
-abstract class AbstractTexts extends AbstractContent
+abstract class Texts extends Anet\Contents
 {
+    /**
+     * @var string `protected` name of text category in DB
+     */
     protected const CATEGORY_NAME = '%';
+    /**
+     * @var string `protected` emergency message
+     */
     protected const WARNING_MESSAGE = 'Сорри, что-то пошло не так';
 
     public function saveToDB() : void
@@ -63,6 +69,10 @@ abstract class AbstractTexts extends AbstractContent
         return $this;
     }
 
+    /**
+     * **Method** get from DB rand text
+     * @return array list of message
+     */
     public static function fetchRand() : array
     {
         $request = DB\DataBase::fetchRandText(static::CATEGORY_NAME);
@@ -74,6 +84,12 @@ abstract class AbstractTexts extends AbstractContent
         return (mb_strlen($request) > 190) ? static::shortenString($request) : [$request];
     }
 
+    /**
+     * **Method** divide string by lenght and return parts in array
+     * @param string $string base string
+     * @param int $lenght `[optional]` max lenght of string
+     * @return array parts of base string
+     */
     private static function shortenString(string $string, int $lenght = 150) : array
     {
         $result = [];

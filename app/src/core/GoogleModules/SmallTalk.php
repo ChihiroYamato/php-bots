@@ -6,19 +6,38 @@ use App\Anet\Helpers;
 use Google\ApiCore;
 use Google\Cloud\Dialogflow\V2;
 
-final class SmallTalkModule
+/**
+ * **SmallTalk** -- wrapper for Google Dialogflow module
+ * https://dialogflow.cloud.google.com/
+ */
+final class SmallTalk
 {
-    use Helpers\ErrorHelperTrait;
+    use Helpers\ErrorTrait;
 
-    private ?string $smallTalkSession = null;
-    private ?V2\SessionsClient $smallTalkClient = null;
+    /**
+     * @var string $smallTalkSession `private` session for connecting
+     */
+    private string $smallTalkSession;
+    /**
+     * @var \Google\Cloud\Dialogflow\V2\SessionsClient $smallTalkClient `private` instance of Google\Cloud\Dialogflow\V2\SessionsClient
+     */
+    private V2\SessionsClient $smallTalkClient;
 
+    /**
+     * Session Initialization
+     * @return void
+     */
     public function __construct()
     {
         $this->smallTalkSession = uniqid();
         $this->smallTalkClient = new V2\SessionsClient(['credentials' => SMALL_TALK_API_KEY]);
     }
 
+    /**
+     * Method execute the request to the module with the specified message and return a response
+     * @param string $message specified message for the request
+     * @return string answer from dialogflow module
+     */
     public function fetchAnswerFromSmallTalk(string $message) : string
     {
         try {
@@ -38,7 +57,7 @@ final class SmallTalkModule
             return $queryResult->getFulfillmentText();
         } catch (ApiCore\ApiException $error) {
             $this->addError(__FUNCTION__, $error->getMessage());
-            Helpers\LogerHelper::logging($this->getErrors());
+            Helpers\Logger::logging('YouTube', $this->getErrors(), 'error');
             return '';
         }
     }

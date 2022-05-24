@@ -4,17 +4,32 @@ namespace App\Anet\Games;
 
 use App\Anet\YouTubeHelpers;
 
-class Сasino extends GameAbstract
+class Сasino extends Game
 {
     public const NAME = 'CASINO';
     public const COMMAND_HELP = '/play casino';
     public const COMMAND_START = '/play casino s';
     protected const GAME_INIT_MESSAGE = 'итак, выберите фишку';
+    /**
+     * @var int `private` min point for score
+     */
     private const MIN_POINT = 10;
+    /**
+     * @var int `private` max point for score
+     */
     private const MAX_POINT = 300;
+    /**
+     * @var int `private` size of casino board
+     */
     private const BOARD_SIZE = 42;
 
+    /**
+     * @var array $board `private` current board for session
+     */
     private array $board;
+    /**
+     * @var null|int $position `private` current user choice
+     */
     private ?int $position;
 
     public function __construct(YouTubeHelpers\User $user)
@@ -23,6 +38,14 @@ class Сasino extends GameAbstract
 
         $this->board = $this->prepareBoard(self::MIN_POINT, self::MAX_POINT);
         $this->position = null;
+    }
+
+    public static function getHelpMessage() : array
+    {
+        return [
+            '—— GAME ' . self::NAME . ' —— правила: игроку предлагается выбрать номер фишки от 1 до '. self::BOARD_SIZE . ', у каждой фишки есть сумма очков от ' . self::MIN_POINT . ' до ' . self::MAX_POINT . ', но половина фишек - выйгрышные, половина - проигрышные',
+            '—— старт: введите <' . self::COMMAND_START . '>. на игру отведено ' . self::DEFAULT_EXPIRE_TIME . ' секунд',
+        ];
     }
 
     public function step(string $answer) : array
@@ -55,6 +78,12 @@ class Сasino extends GameAbstract
         return $this->end($defeatMessage);
     }
 
+    /**
+     * **Method** init board for current game session
+     * @param int $min min score
+     * @param int $max max score
+     * @return array board
+     */
     private function prepareBoard(int $min, int $max) : array
     {
         $part = (int) ((self::BOARD_SIZE / 2) - 1);
@@ -78,13 +107,5 @@ class Сasino extends GameAbstract
         shuffle($result);
 
         return $result;
-    }
-
-    public static function getHelpMessage() : array
-    {
-        return [
-            '—— GAME ' . self::NAME . ' —— правила: игроку предлагается выбрать номер фишки от 1 до '. self::BOARD_SIZE . ', у каждой фишки есть сумма очков от ' . self::MIN_POINT . ' до ' . self::MAX_POINT . ', но половина фишек - выйгрышные, половина - проигрышные',
-            '—— старт: введите <' . self::COMMAND_START . '>. на игру отведено ' . self::DEFAULT_EXPIRE_TIME . ' секунд',
-        ];
     }
 }

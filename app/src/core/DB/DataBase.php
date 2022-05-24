@@ -19,7 +19,7 @@ final class DataBase
             try {
                 self::$connectPDO = new \PDO('mysql:host=' . DB_HOST . ';dbname=' . DB_BASE, DB_USER_NAME, DB_PASSWORD);
             } catch (\PDOException $error) {
-                Helpers\LogerHelper::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
+                Helpers\Logger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
                 exit;
             }
         }
@@ -29,18 +29,15 @@ final class DataBase
 
     public static function fetchVocabulary() : array
     {
-        $result = [];
         $sqlString = 'SELECT v.content, vc.name AS category, vt.name AS type FROM vocabulary AS v JOIN vocabulary_types AS vt ON vt.id=v.type_id JOIN vocabulary_categories AS vc ON vc.id=v.category_id ORDER BY category DESC';
 
         try {
             $request = self::getConnect()->prepare($sqlString);
             $request->execute();
 
-            foreach ($request as $response) {
-                $result[] = $response;
-            }
+            $result = $request->fetchAll(\PDO::FETCH_ASSOC);
         } catch (\PDOException $error) {
-            Helpers\LogerHelper::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
+            Helpers\Logger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
             exit;
         }
 
@@ -71,24 +68,21 @@ final class DataBase
             self::getConnect()->commit();
         }   catch (\PDOException $error) {
             self::getConnect()->rollBack();
-            Helpers\LogerHelper::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
+            Helpers\Logger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
         }
     }
 
     public static function fetchYouTubeUsers() : array
     {
-        $result = [];
         $sqlString = 'SELECT yu.key, yu.name, yu.active, yu.isAdmin, yus.last_published, yus.message_count, yus.social_rating, yus.registation_date, yus.subscriber_count, yus.video_count, yus.view_count, yus.last_update FROM youtube_users AS yu JOIN youtube_users_statisctics AS yus ON yus.user_key=yu.key';
 
         try {
             $request = self::getConnect()->prepare($sqlString);
             $request->execute();
 
-            foreach ($request as $response) {
-                $result[] = $response;
-            }
+            $result = $request->fetchAll(\PDO::FETCH_ASSOC);
         } catch (\PDOException $error) {
-            Helpers\LogerHelper::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
+            Helpers\Logger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
             exit;
         }
 
@@ -136,7 +130,7 @@ final class DataBase
             self::getConnect()->commit();
         } catch (\PDOException $error) {
             self::getConnect()->rollBack();
-            Helpers\LogerHelper::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
+            Helpers\Logger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
         }
     }
 
@@ -151,7 +145,7 @@ final class DataBase
             self::getConnect()->commit();
         } catch (\PDOException $error) {
             self::getConnect()->rollBack();
-            Helpers\LogerHelper::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
+            Helpers\Logger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
         }
     }
 
@@ -163,11 +157,9 @@ final class DataBase
             $request = self::getConnect()->prepare($sqlString);
             $request->execute();
 
-            foreach ($request as $response) {
-                return $response['content'];
-            }
+            return $request->fetch(\PDO::FETCH_ASSOC)['content'] ?? '';
         } catch (\PDOException $error) {
-            Helpers\LogerHelper::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
+            Helpers\Logger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
             return '';
         }
     }
@@ -180,9 +172,7 @@ final class DataBase
             $request = self::getConnect()->prepare("SELECT `id` FROM text_categories WHERE `name` LIKE '$category' LIMIT 1");
             $request->execute();
 
-            foreach ($request as $response) {
-                $id = $response['id'];
-            }
+            $id = $request->fetch(\PDO::FETCH_ASSOC)['id'];
 
             $request = self::getConnect()->prepare("INSERT INTO texts(`content`, `category_id`) VALUES (:content, $id)");
 
@@ -193,17 +183,20 @@ final class DataBase
             self::getConnect()->commit();
         } catch (\PDOException $error) {
             self::getConnect()->rollBack();
-            Helpers\LogerHelper::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
+            Helpers\Logger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
         }
     }
 
+    /**
+     * @deprecated use saveByTableName
+     */
     public static function saveGameStatistic(array $params) : void
     {
         try {
             $request = self::getConnect()->prepare('INSERT INTO games_statistic(`user_key`, `game`, `score`, `date`) VALUES (:user_key, :game, :score, :date)');
             $request->execute($params);
         } catch (\PDOException $error) {
-            Helpers\LogerHelper::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
+            Helpers\Logger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
         }
     }
 
@@ -221,7 +214,7 @@ final class DataBase
             $request = self::getConnect()->prepare($sqlQuery);
             $request->execute();
         } catch (\PDOException $error) {
-            Helpers\LogerHelper::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
+            Helpers\Logger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
         }
     }
 
@@ -229,14 +222,12 @@ final class DataBase
     {
         try {
 
-            $request = self::getConnect()->prepare("SELECT `name` FROM `cities` WHERE `name` LIKE 'а%' ORDER BY RAND() LIMIT 1");
+            $request = self::getConnect()->prepare("SELECT `name` FROM `cities` WHERE `name` LIKE '$letter%' ORDER BY RAND() LIMIT 1");
             $request->execute();
 
-            foreach ($request as $response) {
-                return $response['name'] ?? '';
-            }
+            return $request->fetch(\PDO::FETCH_ASSOC)['name'] ?? '';
         } catch (\PDOException $error) {
-            Helpers\LogerHelper::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
+            Helpers\Logger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
             return '';
         }
     }
@@ -245,16 +236,18 @@ final class DataBase
     {
         try {
 
-            $request = self::getConnect()->prepare("SELECT * FROM cities WHERE `name` LIKE :city");
+            $request = self::getConnect()->prepare("SELECT * FROM cities WHERE `name` LIKE :city LIMIT 1");
             $request->execute([':city' => $city]);
 
-            foreach ($request as $response) {
-                return $response;
+            $result = $request->fetch(\PDO::FETCH_ASSOC);
+
+            if (is_array($result)) {
+                return $result;
             }
 
             return [];
         } catch (\PDOException $error) {
-            Helpers\LogerHelper::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
+            Helpers\Logger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
             return [];
         }
     }
@@ -279,44 +272,16 @@ final class DataBase
             $request->execute($requestData);
 
         } catch (\PDOException $error) {
-            Helpers\LogerHelper::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
+            Helpers\Logger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
         }
     }
 
-    /**
-     * @deprecated
-     */
     public static function saveByTableName(string $table, array $data) : void
     {
-        try {
-            $inserts = '';
-            $values = '';
-
-            foreach ($data[0] as $key => $value) {
-                $inserts .= "`$key`,";
-                $values .= ":$key,";
-            }
-
-            $inserts = rtrim($inserts, ",");
-            $values = rtrim($values, ",");
-
-            $request = self::getConnect()->prepare("INSERT INTO $table($inserts) VALUES ($values)");
-
-            foreach ($data as $items) {
-                $requestData = [];
-                foreach ($items as $key => $item) {
-                    $requestData[":$key"] = preg_replace('/[\x{10000}-\x{10FFFF}]/u', '', $item);
-                }
-                $request->execute($requestData);
-            }
-
-        } catch (\PDOException $error) {
-            Helpers\LogerHelper::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
+        if (empty($data) || empty($data[0]) || ! is_array($data[0])) {
+            return;
         }
-    }
 
-    public static function saveByTableNameOp(string $table, array $data) : void // todo testing
-    {
         try {
             $inserts = '';
             $values = '';
@@ -330,7 +295,7 @@ final class DataBase
                 foreach ($notes as $item) {
                     $value .= '\'' . str_replace('\'', ' ', preg_replace('/[\x{10000}-\x{10FFFF}]/u', '', $item)) . '\',';
                 }
-                $value = rtrim($values, ",");
+                $value = rtrim($value, ",");
                 $values .= "($value),";
             }
 
@@ -340,7 +305,7 @@ final class DataBase
             $request = self::getConnect()->prepare("INSERT INTO $table($inserts) VALUES $values");
             $request->execute();
         } catch (\PDOException $error) {
-            Helpers\LogerHelper::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
+            Helpers\Logger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');
         }
     }
 }

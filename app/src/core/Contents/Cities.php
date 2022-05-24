@@ -1,12 +1,16 @@
 <?php
 
-namespace App\Anet\Services;
+namespace App\Anet\Contents;
 
+use App\Anet;
 use App\Anet\DB;
 use PHPHtmlParser;
 
-class Cities extends AbstractContent
+class Cities extends Anet\Contents
 {
+    /**
+     * @var array `public` vocabulary of base pagination
+     */
     public const VOCABULARY = ['А', 'Б', 'В', 'Г', 'Д', 'Е', 'Ж', 'З', 'И', 'Й', 'К', 'Л', 'М', 'Н', 'О', 'П', 'Р', 'С', 'Т', 'У', 'Ф', 'Х', 'Ц', 'Ч', 'Ш', 'Щ', 'Э', 'Ю', 'Я',];
 
     protected function fetchContent(array $selectorsParam) : void
@@ -52,11 +56,21 @@ class Cities extends AbstractContent
         DB\DataBase::saveCities(array_unique($this->buffer));
     }
 
+    /**
+     * **Method** checked if city is exist in DB by name
+     * @param string $city name of city
+     * @return bool return true if city is exist else - false
+     */
     public static function validate(string $city) : bool
     {
         return (! empty(DB\DataBase::getCityByName($city)));
     }
 
+    /**
+     * **Method** get from DB rand city by first letter
+     * @param string $letter first letter of city
+     * @return string name of city
+     */
     public static function getRandByLetter(string $letter) : string
     {
         return DB\DataBase::getRandCityByLetter($letter);
