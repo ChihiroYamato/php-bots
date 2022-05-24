@@ -43,6 +43,7 @@ final class UserStorage
     public function __construct(Service\YouTube $youtube)
     {
         $this->youtube = $youtube;
+        $this->savedUsers();
         $this->downloadUsers();
     }
 
@@ -307,7 +308,7 @@ final class UserStorage
     }
 
     /**
-     * **Method** save all stored users to DB with local properties
+     * **Method** save all stored in redis users to DB with local properties
      * @return void
      */
     private function savedUsers() : void

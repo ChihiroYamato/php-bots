@@ -23,6 +23,7 @@ final class Games
     {
         $this->storage = [];
         $this->restList = [];
+        DB\DataBase::saveByTableName('games_statistic', DB\Redis::fetch('game*'));
     }
 
     /**
