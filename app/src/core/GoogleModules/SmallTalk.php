@@ -57,7 +57,7 @@ final class SmallTalk
             return $queryResult->getFulfillmentText();
         } catch (ApiCore\ApiException $error) {
             $this->addError(__FUNCTION__, $error->getMessage());
-            Helpers\Loger::logging('YouTube', $this->getErrors(), 'error');
+            Helpers\Logger::logging('YouTube', $this->getErrors(), 'error');
             return '';
         }
     }

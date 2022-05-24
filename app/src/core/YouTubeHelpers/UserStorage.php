@@ -53,7 +53,7 @@ final class UserStorage
     public function __destruct()
     {
         $this->savedUsers();
-        Helpers\Loger::print('System', 'Users saved');
+        Helpers\Logger::print('System', 'Users saved');
     }
 
     /**
@@ -182,7 +182,7 @@ final class UserStorage
         ];
 
         DB\DataBase::insertYoutubeUser($request);
-        Helpers\Loger::print('System', 'saving user: ' . $user->getId());
+        Helpers\Logger::print('System', 'saving user: ' . $user->getId());
     }
 
     /**
@@ -193,7 +193,7 @@ final class UserStorage
     private function delete(User $user) : void
     {
         DB\DataBase::deleteYouTubeUser($user->getId());
-        Helpers\Loger::print('System', 'delete user: ' . $user->getId());
+        Helpers\Logger::print('System', 'delete user: ' . $user->getId());
         unset($user);
     }
 
@@ -262,7 +262,7 @@ final class UserStorage
             ];
         } catch (Service\Exception $error) {
             $this->addError(__FUNCTION__, $error->getMessage());
-            Helpers\Loger::logging('YouTube', $this->getErrors(), 'error');
+            Helpers\Logger::logging('YouTube', $this->getErrors(), 'error');
             return [];
         }
     }

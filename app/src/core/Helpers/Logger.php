@@ -5,9 +5,9 @@ namespace App\Anet\Helpers;
 use App\Anet\DB;
 
 /**
- * **Loger** -- helper static class for working with logs (save to DBm save to XML, archive)
+ * **Logger** -- helper static class for working with logs (save to DBm save to XML, archive)
  */
-final class Loger
+final class Logger
 {
     use FileSystemTrait;
 

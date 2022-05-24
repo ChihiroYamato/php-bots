@@ -14,7 +14,7 @@ do {
     $restart = false;
 
     try {
-        $youtubeBot = new Bots\YouTubeBot($argv[1]);
+        $youtubeBot = new Bots\YouTube($argv[1]);
     } catch (Service\Exception $error) {
         print_r($error->getMessage());
         return 0;
@@ -38,12 +38,12 @@ do {
 
     $youtubeBot->listen(15);
 
-    $error = json_decode((string) Helpers\Loger::fetchLastNode($youtubeBot->getName(), 'error')->message, true)['error'] ?? null;
+    $error = json_decode((string) Helpers\Logger::fetchLastNode($youtubeBot->getName(), 'error')->message, true)['error'] ?? null;
 
     if ($error !== null && $error['code'] === 401 && mb_strpos($error['message'], 'Request had invalid authentication credentials. Expected OAuth 2 access token') !== false) {
         unset($youtubeBot);
         sleep(60);
-        Helpers\Loger::print('System', 'system restarting script by code <failed oAuth>');
+        Helpers\Logger::print('System', 'system restarting script by code <failed oAuth>');
         $restart = true;
     }
 } while ($restart);
