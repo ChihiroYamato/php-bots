@@ -181,6 +181,7 @@ final class UserStorage
         ];
 
         DB\DataBase::insertYoutubeUser($request);
+        Helpers\Loger::print('System', 'saving user: ' . $user->getId());
     }
 
     /**
@@ -191,6 +192,7 @@ final class UserStorage
     private function delete(User $user) : void
     {
         DB\DataBase::deleteYouTubeUser($user->getId());
+        Helpers\Loger::print('System', 'delete user: ' . $user->getId());
         unset($user);
     }
 
