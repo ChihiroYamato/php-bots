@@ -10,4 +10,4 @@ if (YouTubeBot::createAuthTokken()) {
     echo 'file with oAuth tokken is already exist' . PHP_EOL;
 }
 
-exit;
+return 0;

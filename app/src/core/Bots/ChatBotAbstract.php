@@ -93,6 +93,15 @@ abstract class ChatBotAbstract implements BotInterface, BotDebugInterface, Stati
         $this->games = new Anet\Games();
     }
 
+    /**
+     * **Method** get name of current bot
+     * @return string name of current bot
+     */
+    public function getName() : string
+    {
+        return $this->className;
+    }
+
     public function getStatistics() : array
     {
         return [

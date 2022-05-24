@@ -126,7 +126,7 @@ final class Loger
     /**
      * **Method** save logs directory by category name to DB
      * @param string $category name of logs directory
-     * @param string $logs name of logs type directory
+     * @param string $logs base name of logs type directory
      * @param string $database name of database
      * @return void
      */
@@ -139,6 +139,27 @@ final class Loger
                 self::saveXMLToDB("$directory/$file", $logs, $database);
             }
         }
+    }
+
+    /**
+     * **Method** fetch last xml node from last logs file in specidied category
+     *  @param string $category specidied category of logs
+     * @param string $logs base name of logs type directory
+     * @return null|\SimpleXMLElement last xml node
+     */
+    public static function fetchLastNode(string $category, string $logs) : ?\SimpleXMLElement
+    {
+        $directory = self::LOGS_PATH . "/$category/{$logs}s";
+        $logsList = scandir($directory);
+
+        if (empty($logsList)) {
+            return null;
+        }
+
+        $lastLog = array_pop($logsList);
+        $xml = self::openXMLFromFile("$directory/$lastLog");
+
+        return $xml->{$logs}[$xml->count() - 1];
     }
 
     /**
