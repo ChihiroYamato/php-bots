@@ -49,3 +49,19 @@ if (! defined('OAUTH_TOKEN_JSON')) {
 if (! defined('LOGS_PATH')) {
     define('LOGS_PATH', dirname(__DIR__, 2) . '/project_logs');
 }
+
+if (! defined('DB_HOST')) {
+    define('DB_HOST', 'db');
+}
+
+if (! defined('DB_BASE')) {
+    define('DB_BASE', 'bots');
+}
+
+if (! defined('REDIS_HOST')) {
+    define('REDIS_HOST', 'redis');
+}
+
+if (! defined('REDIS_PORT')) {
+    define('REDIS_PORT', 6379);
+}

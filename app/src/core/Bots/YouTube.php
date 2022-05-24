@@ -115,7 +115,7 @@ final class YouTube extends ChatBotAbstract
                     $this->timeTracker->trackerStop('loggingProccess');
 
                     Helpers\Logger::loggingProccess($this->className, $this->getStatistics(), $this->buffer->fetch('sendings'));
-                    Helpers\Logger::logging($this->className, $this->buffer->fetch('messageList'), 'message'); // todo
+                    Helpers\Logger::logging($this->className, $this->buffer->fetch('messageList'), 'message');
 
                     $this->timeTracker->clearPoints();
                     Helpers\Logger::print($this->className, sprintf('Logs saved. Current iteration is: %d Proccessing duration: %s', $this->totalIterations, $this->timeTracker->getDuration()));

@@ -13,7 +13,7 @@ vendor/
 # Project
 secrets/
 !secrets/.gitkeep
-pre_const.php
+env_const.php
 another_close.php
 .env
 redis.conf
