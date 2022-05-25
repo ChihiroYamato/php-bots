@@ -74,7 +74,7 @@ final class User implements UserInterface
     {
         $this->id = $id;
         $this->name = $params['name'];
-        $this->channelUrl = 'https://www.youtube.com/channel/' . $id;
+        $this->channelUrl = 'youtube.com/channel/' . $id;
         $this->lastPublished = new \DateTime($params['last_published'] ?? 'now');
         $this->registration = new \DateTime($params['registation_date'] ?? 'now');
         $this->lastUpdate = new \DateTime($params['last_update'] ?? 'now');

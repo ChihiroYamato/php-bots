@@ -13,7 +13,7 @@ final class DataBase
 
     private static ?\PDO $connectPDO = null;
 
-    private static function getConnect() : \PDO
+    public static function getConnect() : \PDO
     {
         if (self::$connectPDO === null) {
             try {
@@ -109,10 +109,10 @@ final class DataBase
         foreach ($newParams as $prop => $item) {
             if (in_array($prop, self::YOUTUBE_USERS_PROPERTIES)) {
                 $queriesSQL['main']['stringSQL'] .= " `$prop`=:$prop,";
-                $queriesSQL['main']['params'][":$prop"] = $item;
+                $queriesSQL['main']['params'][$prop] = $item;
             } elseif (in_array($prop, self::YOUTUBE_USER_STATISTIC_PROPERTIES)) {
                 $queriesSQL['statistic']['stringSQL'] .= " `$prop`=:$prop,";
-                $queriesSQL['statistic']['params'][":$prop"] = $item;
+                $queriesSQL['statistic']['params'][$prop] = $item;
             }
         }
 
@@ -174,10 +174,10 @@ final class DataBase
 
             $id = $request->fetch(\PDO::FETCH_ASSOC)['id'];
 
-            $request = self::getConnect()->prepare("INSERT INTO texts(`content`, `category_id`) VALUES (:content, $id)");
+            $request = self::getConnect()->prepare('INSERT INTO texts(`content`, `category_id`) VALUES (:content, :id)');
 
             foreach ($content as $item) {
-                $request->execute([':content' => $item]);
+                $request->execute(['content' => $item, 'id' => $id]);
             }
 
             self::getConnect()->commit();
@@ -237,7 +237,7 @@ final class DataBase
         try {
 
             $request = self::getConnect()->prepare("SELECT * FROM cities WHERE `name` LIKE :city LIMIT 1");
-            $request->execute([':city' => $city]);
+            $request->execute(['city' => $city]);
 
             $result = $request->fetch(\PDO::FETCH_ASSOC);
 
@@ -257,19 +257,17 @@ final class DataBase
         try {
             $inserts = '';
             $values = '';
-            $requestData = [];
 
             foreach ($data as $key => $value) {
                 $inserts .= "`$key`,";
                 $values .= ":$key,";
-                $requestData[":$key"] = $value;
             }
 
             $inserts = rtrim($inserts, ",");
             $values = rtrim($values, ",");
 
             $request = self::getConnect()->prepare("INSERT INTO bots_statisctic($inserts) VALUES ($values)");
-            $request->execute($requestData);
+            $request->execute($data);
 
         } catch (\PDOException $error) {
             Helpers\Logger::logging(self::LOGS_CATEGORY, [$error->getMessage()], 'error');

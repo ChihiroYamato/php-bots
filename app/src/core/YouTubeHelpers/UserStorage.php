@@ -109,7 +109,7 @@ final class UserStorage
 
         return [
             $mess . 'Дата регистрации: ' . $user->getRegistration()->format('Y-m-d') . ' —— Последняя активность в чате: ' . $user->getLastPublished()->format('Y-m-d H:i:s') . ' —— Подписчиков: ' . $user->getSubscribers() . ' —— Видео на канале: ' . $user->getVideos() . ' —— Всего просмотров: ' . $user->getViews(),
-            ' —— Отправлено сообщений: ' . $user->getMessages() . ' —— Социальный рейтинг чата: ' . $user->getRating(), // todo  . ' —— ссылка на пользователя: ' . $user->getChannelUrl(),
+            ' —— Отправлено сообщений: ' . $user->getMessages() . ' —— Социальный рейтинг чата: ' . $user->getRating() . ' —— ссылка на пользователя: ' . $user->getChannelUrl(),
         ];
     }
 
