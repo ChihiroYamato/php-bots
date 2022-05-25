@@ -54,22 +54,23 @@ final class YouTube extends ChatBotAbstract
 
     /**
      * Initialize YouTube ChatBot
+     * @param \App\Anet\YouTubeHelpers\ConnectParams $connect object with connection params
      * @param string $youtubeURL link to active youtube video
      * @return void
      */
-    public function __construct(string $youtubeURL)
+    public function __construct(YouTubeHelpers\ConnectParams $connect, string $youtubeURL)
     {
-        if (! file_exists(OAUTH_TOKEN_JSON)) {
+        if (! file_exists($connect->oAuthJSON)) {
             throw new Service\Exception('Create file with oAuth tokken');
         }
         parent::__construct();
 
-        $this->botUserEmail = APP_EMAIL;
-        $this->botUserName = APP_USER_NAME;
+        $this->botUserEmail = YOUTUBE_APP_EMAIL;
+        $this->botUserName = YOUTUBE_APP_USER_NAME;
 
-        $client = self::createGoogleClient();
+        $client = self::createGoogleClient($connect);
 
-        $client->setAccessToken(json_decode(file_get_contents(OAUTH_TOKEN_JSON), true));
+        $client->setAccessToken(json_decode(file_get_contents($connect->oAuthJSON), true));
 
         $this->youtubeService = new Service\YouTube($client);
         $this->video = new YouTubeHelpers\VideoProperties($this->youtubeService, $youtubeURL);
@@ -184,15 +185,16 @@ final class YouTube extends ChatBotAbstract
     /**
      * **Method** create Google auth token for connect to server
      * need to execute in isolated page including to google oAuth list
+     * @param \App\Anet\YouTubeHelpers\ConnectParams $connect object with connection params
      * @return bool true if token is creating succussful
      */
-    public static function createAuthTokken() : bool
+    public static function createAuthTokken(YouTubeHelpers\ConnectParams $connect) : bool
     {
-        if (file_exists(OAUTH_TOKEN_JSON)) {
+        if (file_exists($connect->oAuthJSON)) {
             return false;
         }
 
-        $client = self::createGoogleClient(true);
+        $client = self::createGoogleClient($connect, true);
 
         if (! isset($_GET['code'])) {
             header('Location: ' . $client->createAuthUrl());
@@ -201,22 +203,23 @@ final class YouTube extends ChatBotAbstract
         }
 
         $client->fetchAccessTokenWithAuthCode($_GET['code']);
-        file_put_contents(OAUTH_TOKEN_JSON, json_encode($client->getAccessToken(), JSON_FORCE_OBJECT));
+        file_put_contents($connect->oAuthJSON, json_encode($client->getAccessToken(), JSON_FORCE_OBJECT));
 
         return true;
     }
 
     /**
      * **Method** create Google API client connection with specified params
+     * @param \App\Anet\YouTubeHelpers\ConnectParams $connect object with connection params
      * @param bool $setRedirectUrl set true if needed to setup reditect url for oAuth token, default false
      * @return \Google\Client instance of client connection
      */
-    private static function createGoogleClient(bool $setRedirectUrl = false) : Google\Client
+    private static function createGoogleClient(YouTubeHelpers\ConnectParams $connect, bool $setRedirectUrl = false) : Google\Client
     {
         $client = new Google\Client();
 
-        $client->setApplicationName(APP_NAME);
-        $client->setAuthConfig(CLIENT_SECRET_JSON);
+        $client->setApplicationName($connect->appName);
+        $client->setAuthConfig($connect->secretKeyJSON);
         $client->setAccessType('offline');
 
         if ($setRedirectUrl) {
@@ -227,7 +230,7 @@ final class YouTube extends ChatBotAbstract
             Service\YouTube::YOUTUBE_FORCE_SSL,
             Service\YouTube::YOUTUBE_READONLY,
         ]);
-        $client->setLoginHint(APP_EMAIL);
+        $client->setLoginHint(YOUTUBE_APP_EMAIL);
 
         return $client;
     }
@@ -240,7 +243,7 @@ final class YouTube extends ChatBotAbstract
     private function fetchChatList() : array
     {
         try {
-            $response = $this->youtubeService->liveChatMessages->listLiveChatMessages($this->video->getLiveChatID(), 'snippet', ['maxResults' => 100]); // todo
+            $response = $this->youtubeService->liveChatMessages->listLiveChatMessages($this->video->getLiveChatID(), 'snippet', ['maxResults' => 100]);
 
             $chatList = $response['items'];
             $actualChat = [];
@@ -372,7 +375,6 @@ final class YouTube extends ChatBotAbstract
                     $largeSending = Contents\Jokes::fetchRand();
                     break;
                 case mb_strpos($chatItem['message'], '/play') !== false:
-                    // TODO =========== игры
                     switch (true) {
                         case $chatItem['message'] === Games\Roulette::COMMAND_HELP:
                             $largeSending = Games\Roulette::getHelpMessage();
@@ -411,7 +413,6 @@ final class YouTube extends ChatBotAbstract
                 continue;
             }
 
-            // todo ================= NEED TESTING
             if (! $this->timeTracker->trackerState('standart_responce') || $this->timeTracker->trackerCheck('standart_responce', 30)) {
                 $this->timeTracker->trackerStop('standart_responce');
 

@@ -6,15 +6,22 @@ if (count($argv) < 2) {
 
 use App\Anet\Bots;
 use App\Anet\Helpers;
+use App\Anet\YouTubeHelpers;
 use Google\Service;
 
 require_once __DIR__ . '/vendor/autoload.php';
+
+$connectParams = new YouTubeHelpers\ConnectParams(
+    YOUTUBE_APP_NAME_RESERVE,               // todo ==== testing
+    YOUTUBE_CLIENT_SECRET_JSON_RESERVE,     // todo ==== testing
+    YOUTUBE_OAUTH_TOKEN_JSON_RESERVE        // todo ==== testing
+);
 
 do {
     $restart = false;
 
     try {
-        $youtubeBot = new Bots\YouTube($argv[1]);
+        $youtubeBot = new Bots\YouTube($connectParams, $argv[1]);
     } catch (Service\Exception $error) {
         print_r($error->getMessage());
         return 0;
@@ -36,7 +43,7 @@ do {
         }
     }
 
-    $youtubeBot->listen(15);
+    $youtubeBot->listen(5);     // todo === testing
 
     $error = json_decode((string) Helpers\Logger::fetchLastNode($youtubeBot->getName(), 'error')->message, true)['error'] ?? null;
 
@@ -45,5 +52,15 @@ do {
         sleep(60);
         Helpers\Logger::print('System', 'system restarting script by code <failed oAuth>');
         $restart = true;
-    }
+    } /*elseif(code???) {
+        unset($youtubeBot);
+        sleep(10);
+        Helpers\Logger::print('System', 'system restarting script by code <****code???****>'); // todo ==== testing
+        $connectParams = new YouTubeHelpers\ConnectParams(
+            YOUTUBE_APP_NAME_RESERVE,               // todo ==== testing
+            YOUTUBE_CLIENT_SECRET_JSON_RESERVE,     // todo ==== testing
+            YOUTUBE_OAUTH_TOKEN_JSON_RESERVE        // todo ==== testing
+        );
+        $restart = true;
+    }*/
 } while ($restart);

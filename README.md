@@ -142,9 +142,9 @@ NGINX_LOGS_CONTAINER=/var/log/nginx/
 #### env_const.php
 Файл env_const.php должен иметь следующий вид:
 ```php
-define('APP_NAME', ''); // Имя проекта Google Cloud Platform
-define('APP_EMAIL', ''); // почта юзер бота
-define('APP_USER_NAME', ''); // имя юзер бота
+define('YOUTUBE_APP_NAME', ''); // Имя проекта Google Cloud Platform
+define('YOUTUBE_APP_EMAIL', ''); // почта юзер бота
+define('YOUTUBE_APP_USER_NAME', ''); // имя юзер бота
 define('SMALL_TALK_ID', ''); // Имя проекта Dialogflow
 define('USER_LISTEN_LIST', []); // список пользователей на постоянную прослушку
 define('DB_USER_NAME', ''); // Имя пользователя БД
