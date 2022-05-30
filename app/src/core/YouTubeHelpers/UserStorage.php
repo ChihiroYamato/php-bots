@@ -121,7 +121,7 @@ final class UserStorage
      * @param mixed ...$params specified list of params for User method
      * @return void
      */
-    public function handler(string $id, string $method, ...$params) : void
+    public function handler(string $id, string $method, mixed ...$params) : void
     {
         $user = $this->get($id);
 
