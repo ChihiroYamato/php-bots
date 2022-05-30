@@ -256,9 +256,9 @@ final class UserStorage
             return [
                 'name' => $response['items'][0]['snippet']['title'] ?? 'unknown',
                 'registation_date' => $response['items'][0]['snippet']['publishedAt'] ?? null,
-                'subscriber_count' => $response['items'][0]['statistics']['subscriberCount'] ?? null,
-                'video_count' => $response['items'][0]['statistics']['videoCount'] ?? null,
-                'view_count' => $response['items'][0]['statistics']['viewCount'] ?? null,
+                'subscriber_count' => $response['items'][0]['statistics']['subscriberCount'] ?? 0,
+                'video_count' => $response['items'][0]['statistics']['videoCount'] ?? 0,
+                'view_count' => $response['items'][0]['statistics']['viewCount'] ?? 0,
             ];
         } catch (Service\Exception $error) {
             $this->addError(__FUNCTION__, $error->getMessage());

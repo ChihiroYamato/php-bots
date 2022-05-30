@@ -117,6 +117,15 @@ abstract class ChatBotAbstract implements BotInterface, BotDebugInterface, Stati
     }
 
     /**
+     * **Method** get status bot proccessing
+     * @return bool
+     */
+    public function isListening() : bool
+    {
+        return $this->listeningFlag;
+    }
+
+    /**
      * **Method** prepare answer from smallTalk module
      * @param string $message current message
      * @param bool $setDefault `[optional]` set default answer if module get empty response, default - true

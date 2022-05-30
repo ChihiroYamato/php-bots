@@ -73,14 +73,14 @@ final class User implements UserInterface
     public function __construct(string $id, array $params, bool $isAdmin = false, bool $isActive = true)
     {
         $this->id = $id;
-        $this->name = $params['name'];
-        $this->channelUrl = 'youtube.com/channel/' . $id;
+        $this->name = preg_replace('/[\x{10000}-\x{10FFFF}]/u', '', $params['name']);
+        $this->channelUrl = 'channel/' . $id;
         $this->lastPublished = new \DateTime($params['last_published'] ?? 'now');
         $this->registration = new \DateTime($params['registation_date'] ?? 'now');
         $this->lastUpdate = new \DateTime($params['last_update'] ?? 'now');
-        $this->subscribers = $params['subscriber_count'] ?? null;
-        $this->videos = $params['video_count'] ?? null;
-        $this->views = $params['view_count'] ?? null;
+        $this->subscribers = $params['subscriber_count'] ?? 0;
+        $this->videos = $params['video_count'] ?? 0;
+        $this->views = $params['view_count'] ?? 0;
         $this->messages = $params['message_count'] ?? 0;
         $this->rating = $params['social_rating'] ?? 50;
         $this->isActive = $isActive;
@@ -159,7 +159,7 @@ final class User implements UserInterface
      * **Method** get user subscribers count
      * @return null|int subscribers count
      */
-    public function getSubscribers() : ?int
+    public function getSubscribers() : int
     {
         return $this->subscribers;
     }
@@ -168,7 +168,7 @@ final class User implements UserInterface
      * **Method** get user video count
      * @return null|int user video count
      */
-    public function getVideos() : ?int
+    public function getVideos() : int
     {
         return $this->videos;
     }
@@ -177,7 +177,7 @@ final class User implements UserInterface
      * **Method** get user views count
      * @return null|int user views count
      */
-    public function getViews() : ?int
+    public function getViews() : int
     {
         return $this->views;
     }
@@ -221,7 +221,7 @@ final class User implements UserInterface
      * @param null|int $subscribers new user subscribers count
      * @return \App\Anet\YouTubeHelpers\User return instance of User
      */
-    public function updateSubscribers(?int $subscribers) : User
+    public function updateSubscribers(int $subscribers) : User
     {
         $this->subscribers = $subscribers;
 
@@ -233,7 +233,7 @@ final class User implements UserInterface
      * @param null|int $videos new user videos count
      * @return \App\Anet\YouTubeHelpers\User return instance of User
      */
-    public function updateVideos(?int $videos) : User
+    public function updateVideos(int $videos) : User
     {
         $this->videos = $videos;
 
@@ -245,7 +245,7 @@ final class User implements UserInterface
      * @param null|int $views new user views count
      * @return \App\Anet\YouTubeHelpers\User return instance of User
      */
-    public function updateViews(?int $views) : User
+    public function updateViews(int $views) : User
     {
         $this->views = $views;
 

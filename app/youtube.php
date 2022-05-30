@@ -12,10 +12,11 @@ use Google\Service;
 require_once __DIR__ . '/vendor/autoload.php';
 
 $connectParams = new YouTubeHelpers\ConnectParams(
-    YOUTUBE_APP_NAME_RESERVE,               // todo ==== testing
-    YOUTUBE_CLIENT_SECRET_JSON_RESERVE,     // todo ==== testing
-    YOUTUBE_OAUTH_TOKEN_JSON_RESERVE        // todo ==== testing
+    YOUTUBE_APP_NAME,
+    YOUTUBE_CLIENT_SECRET_JSON,
+    YOUTUBE_OAUTH_TOKEN_JSON
 );
+$spareConnection = true;
 
 do {
     $restart = false;
@@ -43,24 +44,27 @@ do {
         }
     }
 
-    $youtubeBot->listen(5);     // todo === testing
+    $youtubeBot->listen(15);
 
     $error = json_decode((string) Helpers\Logger::fetchLastNode($youtubeBot->getName(), 'error')->message, true)['error'] ?? null;
 
-    if ($error !== null && $error['code'] === 401 && mb_strpos($error['message'], 'Request had invalid authentication credentials. Expected OAuth 2 access token') !== false) {
-        unset($youtubeBot);
-        sleep(60);
-        Helpers\Logger::print('System', 'system restarting script by code <failed oAuth>');
-        $restart = true;
-    } /*elseif(code???) {
-        unset($youtubeBot);
-        sleep(10);
-        Helpers\Logger::print('System', 'system restarting script by code <****code???****>'); // todo ==== testing
-        $connectParams = new YouTubeHelpers\ConnectParams(
-            YOUTUBE_APP_NAME_RESERVE,               // todo ==== testing
-            YOUTUBE_CLIENT_SECRET_JSON_RESERVE,     // todo ==== testing
-            YOUTUBE_OAUTH_TOKEN_JSON_RESERVE        // todo ==== testing
-        );
-        $restart = true;
-    }*/
+    if ($youtubeBot->isListening()) {
+        if ($error !== null && $error['code'] === 401 && mb_strpos($error['message'], 'Request had invalid authentication credentials. Expected OAuth 2 access token') !== false) {
+            unset($youtubeBot);
+            sleep(60);
+            Helpers\Logger::print('System', 'system restarting script by code <failed oAuth>');
+            $restart = true;
+        } elseif($spareConnection && $error !== null && $error['code'] === 403 && mb_strpos($error['message'], 'The request cannot be completed because you have exceeded your') !== false) {
+            $spareConnection = false;
+            unset($youtubeBot);
+            sleep(10);
+            Helpers\Logger::print('System', 'system restarting script by code <****code???****>');
+            $connectParams = new YouTubeHelpers\ConnectParams(
+                YOUTUBE_APP_NAME_RESERVE,
+                YOUTUBE_CLIENT_SECRET_JSON_RESERVE,
+                YOUTUBE_OAUTH_TOKEN_JSON_RESERVE
+            );
+            $restart = true;
+        }
+    }
 } while ($restart);

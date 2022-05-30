@@ -76,9 +76,8 @@ class Towns extends Game
 
         $response = $this->getCity($letter);
         $this->stopList[] = $response;
-        $this->lastLetter = mb_strtolower(mb_strcut($response, -1));
+        $this->lastLetter = mb_strtolower(mb_strcut($response, -2));
 
-        var_dump($response); // todo ====================== bug с некоторыми городами - не отправляются
         return [
             'message' => $this->user->getName() . " продолжаем, $response, тебе на <{$this->lastLetter}>",
             'end' => false,

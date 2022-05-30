@@ -23,6 +23,7 @@ use App\Anet\Games;
  */
 final class YouTube extends ChatBotAbstract
 {
+    use YouTubeHelpers\MessageSpotterTrait;
     /**
      * @var \Google\Service\YouTube $youtubeService `private` instance of Youtube Servise class
      */
@@ -271,7 +272,7 @@ final class YouTube extends ChatBotAbstract
                 }
             }
 
-            $this->lastChatMessageID = array_pop($chatList)['id'];
+            $this->lastChatMessageID = array_pop($chatList)['id'] ?? $this->lastChatMessageID;
             $this->totalMessageReading += count($actualChat);
 
             return $actualChat;
@@ -536,7 +537,7 @@ final class YouTube extends ChatBotAbstract
             $liveChatMessageSnippet = new Service\YouTube\LiveChatMessageSnippet();
             $liveChatTextMessageDetails = new Service\YouTube\LiveChatTextMessageDetails();
 
-            $liveChatTextMessageDetails->setMessageText($message);
+            $liveChatTextMessageDetails->setMessageText($this->changeChars($message));
 
             $liveChatMessageSnippet->setLiveChatId($this->video->getLiveChatID());
             $liveChatMessageSnippet->setType('textMessageEvent');
