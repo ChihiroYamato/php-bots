@@ -2,6 +2,8 @@
 
 namespace App\Anet\DB;
 
+use App\Anet\YouTubeHelpers;
+
 /**
  * **Redis** -- simple wrapper for Redis PHP library
  * https://github.com/phpredis/phpredis
@@ -12,6 +14,13 @@ final class Redis
      * @var null|\Redis $connect `private` static connect to Redis storage
      */
     private static ?\Redis $connect = null;
+
+    /**
+     * @var array $serializeAllowed `private` list of allowed classes for unserialize
+     */
+    private static array $serializeAllowed = [
+        YouTubeHelpers\User::class,
+    ];
 
     /**
      * **Method** get instance of connect to redis storage
@@ -73,7 +82,7 @@ final class Redis
         }
 
         $result = self::getConnect()->mGet($keyList);
-        $result = array_map(fn (string $item) => $isObjects ? unserialize($item) : json_decode($item, true), $result);
+        $result = array_map(fn (string $item) => $isObjects ? unserialize($item, ['allowed_classes' => self::$serializeAllowed]) : json_decode($item, true), $result);
         self::getConnect()->del($keyList);
 
         return $result;
