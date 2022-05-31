@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/vendor/autoload.php';
+require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 use App\Anet\Bots;
 use App\Anet\YouTubeHelpers;
@@ -40,7 +40,6 @@ if (! empty($_SESSION['project'])) {
 
     return 0;
 }
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
