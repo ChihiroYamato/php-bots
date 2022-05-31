@@ -58,7 +58,7 @@ do {
             $spareConnection = false;
             unset($youtubeBot);
             sleep(10);
-            Helpers\Logger::print('System', 'system restarting script by code <****code???****>');
+            Helpers\Logger::print('System', 'system restarting script by code <exceeded quota>');
             $connectParams = new YouTubeHelpers\ConnectParams(
                 YOUTUBE_APP_NAME_RESERVE,
                 YOUTUBE_CLIENT_SECRET_JSON_RESERVE,
