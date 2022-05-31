@@ -5,6 +5,9 @@ namespace App\Anet\Games;
 use App\Anet\Contents;
 use App\Anet\YouTubeHelpers;
 
+/**
+ * **Towns** -- class realization of game Towns
+ */
 class Towns extends Game
 {
     public const DEFAULT_EXPIRE_TIME = 480;
@@ -87,8 +90,8 @@ class Towns extends Game
     public static function getHelpMessage() : array
     {
         return [
-            '—— GAME ' . self::NAME . ' —— правила: классическая игра в города с модификацией: игра ограничена ' . self::MAX_TURN . ' ходами игрока, за это время нужно угадать случайную букву, на которую город не должен заканчиваться',
-            'Таких букв всего: ' . self::LETTERS_COUNT . ' —— старт: введите <' . self::COMMAND_START . '>. на игру отведено ' . self::DEFAULT_EXPIRE_TIME . ' секунд, очков за победу: +' . self::WIN_SCORE . ', очков за поражение: -' . self::LOSE_SCORE,
+            sprintf('—— GAME %s —— правила: классическая игра в города с модификацией: игра ограничена %d ходами игрока, за это время нужно угадать случайную букву, на которую город не должен заканчиваться', self::NAME, self::MAX_TURN),
+            sprintf('Таких букв всего: %s —— старт: введите <%s>. на игру отведено %d секунд, очков за победу: +%d, очков за поражение: -%d', self::LETTERS_COUNT, self::COMMAND_START, self::DEFAULT_EXPIRE_TIME, self::WIN_SCORE, self::LOSE_SCORE),
         ];
     }
 

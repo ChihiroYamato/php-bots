@@ -63,7 +63,7 @@ abstract class Game implements GameInterface
 
     public function getInitMessage() : string
     {
-        return 'Игрок: ' . $this->user->getName() . ' ' . static::GAME_INIT_MESSAGE;
+        return sprintf('Игрок: %s %s', $this->user->getName(), static::GAME_INIT_MESSAGE);
     }
 
     public function getStatistic() : array
@@ -92,7 +92,7 @@ abstract class Game implements GameInterface
      */
     protected function getStatisticMessage(int $rating) : string
     {
-        return " —— очки: {$this->score} —— текущий соц рейтинг: $rating";
+        return "—— очки: {$this->score} —— текущий соц рейтинг: $rating";
     }
 
     /**
@@ -105,7 +105,7 @@ abstract class Game implements GameInterface
         $this->user->incrementRaiting($this->score);
 
         return [
-            'message' => $this->user->getName() . ' ' . $endMessage . $this->getStatisticMessage($this->user->getRating()),
+            'message' => sprintf('%s %s %s', $this->user->getName(), $endMessage, $this->getStatisticMessage($this->user->getRating())),
             'end' => true,
         ];
     }

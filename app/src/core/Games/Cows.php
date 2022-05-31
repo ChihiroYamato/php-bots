@@ -63,7 +63,7 @@ class Cows extends Game
     public static function getHelpMessage() : array
     {
         return [
-            sprintf('—— GAME %s Нужно отгадать загаданное компьютером число. Если цифра есть в загаданном числе и стоит на своем месте - это бык. Если есть, но стоит в другом месте - это корова.', self::NAME),
+            sprintf('—— GAME %s —— Нужно отгадать загаданное компьютером число. Если цифра есть в загаданном числе и стоит на своем месте - это бык. Если есть, но стоит в другом месте - это корова.', self::NAME),
             sprintf('Волки - цифры, которых нет в числе. —— Уровни сложности: [%s]', implode(', ', array_map(fn ($key, $value) => "$key => $value: " . self::DESCRIPTION[$value], array_keys(self::DIFFICULT), array_values(self::DIFFICULT)))),
             sprintf('—— модификатор очков: [%s] —— старт: введите <%s> на игру отведено %s секунд.', implode(', ', array_map(fn ($value) => "$value: x" . self::MODIFIER[$value], array_values(self::DIFFICULT))), self::COMMAND_START, self::DEFAULT_EXPIRE_TIME),
         ];

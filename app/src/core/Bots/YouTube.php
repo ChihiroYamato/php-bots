@@ -402,7 +402,7 @@ final class YouTube extends ChatBotAbstract
                             $largeSending = $this->games->validateAndStarting(new Games\Cows($currentUser), $currentUser, 120, 55);
                             break;
                         default:
-                            $largeSending[] = 'В настоящее время доступны следующие игры: —— русская рулетка <' . Games\Roulette::COMMAND_HELP . '> —— казино <' . Games\Сasino::COMMAND_HELP . '> —— города <' . Games\Towns::COMMAND_HELP . '> —— быки и коровы <' . Games\Cows::COMMAND_HELP .  '>';
+                            $largeSending[] = sprintf('В настоящее время доступны следующие игры: —— русская рулетка <%s> —— казино <%s> —— города <%s> —— быки и коровы <%s>', Games\Roulette::COMMAND_HELP, Games\Сasino::COMMAND_HELP, Games\Towns::COMMAND_HELP, Games\Cows::COMMAND_HELP);
                             $largeSending[] = 'Внимание! - каждое следующее сообщение игрока после старта игры засчитывается как ход, на игру отводится определенное время, по истечению засчитывается проигрыш с максимумом очков';
                             break;
                     }
