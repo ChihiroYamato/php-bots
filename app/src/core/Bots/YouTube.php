@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Anet\Bots;
+namespace Anet\App\Bots;
 
 use Google;
 use Google\Service;
-use App\Anet\Contents;
-use App\Anet\YouTubeHelpers;
-use App\Anet\Helpers;
-use App\Anet\Games;
+use Anet\App\Contents;
+use Anet\App\YouTubeHelpers;
+use Anet\App\Helpers;
+use Anet\App\Games;
 
 /**
  * Realization of YouTube ChatBot.
@@ -29,11 +29,11 @@ final class YouTube extends ChatBotAbstract
      */
     private Service\YouTube $youtubeService;
     /**
-     * @var \App\Anet\YouTubeHelpers\VideoProperties $video `private` instance of VideoProperties class
+     * @var \Anet\App\YouTubeHelpers\VideoProperties $video `private` instance of VideoProperties class
      */
     private YouTubeHelpers\VideoProperties $video;
     /**
-     * @var \App\Anet\YouTubeHelpers\UserStorage $users `private` instance of UserStorage class
+     * @var \Anet\App\YouTubeHelpers\UserStorage $users `private` instance of UserStorage class
      */
     private YouTubeHelpers\UserStorage $users;
     /**
@@ -55,7 +55,7 @@ final class YouTube extends ChatBotAbstract
 
     /**
      * Initialize YouTube ChatBot
-     * @param \App\Anet\YouTubeHelpers\ConnectParams $connect object with connection params
+     * @param \Anet\App\YouTubeHelpers\ConnectParams $connect object with connection params
      * @param string $youtubeURL link to active youtube video
      * @return void
      */
@@ -186,7 +186,7 @@ final class YouTube extends ChatBotAbstract
     /**
      * **Method** create Google auth token for connect to server
      * need to execute in isolated page including to google oAuth list
-     * @param \App\Anet\YouTubeHelpers\ConnectParams $connect object with connection params
+     * @param \Anet\App\YouTubeHelpers\ConnectParams $connect object with connection params
      * @return bool true if token is creating succussful
      */
     public static function createAuthTokken(YouTubeHelpers\ConnectParams $connect) : bool
@@ -211,7 +211,7 @@ final class YouTube extends ChatBotAbstract
 
     /**
      * **Method** create Google API client connection with specified params
-     * @param \App\Anet\YouTubeHelpers\ConnectParams $connect object with connection params
+     * @param \Anet\App\YouTubeHelpers\ConnectParams $connect object with connection params
      * @param bool $setRedirectUrl set true if needed to setup reditect url for oAuth token, default false
      * @return \Google\Client instance of client connection
      */

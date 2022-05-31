@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Anet\YouTubeHelpers;
+namespace Anet\App\YouTubeHelpers;
 
 use Google\Service;
-use App\Anet\Helpers;
+use Anet\App\Helpers;
 
 /**
  * **VideoProperties** -- class storage of youtube video properties
@@ -20,7 +20,7 @@ final class VideoProperties
      */
     private Service\YouTube $youtube;
     /**
-     * @var \App\Anet\Helpers\TimeTracker $timeTracker `private` instance of TimeTracker class
+     * @var \Anet\App\Helpers\TimeTracker $timeTracker `private` instance of TimeTracker class
      */
     private Helpers\TimeTracker $timeTracker;
     /**

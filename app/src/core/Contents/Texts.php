@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Anet\Contents;
+namespace Anet\App\Contents;
 
-use App\Anet;
-use App\Anet\DB;
+use Anet\App;
+use Anet\App\DB;
 use PHPHtmlParser;
 
-abstract class Texts extends Anet\Contents
+abstract class Texts extends App\Contents
 {
     /**
      * @var string `protected` name of text category in DB

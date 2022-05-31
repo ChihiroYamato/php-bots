@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Anet\DB;
+namespace Anet\App\DB;
 
-use App\Anet\Helpers;
+use Anet\App\Helpers;
 
 // TODO ======================== Переработать класс
 final class DataBase

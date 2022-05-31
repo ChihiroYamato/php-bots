@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Anet\Storages;
+namespace Anet\App\Storages;
 
-use App\Anet\DB;
+use Anet\App\DB;
 
 /**
  * **Vocabulary** -- class for store vocabulary from DB on script runtime

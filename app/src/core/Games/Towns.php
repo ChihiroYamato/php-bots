@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Anet\Games;
+namespace Anet\App\Games;
 
-use App\Anet\Contents;
-use App\Anet\YouTubeHelpers;
+use Anet\App\Contents;
+use Anet\App\YouTubeHelpers;
 
 /**
  * **Towns** -- class realization of game Towns

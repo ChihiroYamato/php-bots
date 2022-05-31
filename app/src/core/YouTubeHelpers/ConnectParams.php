@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Anet\YouTubeHelpers;
+namespace Anet\App\YouTubeHelpers;
 
 /**
  * **ConnectParams** -- class for seting params for connect to youtube server

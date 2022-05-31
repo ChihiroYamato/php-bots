@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Anet\Helpers;
+namespace Anet\App\Helpers;
 
-use App\Anet\DB;
+use Anet\App\DB;
 
 /**
  * **Logger** -- helper static class for working with logs (save to DBm save to XML, archive)

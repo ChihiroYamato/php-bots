@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Anet\Contents;
+namespace Anet\App\Contents;
 
 final class Facts extends Texts
 {

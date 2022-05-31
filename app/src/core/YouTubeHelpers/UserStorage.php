@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Anet\YouTubeHelpers;
+namespace Anet\App\YouTubeHelpers;
 
 use Google\Service;
-use App\Anet\Helpers;
-use App\Anet\DB;
+use Anet\App\Helpers;
+use Anet\App\DB;
 
 /**
  * **UserStorage** class storage of User
@@ -59,7 +59,7 @@ final class UserStorage
     /**
      * **Method** get instance of user from storage by id (or if it doesn't exist - fetch from youtube server)
      * @param string $id id of needed user
-     * @return null|\App\Anet\YouTubeHelpers\User instance of user or null if user doesn't exist and response from youtube server is empty
+     * @return null|\Anet\App\YouTubeHelpers\User instance of user or null if user doesn't exist and response from youtube server is empty
      */
     public function fetch(string $id) : ?User
     {
@@ -82,7 +82,7 @@ final class UserStorage
     /**
      * **Method** get instance of user only from local storage
      * @param string $id id of needed user
-     * @return null|\App\Anet\YouTubeHelpers\User instance of user or null if user doesn't exist
+     * @return null|\Anet\App\YouTubeHelpers\User instance of user or null if user doesn't exist
      */
     public function get(string $id) : ?User
     {
@@ -133,7 +133,7 @@ final class UserStorage
 
     /**
      * **Method** checked user by insance for possibility to "win random" if success - return congratulation message
-     * @param \App\Anet\YouTubeHelpers\User $user instance of current user
+     * @param \Anet\App\YouTubeHelpers\User $user instance of current user
      * @param int $raiting rating which will increment current rating on success
      * @return string if success - congratulation message else - empty string
      */
@@ -166,7 +166,7 @@ final class UserStorage
 
     /**
      * **Method** add new user to DB
-     * @param \App\Anet\YouTubeHelpers\User $user instance of user
+     * @param \Anet\App\YouTubeHelpers\User $user instance of user
      * @return void
      */
     private function insert(User $user) : void
@@ -187,7 +187,7 @@ final class UserStorage
 
     /**
      * **Method** delete user from DB
-     * @param \App\Anet\YouTubeHelpers\User $user instance of user
+     * @param \Anet\App\YouTubeHelpers\User $user instance of user
      * @return void
      */
     private function delete(User $user) : void
@@ -199,8 +199,8 @@ final class UserStorage
 
     /**
      * **Method** update user to DB with general properties from request to youtube server
-     * @param \App\Anet\YouTubeHelpers\User $user instance of current user
-     * @return \App\Anet\YouTubeHelpers\User $user instance of current user
+     * @param \Anet\App\YouTubeHelpers\User $user instance of current user
+     * @return \Anet\App\YouTubeHelpers\User $user instance of current user
      */
     private function updateGlobal(User $user) : User
     {
@@ -227,8 +227,8 @@ final class UserStorage
 
     /**
      * **Method** update user to DB with local properties
-     * @param \App\Anet\YouTubeHelpers\User $user instance of current user
-     * @return \App\Anet\YouTubeHelpers\User $user instance of current user
+     * @param \Anet\App\YouTubeHelpers\User $user instance of current user
+     * @return \Anet\App\YouTubeHelpers\User $user instance of current user
      */
     private function updateLocal(User $user) : User
     {

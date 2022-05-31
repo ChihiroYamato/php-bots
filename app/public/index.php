@@ -2,8 +2,8 @@
 
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
-use App\Anet\Bots;
-use App\Anet\YouTubeHelpers;
+use Anet\App\Bots;
+use Anet\App\YouTubeHelpers;
 
 session_start();
 

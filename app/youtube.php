@@ -4,9 +4,9 @@ if (count($argv) < 2) {
     exit('second argument $argv must be specified by Youtube url'. PHP_EOL);
 }
 
-use App\Anet\Bots;
-use App\Anet\Helpers;
-use App\Anet\YouTubeHelpers;
+use Anet\App\Bots;
+use Anet\App\Helpers;
+use Anet\App\YouTubeHelpers;
 use Google\Service;
 
 require_once __DIR__ . '/vendor/autoload.php';

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Anet;
+namespace Anet\App;
 
 /**
  * **Games** -- class controller of game instances
@@ -37,8 +37,8 @@ final class Games
 
     /**
      * **method** validate possibility of user to start game session, start if possible, and get status message
-     * @param \App\Anet\Games\GameInterface $game instence of game to starting
-     * @param \App\Anet\YouTubeHelpers\User $user instance of current user
+     * @param \Anet\App\Games\GameInterface $game instence of game to starting
+     * @param \Anet\App\YouTubeHelpers\User $user instance of current user
      * @param int $timeout game timeout for current user
      * @param int $minRaiting `[optional]` min rating for user to validate session
      * @return array list of response messages
@@ -113,7 +113,7 @@ final class Games
 
     /**
      * **Method** save new game session and get init message
-     * @param \App\Anet\Games\GameInterface $game instance of current game
+     * @param \Anet\App\Games\GameInterface $game instance of current game
      * @param string $userId id of current user
      * @return string init message to user
      */

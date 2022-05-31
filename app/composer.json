@@ -3,7 +3,9 @@
     "description": "PHP ChatBots",
     "autoload": {
         "psr-4": {
-            "App\\Anet\\": "src/core/"
+            "Anet\\App\\": "src/core/",
+            "Anet\\Controllers\\": "src/controllers/",
+            "Anet\\Views\\": "src/views/"
         },
         "classmap": [],
         "files": [

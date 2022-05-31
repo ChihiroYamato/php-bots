@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Anet\Games;
+namespace Anet\App\Games;
 
-use App\Anet\YouTubeHelpers;
+use Anet\App\YouTubeHelpers;
 
 /**
  * **Сasino** -- class realization of game Casino

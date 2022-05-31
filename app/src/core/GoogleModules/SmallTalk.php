@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Anet\GoogleModules;
+namespace Anet\App\GoogleModules;
 
-use App\Anet\Helpers;
+use Anet\App\Helpers;
 use Google\ApiCore;
 use Google\Cloud\Dialogflow\V2;
 

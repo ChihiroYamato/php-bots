@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Anet\YouTubeHelpers;
+namespace Anet\App\YouTubeHelpers;
 
 /**
  * **MessageSpotterTrait** -- trait for spotter message before sending by Youtube API

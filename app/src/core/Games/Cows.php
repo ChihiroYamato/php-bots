@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Anet\Games;
+namespace Anet\App\Games;
 
-use App\Anet\YouTubeHelpers;
+use Anet\App\YouTubeHelpers;
 
 /**
  * **Cows** -- class realization of game Bulls and Cows

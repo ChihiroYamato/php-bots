@@ -77,15 +77,15 @@ ____
 Модуль Youtube бота настроен и готов к работе из коробки, но следующие моменты можно прояснить:
 ```php
 // Создание oAuth токена бота для подключения к youTube серверу
-App\Anet\Bots\YouTube::createAuthTokken();
+Anet\App\Bots\YouTube::createAuthTokken();
 ```
 ```php
 // Создание объекта бота
 $url = 'https://www.youtube.com/<видео id>';
-$youtubeBot = new App\Anet\Bots\YouTube($url);
+$youtubeBot = new Anet\App\Bots\YouTube($url);
 
 // Из коробки объект создается с передачей параметра командной строки
-$youtubeBot = new App\Anet\Bots\YouTube($argv[1]);
+$youtubeBot = new Anet\App\Bots\YouTube($argv[1]);
 ```
 ```php
 // Основной процесс проходит в методе listen() где входит в бесконечный цикл,
@@ -109,12 +109,12 @@ $youtubeBot->testSend();
 $data = [
     // ...data
 ];
-App\Anet\Helpers\Logger::logging('категория', $data, 'тип');
+Anet\App\Helpers\Logger::logging('категория', $data, 'тип');
 ```
 Вывод работы скрипта можно перенаправлять в специальный лог файл
 ```php
 // логгирование происходит с указанием метки времени и указанной категории <System>
-App\Anet\Helpers\Logger::print('System', 'Сообщение');
+Anet\App\Helpers\Logger::print('System', 'Сообщение');
 ```
 ## **Annex**
 _____

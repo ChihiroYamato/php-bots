@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Anet\Storages;
+namespace Anet\App\Storages;
 
 /**
  * **Buffer** -- class for storage in memory any data

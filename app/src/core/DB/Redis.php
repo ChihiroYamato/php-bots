@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Anet\DB;
+namespace Anet\App\DB;
 
-use App\Anet\YouTubeHelpers;
+use Anet\App\YouTubeHelpers;
 
 /**
  * **Redis** -- simple wrapper for Redis PHP library

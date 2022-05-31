@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Anet\Contents;
+namespace Anet\App\Contents;
 
-use App\Anet;
-use App\Anet\DB;
+use Anet\App;
+use Anet\App\DB;
 use PHPHtmlParser;
 
-class Cities extends Anet\Contents
+class Cities extends App\Contents
 {
     /**
      * @var array `public` vocabulary of base pagination
