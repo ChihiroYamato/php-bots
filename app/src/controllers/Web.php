@@ -6,8 +6,17 @@ use Anet\App\Bots;
 use Anet\App\YouTubeHelpers;
 use Anet\Views;
 
+/**
+ * **Web** class controller for web requests
+ */
 final class Web
 {
+    /**
+     * **Method** handle request by URL
+     * @param string $url url of request
+     * @param string $method name of method for handle request
+     * @return void
+     */
     public static function route(string $url, string $method) : void
     {
         if ($_SERVER['REQUEST_URI'] === $url && method_exists(self::class, 'getYoutubeAuth')) {
@@ -16,6 +25,10 @@ final class Web
         }
     }
 
+    /**
+     * **Method** handle for YoutubeAuth
+     * @return void
+     */
     public static function getYoutubeAuth()
     {
         if (! empty($_POST['project'])) {
