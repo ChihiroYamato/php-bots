@@ -54,6 +54,19 @@ final class YouTube extends ChatBotAbstract
     private array $usersListening;
 
     /**
+     * @var array $currentUsersList `private` list of users on current iteration
+     */
+    private array $currentUsersList;
+
+    /**
+     * @var array $actionPrepareList `private` list of action methods for prepareSendings()
+     * for set method to action is needed: named like `actionPrepare...Sendings`,
+     * accept param array with chat message
+     * return array with formed sendings
+     */
+    private array $actionPrepareList;
+
+    /**
      * Initialize YouTube ChatBot
      * @param \Anet\App\YouTubeHelpers\ConnectParams $connect object with connection params
      * @param string $youtubeURL link to active youtube video
@@ -79,6 +92,8 @@ final class YouTube extends ChatBotAbstract
 
         $this->lastChatMessageID = null;
         $this->usersListening = USER_LISTEN_LIST;
+        $this->currentUsersList = [];
+        $this->actionPrepareList = array_filter(get_class_methods(self::class), fn ($method) => preg_match('/^actionPrepare\w*Sendings$/', $method));
     }
 
     /**
@@ -285,11 +300,9 @@ final class YouTube extends ChatBotAbstract
 
     protected function prepareSendings(array $chatlist) : array
     {
-        // TODO ============ restruct by modules
-        $usersList = [];
+        $this->currentUsersList = [];
         $sendingList = [];
-        $sendingDetail = [];
-        $sending = '';
+        $sendings = [];
 
         if (empty($chatlist)) {
             return [];
@@ -301,220 +314,24 @@ final class YouTube extends ChatBotAbstract
             }
 
             $this->buffer->add('messageList', ['content' => $chatItem['message'], 'user_key' => $chatItem['authorId']]);
+            $this->users->handler($chatItem['authorId'], 'incrementRaitingRandom', 2, random_int(1, 2));
+            $this->currentUsersList[] = $this->users->get($chatItem['authorId']);
 
-            $currentUser = $this->users->get($chatItem['authorId']);
-            $sendingDetail = [
-                'author' => $chatItem['authorName'],
-                'message' => $chatItem['message'],
-                'published' => $chatItem['published'],
-            ];
-            $sending = "@{$chatItem['authorName']} ";
-            $largeSending = [];
+            foreach ($this->actionPrepareList as $action) {
+                $sendings = $this->{$action}($chatItem);
+                if (! empty($sendings)) {
+                    $sendingList = array_merge($sendingList, $sendings);
 
-            $matches = explode(' ', trim(str_replace(['!', ',', '.', '?'], '', $chatItem['message'])));
-            $lastWord = mb_strtolower(array_pop($matches));
-
-            $this->users->handler($currentUser->getId(), 'incrementRaitingRandom', 2, random_int(1, 2));
-
-            if ($currentUser->checkAdmin()) {
-                switch (true) {
-                    case $lastWord === '/help-admin':
-                        $sendingDetail['sending'] = $sending . '</stop> —— завершить скрипт; </insert user> —— добавить юзера в список слежения ; </drop user> —— удалить юзера из списка слежения; </show-listern> —— список слежения;';
-                        break;
-                    case $lastWord === '/stop':
-                        $sendingDetail['sending'] = $sending . 'Завершаю свою работу.';
-                        $sendingList[] = $sendingDetail;
-                        $this->listeningFlag = false;
+                    if (! $this->listeningFlag) {
                         break 2;
-                    case mb_stripos($chatItem['message'], '/insert') !== false:
-                        $listernUser = preg_replace('/\/insert /', '', $chatItem['message']);
-                        $this->usersListening[$listernUser] = $listernUser;
-
-                        $sendingDetail['sending'] = $sending . "Начинаю слушать пользователя <$listernUser>";
-                        break;
-                    case mb_stripos($chatItem['message'], '/drop') !== false:
-                        $listernUser = preg_replace('/\/drop /', '', $chatItem['message']);
-                        unset($this->usersListening[$listernUser]);
-
-                        $sendingDetail['sending'] = $sending . "Прекращаю слушать пользователя <$listernUser>";
-                        break;
-                    case mb_stripos($chatItem['message'], '/show-listern') !== false:
-                        $sendingDetail['sending'] = $sending . 'Список прослушиваемых: ' . implode(',', $this->usersListening);
-                        break;
-                }
-
-                if (array_key_exists('sending', $sendingDetail)) {
-                    $sendingList[] = $sendingDetail;
-                    continue;
-                }
-            }
-
-            if ($this->games->checkUserActiveSession($chatItem['authorId'])) {
-                $sendingDetail['sending'] = $this->games->checkGame($chatItem['authorId'], $lastWord);
-                $sendingList[] = $sendingDetail;
-                continue;
-            }
-
-            switch (true) {
-                case in_array($chatItem['message'], ['/help', '/справка']):
-                    $largeSending[] = $sending . 'приветствую, в данном чате доступны следующие команды: </stat (/стата) "@user"> получить статистику по себе (или по указанному юзеру); —— </joke (/шутка)> получить баянистый анекдот;';
-                    $largeSending[] = '—— </fact (/факт)> получить забавный (или не очень) факт; —— </stream (/стрим)> получить информацию о стриме; —— </play> раздел игр';
-                    break;
-                case mb_ereg_match('.*(\/stat|\/стата) @', $chatItem['message']):
-                    $largeSending = $this->users->showUserStatistic(mb_ereg_replace('.*(\/stat|\/стата) @', '', $chatItem['message']));
-                    break;
-                case in_array($chatItem['message'], ['/stat', '/стата']):
-                    $largeSending = $this->users->showUserStatistic($chatItem['authorName']);
-                    break;
-                case in_array($chatItem['message'], ['/stream', '/стрим']):
-                    $largeSending = $this->video->showStatistic();
-                    break;
-                case in_array($chatItem['message'], ['/факт', '/fact']):
-                    $largeSending = Contents\Facts::fetchRand();
-                    break;
-                case in_array($chatItem['message'], ['/шутка', '/joke']):
-                    $largeSending = Contents\Jokes::fetchRand();
-                    break;
-                case mb_strpos($chatItem['message'], '/play') !== false:
-                    switch (true) {
-                        case $chatItem['message'] === Games\Roulette::COMMAND_HELP:
-                            $largeSending = Games\Roulette::getHelpMessage();
-                            break;
-                        case $chatItem['message'] === Games\Сasino::COMMAND_HELP:
-                            $largeSending = Games\Сasino::getHelpMessage();
-                            break;
-                        case $chatItem['message'] === Games\Towns::COMMAND_HELP:
-                            $largeSending = Games\Towns::getHelpMessage();
-                            break;
-                        case $chatItem['message'] === Games\Cows::COMMAND_HELP:
-                            $largeSending = Games\Cows::getHelpMessage();
-                            break;
-                        case $chatItem['message'] === Games\Roulette::COMMAND_START:
-                            $largeSending = $this->games->validateAndStarting(new Games\Roulette($currentUser), $currentUser, 180);
-                            break;
-                        case $chatItem['message'] === Games\Сasino::COMMAND_START:
-                            $largeSending = $this->games->validateAndStarting(new Games\Сasino($currentUser), $currentUser, 300, 300);
-                            break;
-                        case $chatItem['message'] === Games\Towns::COMMAND_START:
-                            $largeSending = $this->games->validateAndStarting(new Games\Towns($currentUser), $currentUser, 120, 55);
-                            break;
-                        case $chatItem['message'] === Games\Cows::COMMAND_START:
-                            $largeSending = $this->games->validateAndStarting(new Games\Cows($currentUser), $currentUser, 120, 55);
-                            break;
-                        default:
-                            $largeSending[] = sprintf('В настоящее время доступны следующие игры: —— русская рулетка <%s> —— казино <%s> —— города <%s> —— быки и коровы <%s>', Games\Roulette::COMMAND_HELP, Games\Сasino::COMMAND_HELP, Games\Towns::COMMAND_HELP, Games\Cows::COMMAND_HELP);
-                            $largeSending[] = 'Внимание! - каждое следующее сообщение игрока после старта игры засчитывается как ход, на игру отводится определенное время, по истечению засчитывается проигрыш с максимумом очков';
-                            break;
                     }
-                    break;
-            }
 
-            if (! empty($largeSending)) {
-                $this->users->handler($currentUser->getId(), 'incrementRaiting', rand(0, 4) * 5);
-
-                foreach ($largeSending as $item) {
-                    $sendingDetail['sending'] = $item;
-                    $sendingList[] = $sendingDetail;
-                }
-
-                continue;
-            }
-
-            if (! $this->timeTracker->trackerState('standart_responce') || $this->timeTracker->trackerCheck('standart_responce', 30)) {
-                $this->timeTracker->trackerStop('standart_responce');
-
-                foreach ($this->vocabulary->getCategoriesGroup('standart', ['greetings', 'parting']) as $category) {
-                    foreach ($category['request'] as $option) {
-                        if (mb_stripos(mb_strtolower($chatItem['message']), $option) !== false) {
-                            $answer = $this->prepareSmartAnswer($option, false);
-
-                            if (! empty($answer)) {
-                                $sendingDetail['sending'] = $sending . $answer;
-                                $sendingList[] = $sendingDetail;
-                                $this->timeTracker->trackerStart('standart_responce');
-                                continue 3;
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (in_array($lastWord, $this->vocabulary->getCategoryType('dead_inside', 'request'))) {
-                $sendingDetail['sending'] = $sending . "сколько будет {$lastWord}-7?";
-                $sendingList[] = $sendingDetail;
-                continue;
-            }
-
-            if (mb_stripos(mb_strtolower($chatItem['message']), $this->botUserName) !== false) {
-                $this->users->handler($currentUser->getId(), 'incrementRaiting', rand(0, 4) * 5);
-
-                $currentMessage = trim(mb_strtolower(preg_replace("/@?{$this->botUserName}/", '', $chatItem['message'])));
-                $sending = $sending . $this->prepareSmartAnswer($currentMessage);
-
-                $sendingDetail['sending'] = $sending;
-                $sendingList[] = $sendingDetail;
-                continue;
-            }
-
-            foreach ($this->vocabulary->getCategoriesGroup('another', ['say_yes', 'say_no', 'say_haha', 'say_foul', 'say_three']) as $key => $item) {
-                if (in_array($key, ['say_haha', 'say_foul', 'say_three'])) {
-                    foreach ($item['request'] as $option) {
-                        if (mb_stripos(mb_strtolower($chatItem['message']), $option) !== false) {
-                            if ($key === 'say_foul') {
-                                $this->users->handler($currentUser->getId(), 'incrementRaiting', rand(0, 2) * (-5));
-                            }
-                            $sendingDetail['sending'] = $sending . $this->vocabulary->getRandItem($key);
-                            $sendingList[] = $sendingDetail;
-                            continue 3;
-                        }
-                    }
-                } elseif (in_array($lastWord, $item['request'])) {
-                    $sendingDetail['sending'] = $sending . $this->vocabulary->getRandItem($key);
-                    $sendingList[] = $sendingDetail;
                     continue 2;
                 }
             }
-
-            if (in_array($chatItem['authorName'], $this->usersListening)) {
-                $answer = $this->prepareSmartAnswer($chatItem['message'], true);
-
-                if (! empty($answer)) {
-                    $sendingDetail['sending'] = $sending . $answer;
-                    $sendingList[] = $sendingDetail;
-                    continue;
-                }
-            }
-
-            $usersList[] = $currentUser;
         }
 
-        $sendingDetail = [
-            'author' => 'System',
-            'message' => 'none',
-            'published' => (new \DateTime())->format('Y-m-d H:i:s'),
-        ];
-
-        $gamesReport = $this->games->checkSessionsTimeOut();
-
-        if (! empty($gamesReport)) {
-            foreach ($gamesReport as $systemMess) {
-                $sendingDetail['sending'] = $systemMess;
-                $sendingList[] = $sendingDetail;
-            }
-        }
-
-        if (! empty($usersList)) {
-            foreach ($usersList as $user) {
-                $lotery = $this->users->randomLottery($user, 5000);
-
-                if (!empty($lotery)) {
-                    $sendingDetail['sending'] = $lotery;
-                    $sendingList[] = $sendingDetail;
-                    break;
-                }
-            }
-        }
-
+        $sendingList = array_merge($sendingList, $this->prepareSystemSendings());
 
         return $sendingList;
     }
@@ -559,6 +376,352 @@ final class YouTube extends ChatBotAbstract
 
             return false;
         }
+    }
+
+    /**
+     * **Method** get detail for sending by current youtube chat message
+     * @param array $chatItem current youtube chat message
+     * @return array detail for sending
+     */
+    private function getSendingDetail(array $chatItem) : array
+    {
+        return [
+            'author' => $chatItem['authorName'],
+            'message' => $chatItem['message'],
+            'published' => $chatItem['published'],
+        ];
+    }
+
+    /**
+     * **Method** prepare sendings from system
+     * @return array sendings from system
+     */
+    private function prepareSystemSendings() : array
+    {
+        $sendingDetail = [
+            'author' => 'System',
+            'message' => 'none',
+            'published' => (new \DateTime())->format('Y-m-d H:i:s'),
+        ];
+        $result = [];
+
+        $result = array_merge($result, $this->prepareSystemGamesSendings( $sendingDetail));
+        $result = array_merge($result, $this->prepareSystemLotterySendings( $sendingDetail));
+
+        return $result;
+    }
+
+    /**
+     * **Method** prepare system sendings from game module
+     * @param array $sendingDetail system headers for sendings
+     * @return array system sendings from game module
+     */
+    private function prepareSystemGamesSendings(array $sendingDetail) : array
+    {
+        $result = [];
+
+        foreach ($this->games->checkSessionsTimeOut() as $systemMess) {
+            $sendingDetail['sending'] = $systemMess;
+            $result[] = $sendingDetail;
+        }
+
+        return $result;
+    }
+
+    /**
+     * **Method** prepare system sendings from lottery module
+     * @param array $sendingDetail system headers for sendings
+     * @return array system sendings from lottery module
+     */
+    private function prepareSystemLotterySendings(array $sendingDetail) : array
+    {
+        $result = [];
+
+        foreach ($this->currentUsersList as $user) {
+            $lotery = $this->users->randomLottery($user, 5000);
+
+            if (! empty($lotery)) {
+                $sendingDetail['sending'] = $lotery;
+                $result[] = $sendingDetail;
+                break;
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * **Method** [is action of prepareSendings] prepare sendings from admin commands module by current youtube chat message
+     * @param array $chatItem current youtube chat message
+     * @return array sendings from admin commands module
+     */
+    private function actionPrepareAdminSendings(array $chatItem) : array
+    {
+        if (! $this->users->get($chatItem['authorId'])?->checkAdmin()) {
+            return [];
+        }
+
+        $sendingDetail = $this->getSendingDetail($chatItem);
+        $sendTo = "@{$chatItem['authorName']} ";
+
+        switch (true) {
+            case $chatItem['message'] === '/help-admin':
+                $sendingDetail['sending'] = $sendTo . '</stop> —— завершить скрипт; </insert user> —— добавить юзера в список слежения ; </drop user> —— удалить юзера из списка слежения; </show-listern> —— список слежения;';
+                break;
+            case $chatItem['message'] === '/stop':
+                $sendingDetail['sending'] = $sendTo . 'Завершаю свою работу.';
+                $this->listeningFlag = false;
+                break;
+            case mb_stripos($chatItem['message'], '/insert') !== false:
+                $listernUser = preg_replace('/\/insert /', '', $chatItem['message']);
+                $this->usersListening[$listernUser] = $listernUser;
+
+                $sendingDetail['sending'] = $sendTo . "Начинаю слушать пользователя <$listernUser>";
+                break;
+            case mb_stripos($chatItem['message'], '/drop') !== false:
+                $listernUser = preg_replace('/\/drop /', '', $chatItem['message']);
+                unset($this->usersListening[$listernUser]);
+
+                $sendingDetail['sending'] = $sendTo . "Прекращаю слушать пользователя <$listernUser>";
+                break;
+            case mb_stripos($chatItem['message'], '/show-listern') !== false:
+                $sendingDetail['sending'] = $sendTo . 'Список прослушиваемых: ' . implode(',', $this->usersListening);
+                break;
+        }
+
+        if (! array_key_exists('sending', $sendingDetail)) {
+            return [];
+        }
+
+        return [$sendingDetail];
+    }
+
+    /**
+     * **Method** [is action of prepareSendings] prepare sendings from game module by current youtube chat message
+     * @param array $chatItem current youtube chat message
+     * @return array sendings from game module
+     */
+    private function actionPrepareGamesSendings(array $chatItem) : array
+    {
+        if (! $this->games->checkUserActiveSession($chatItem['authorId'])) {
+            return [];
+        }
+
+        $sendingDetail = $this->getSendingDetail($chatItem);
+        $matches = explode(' ', trim(str_replace(['!', ',', '.', '?'], '', $chatItem['message'])));
+        $lastWord = mb_strtolower(array_pop($matches));
+        $sendingDetail['sending'] = $this->games->checkGame($chatItem['authorId'], $lastWord);
+
+        return [$sendingDetail];
+    }
+
+    /**
+     * **Method** [is action of prepareSendings] prepare sendings from default commands module by current youtube chat message
+     * @param array $chatItem current youtube chat message
+     * @return array sendings from default commands module
+     */
+    private function actionPrepareCommandSendings(array $chatItem) : array
+    {
+        $user = $this->users->get($chatItem['authorId']);
+        $sendingDetail = $this->getSendingDetail($chatItem);
+        $sendTo = "@{$chatItem['authorName']} ";
+        $sendings = [];
+        $result = [];
+
+        switch (true) {
+            case in_array($chatItem['message'], ['/help', '/справка']):
+                $sendings[] = $sendTo . 'приветствую, в данном чате доступны следующие команды: </stat (/стата) "@user"> получить статистику по себе (или по указанному юзеру); —— </joke (/шутка)> получить баянистый анекдот;';
+                $sendings[] = '—— </fact (/факт)> получить забавный (или не очень) факт; —— </stream (/стрим)> получить информацию о стриме; —— </play> раздел игр';
+                break;
+            case mb_ereg_match('.*(\/stat|\/стата) @', $chatItem['message']):
+                $sendings = $this->users->showUserStatistic(mb_ereg_replace('.*(\/stat|\/стата) @', '', $chatItem['message']));
+                break;
+            case in_array($chatItem['message'], ['/stat', '/стата']):
+                $sendings = $this->users->showUserStatistic($chatItem['authorName']);
+                break;
+            case in_array($chatItem['message'], ['/stream', '/стрим']):
+                $sendings = $this->video->showStatistic();
+                break;
+            case in_array($chatItem['message'], ['/факт', '/fact']):
+                $sendings = Contents\Facts::fetchRand();
+                break;
+            case in_array($chatItem['message'], ['/шутка', '/joke']):
+                $sendings = Contents\Jokes::fetchRand();
+                break;
+            case mb_strpos($chatItem['message'], '/play') !== false:
+                switch (true) {
+                    case $chatItem['message'] === Games\Roulette::COMMAND_HELP:
+                        $sendings = Games\Roulette::getHelpMessage();
+                        break;
+                    case $chatItem['message'] === Games\Сasino::COMMAND_HELP:
+                        $sendings = Games\Сasino::getHelpMessage();
+                        break;
+                    case $chatItem['message'] === Games\Towns::COMMAND_HELP:
+                        $sendings = Games\Towns::getHelpMessage();
+                        break;
+                    case $chatItem['message'] === Games\Cows::COMMAND_HELP:
+                        $sendings = Games\Cows::getHelpMessage();
+                        break;
+                    case $chatItem['message'] === Games\Roulette::COMMAND_START:
+                        $sendings = $this->games->validateAndStarting(new Games\Roulette($user), $user, 180);
+                        break;
+                    case $chatItem['message'] === Games\Сasino::COMMAND_START:
+                        $sendings = $this->games->validateAndStarting(new Games\Сasino($user), $user, 300, 300);
+                        break;
+                    case $chatItem['message'] === Games\Towns::COMMAND_START:
+                        $sendings = $this->games->validateAndStarting(new Games\Towns($user), $user, 120, 55);
+                        break;
+                    case $chatItem['message'] === Games\Cows::COMMAND_START:
+                        $sendings = $this->games->validateAndStarting(new Games\Cows($user), $user, 120, 55);
+                        break;
+                    default:
+                        $sendings[] = sprintf('В настоящее время доступны следующие игры: —— русская рулетка <%s> —— казино <%s> —— города <%s> —— быки и коровы <%s>', Games\Roulette::COMMAND_HELP, Games\Сasino::COMMAND_HELP, Games\Towns::COMMAND_HELP, Games\Cows::COMMAND_HELP);
+                        $sendings[] = 'Внимание! - каждое следующее сообщение игрока после старта игры засчитывается как ход, на игру отводится определенное время, по истечению засчитывается проигрыш с максимумом очков';
+                        break;
+                }
+                break;
+        }
+
+        if (empty($sendings)) {
+            return [];
+        }
+
+        $this->users->handler($user->getId(), 'incrementRaiting', rand(0, 4) * 5);
+
+        foreach ($sendings as $item) {
+            $sendingDetail['sending'] = $item;
+            $result[] = $sendingDetail;
+        }
+
+        return $result;
+    }
+
+    /**
+     * **Method** [is action of prepareSendings] prepare sendings from greeting and parting module by current youtube chat message
+     * @param array $chatItem current youtube chat message
+     * @return array sendings from greeting and parting module
+     */
+    public function actionPrepareGreetingSendings(array $chatItem) : array
+    {
+        if (! $this->timeTracker->trackerState('standart_responce') || $this->timeTracker->trackerCheck('standart_responce', 30)) {
+            $this->timeTracker->trackerStop('standart_responce');
+
+            foreach ($this->vocabulary->getCategoriesGroup('standart', ['greetings', 'parting']) as $category) {
+                foreach ($category['request'] as $option) {
+                    if (mb_stripos(mb_strtolower($chatItem['message']), $option) !== false) {
+                        $answer = $this->prepareSmartAnswer($option, false);
+
+                        if (empty($answer)) {
+                            return [];
+                        }
+
+                        $sendingDetail = $this->getSendingDetail($chatItem);
+                        $sendingDetail['sending'] = "@{$chatItem['authorName']} $answer";
+                        $this->timeTracker->trackerStart('standart_responce');
+
+                        return [$sendingDetail];
+                    }
+                }
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * **Method** [is action of prepareSendings] prepare sendings from dead inside joke module by current youtube chat message
+     * @param array $chatItem current youtube chat message
+     * @return array sendings from dead inside joke module
+     */
+    public function actionPrepareDeadInsideSendings(array $chatItem) : array
+    {
+        $matches = explode(' ', trim(str_replace(['!', ',', '.', '?'], '', $chatItem['message'])));
+        $lastWord = mb_strtolower(array_pop($matches));
+
+        if (! in_array($lastWord, $this->vocabulary->getCategoryType('dead_inside', 'request'))) {
+            return [];
+        }
+
+        $sendingDetail = $this->getSendingDetail($chatItem);
+        $sendingDetail['sending'] = "@{$chatItem['authorName']} сколько будет {$lastWord}-7?";
+
+        return [$sendingDetail];
+    }
+
+    /**
+     * **Method** [is action of prepareSendings] prepare sendings from base communication module by current youtube chat message
+     * @param array $chatItem current youtube chat message
+     * @return array sendings from base communication module
+     */
+    public function actionPrepareBotCommunicationSendings(array $chatItem) : array
+    {
+        if (mb_stripos(mb_strtolower($chatItem['message']), $this->botUserName) === false) {
+            return [];
+        }
+
+        $this->users->handler($chatItem['authorId'], 'incrementRaiting', rand(0, 4) * 5);
+
+        $sendingDetail = $this->getSendingDetail($chatItem);
+        $sendingDetail['sending'] = sprintf('@%s $s', $chatItem['authorName'], $this->prepareSmartAnswer(trim(mb_strtolower(preg_replace("/@?{$this->botUserName}/", '', $chatItem['message'])))));
+
+        return [$sendingDetail];
+    }
+
+    /**
+     * **Method** [is action of prepareSendings] prepare sendings from vocabulary module by current youtube chat message
+     * @param array $chatItem current youtube chat message
+     * @return array sendings from vocabulary module
+     */
+    public function actionPrepareVocabularySendings(array $chatItem) : array
+    {
+        $sendingDetail = $this->getSendingDetail($chatItem);
+        $matches = explode(' ', trim(str_replace(['!', ',', '.', '?'], '', $chatItem['message'])));
+        $lastWord = mb_strtolower(array_pop($matches));
+
+        foreach ($this->vocabulary->getCategoriesGroup('another', ['say_yes', 'say_no', 'say_haha', 'say_foul', 'say_three']) as $key => $item) {
+            if (in_array($key, ['say_haha', 'say_foul', 'say_three'])) {
+                foreach ($item['request'] as $option) {
+                    if (mb_stripos(mb_strtolower($chatItem['message']), $option) !== false) {
+                        if ($key === 'say_foul') {
+                            $this->users->handler($chatItem['authorId'], 'incrementRaiting', rand(0, 2) * (-5));
+                        }
+
+                        $sendingDetail['sending'] = sprintf('@%s $s', $chatItem['authorName'], $this->vocabulary->getRandItem($key));
+
+                        return [$sendingDetail];
+                    }
+                }
+            } elseif (in_array($lastWord, $item['request'])) {
+                $sendingDetail['sending'] = sprintf('@%s $s', $chatItem['authorName'], $this->vocabulary->getRandItem($key));
+
+                return [$sendingDetail];
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * **Method** [is action of prepareSendings] prepare sendings from users listening module by current youtube chat message
+     * @param array $chatItem current youtube chat message
+     * @return array sendings from users listening module
+     */
+    public function actionPrepareUsersListenSendings(array $chatItem) : array
+    {
+        if (! in_array($chatItem['authorName'], $this->usersListening)) {
+            return [];
+        }
+
+        $answer = $this->prepareSmartAnswer($chatItem['message'], true);
+
+        if (empty($answer)) {
+            return [];
+        }
+
+        $sendingDetail = $this->getSendingDetail($chatItem);
+        $sendingDetail['sending'] = "@{$chatItem['authorName']} $answer";
+
+        return [$sendingDetail];
     }
 
     /**
