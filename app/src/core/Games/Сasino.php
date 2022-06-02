@@ -1,9 +1,12 @@
 <?php
 
-namespace App\Anet\Games;
+namespace Anet\App\Games;
 
-use App\Anet\YouTubeHelpers;
+use Anet\App\YouTubeHelpers;
 
+/**
+ * **Сasino** -- class realization of game Casino
+ */
 class Сasino extends Game
 {
     public const NAME = 'CASINO';
@@ -43,8 +46,8 @@ class Сasino extends Game
     public static function getHelpMessage() : array
     {
         return [
-            '—— GAME ' . self::NAME . ' —— правила: игроку предлагается выбрать номер фишки от 1 до '. self::BOARD_SIZE . ', у каждой фишки есть сумма очков от ' . self::MIN_POINT . ' до ' . self::MAX_POINT . ', но половина фишек - выйгрышные, половина - проигрышные',
-            '—— старт: введите <' . self::COMMAND_START . '>. на игру отведено ' . self::DEFAULT_EXPIRE_TIME . ' секунд',
+            sprintf('—— GAME %s  —— правила: игроку предлагается выбрать номер фишки от 1 до %d, у каждой фишки есть сумма очков от %d до %d, но половина фишек - выйгрышные, половина - проигрышные', self::NAME, self::BOARD_SIZE, self::MIN_POINT, self::MAX_POINT),
+            sprintf('—— старт: введите <%s>. на игру отведено %d секунд', self::COMMAND_START, self::DEFAULT_EXPIRE_TIME),
         ];
     }
 

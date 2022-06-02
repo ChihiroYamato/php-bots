@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Anet\Helpers;
+namespace Anet\App\Helpers;
 
 /**
  * **ErrorTrait** -- contains any methods for storage and increment project errors

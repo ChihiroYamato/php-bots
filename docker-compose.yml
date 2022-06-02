@@ -67,6 +67,7 @@ services:
       volumes:
         - ${APP_PATH_HOST}:${APP_PATH_CONTAINER}
         - ${NGINX_SETTINGS_HOST}:${NGINX_SETTINGS_CONTAINER}
+        - ${NGINX_PASS_HOST}:${NGINX_PASS_CONTAINER}
         - ${NGINX_LOGS_HOST}:${NGINX_LOGS_CONTAINER}
       links:
           - app

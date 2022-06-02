@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Anet\Helpers;
+namespace Anet\App\Helpers;
 
 /**
  * **FileSystemTrait** -- contains any methods for work with file system og project

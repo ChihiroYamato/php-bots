@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Anet\Helpers;
+namespace Anet\App\Helpers;
 
 /**
  * **Timer** -- class for setup general proccesing of time in script

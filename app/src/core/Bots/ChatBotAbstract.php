@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Anet\Bots;
+namespace Anet\App\Bots;
 
-use App\Anet;
-use App\Anet\Helpers;
-use App\Anet\GoogleModules;
-use App\Anet\Storages;
+use Anet\App;
+use Anet\App\Helpers;
+use Anet\App\GoogleModules;
+use Anet\App\Storages;
 
 /**
  * **ChatBotAbstract** -- base class for project bots
@@ -35,25 +35,25 @@ abstract class ChatBotAbstract implements BotInterface, BotDebugInterface, Stati
      */
     protected bool $listeningFlag;
     /**
-     * @var \App\Anet\GoogleModules\SmallTalk $smallTalk `protected` instance of SmallTalk class
+     * @var \Anet\App\GoogleModules\SmallTalk $smallTalk `protected` instance of SmallTalk class
      */
     protected GoogleModules\SmallTalk $smallTalk;
     /**
-     * @var \App\Anet\Helpers\TimeTracker $timeTracker `protected` instance of TimeTracker class
+     * @var \Anet\App\Helpers\TimeTracker $timeTracker `protected` instance of TimeTracker class
      */
     protected Helpers\TimeTracker $timeTracker;
     /**
-     * @var \App\Anet\Storages\Vocabulary $vocabulary `protected` instance of Vocabulary class
+     * @var \Anet\App\Storages\Vocabulary $vocabulary `protected` instance of Vocabulary class
      */
     protected Storages\Vocabulary $vocabulary;
     /**
-     * @var \App\Anet\Storages\Buffer $buffer `protected` instance of Buffer class
+     * @var \Anet\App\Storages\Buffer $buffer `protected` instance of Buffer class
      */
     protected Storages\Buffer $buffer;
     /**
-     * @var \App\Anet\Games $games `protected` instance of Games class
+     * @var \Anet\App\Games $games `protected` instance of Games class
      */
-    protected Anet\Games $games;
+    protected App\Games $games;
 
     /**
      * **Method** prepare list of sending
@@ -90,7 +90,7 @@ abstract class ChatBotAbstract implements BotInterface, BotDebugInterface, Stati
         $this->timeTracker = new Helpers\TimeTracker();
         $this->buffer = new Storages\Buffer();
         $this->vocabulary = new Storages\Vocabulary();
-        $this->games = new Anet\Games();
+        $this->games = new App\Games();
     }
 
     /**

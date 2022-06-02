@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Anet\Games;
+namespace Anet\App\Games;
 
-use App\Anet\Helpers;
-use App\Anet\YouTubeHelpers;
+use Anet\App\Helpers;
+use Anet\App\YouTubeHelpers;
 
 abstract class Game implements GameInterface
 {
@@ -12,11 +12,11 @@ abstract class Game implements GameInterface
      */
     protected const GAME_INIT_MESSAGE = '';
     /**
-     * @var \App\Anet\Helpers\TimeTracker $timeTracker `private` instance of TimeTracker class
+     * @var \Anet\App\Helpers\TimeTracker $timeTracker `private` instance of TimeTracker class
      */
     private Helpers\TimeTracker $timeTracker;
     /**
-     * @var \App\Anet\YouTubeHelpers\User $user `protected` instance of User class
+     * @var \Anet\App\YouTubeHelpers\User $user `protected` instance of User class
      */
     protected YouTubeHelpers\User $user;
     /**
@@ -40,7 +40,7 @@ abstract class Game implements GameInterface
 
     /**
      * Initialize game session
-     * @param \App\Anet\YouTubeHelpers\User $user instance of current user
+     * @param \Anet\App\YouTubeHelpers\User $user instance of current user
      * @return void
      */
     public function __construct(YouTubeHelpers\User $user)
@@ -63,7 +63,7 @@ abstract class Game implements GameInterface
 
     public function getInitMessage() : string
     {
-        return 'Игрок: ' . $this->user->getName() . ' ' . static::GAME_INIT_MESSAGE;
+        return sprintf('Игрок: %s %s', $this->user->getName(), static::GAME_INIT_MESSAGE);
     }
 
     public function getStatistic() : array
@@ -92,7 +92,7 @@ abstract class Game implements GameInterface
      */
     protected function getStatisticMessage(int $rating) : string
     {
-        return " —— очки: {$this->score} —— текущий соц рейтинг: $rating";
+        return "—— очки: {$this->score} —— текущий соц рейтинг: $rating";
     }
 
     /**
@@ -105,7 +105,7 @@ abstract class Game implements GameInterface
         $this->user->incrementRaiting($this->score);
 
         return [
-            'message' => $this->user->getName() . ' ' . $endMessage . $this->getStatisticMessage($this->user->getRating()),
+            'message' => sprintf('%s %s %s', $this->user->getName(), $endMessage, $this->getStatisticMessage($this->user->getRating())),
             'end' => true,
         ];
     }

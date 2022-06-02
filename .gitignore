@@ -16,6 +16,7 @@ secrets/
 env_const.php
 another_close.php
 .env
+.htpasswd
 
 # Project logs
 project_logs/*

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Anet\Helpers;
+namespace Anet\App\Helpers;
 
 /**
  * **TimerTracker** -- helper class with methods for setup and calulate timers

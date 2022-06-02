@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Anet;
+namespace Anet\App;
 
 use GuzzleHttp;
 use PHPHtmlParser;
@@ -41,7 +41,7 @@ abstract class Contents
     /**
      * **Method** set pagination list and return instance of current class
      * @param array $paginationParams list of pagination params
-     * @return null|\App\Anet\Contents instance of current class
+     * @return null|\Anet\App\Contents instance of current class
      */
     abstract public function setPagination(array $paginationParams) : ?Contents;
 
@@ -69,7 +69,7 @@ abstract class Contents
      * **Method** parse content from all pages by paginations list
      * @param string $url url to resurce
      * @param array $selectorsParam list of selectors params
-     * @return \App\Anet\Contents instance of current class
+     * @return \Anet\App\Contents instance of current class
      */
     public function parseContentByPagination(string $url, array $selectorsParam) : Contents
     {
@@ -87,7 +87,7 @@ abstract class Contents
     /**
      * **Method** parse body from url and save to string
      * @param string $url url to resurce
-     * @return null|\App\Anet\Contents instance of current class
+     * @return null|\Anet\App\Contents instance of current class
      */
     public function parsePageBody(string $url) : ?Contents
     {

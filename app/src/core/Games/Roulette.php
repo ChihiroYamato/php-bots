@@ -1,9 +1,12 @@
 <?php
 
-namespace App\Anet\Games;
+namespace Anet\App\Games;
 
-use App\Anet\YouTubeHelpers;
+use Anet\App\YouTubeHelpers;
 
+/**
+ * **Roulette** -- class realization of game Roulette
+ */
 class Roulette extends Game
 {
     public const NAME = 'ROULETTE';
@@ -55,8 +58,8 @@ class Roulette extends Game
     public static function getHelpMessage() : array
     {
         return [
-            '—— GAME ' . self::NAME . ' —— правила: игроку предлагается угадать число от 1 до 6, в случае выигрыша - соц рейтинг удваивается, в случае проигрыша - уполовинивается',
-            '—— старт: введите <' . self::COMMAND_START . '>. на игру отведено ' . self::DEFAULT_EXPIRE_TIME . ' секунд',
+            sprintf('—— GAME %s  —— правила: игроку предлагается угадать число от 1 до 6, в случае выигрыша - соц рейтинг удваивается, в случае проигрыша - уполовинивается', self::NAME),
+            sprintf('—— старт: введите <%s>. на игру отведено %d секунд', self::COMMAND_START, self::DEFAULT_EXPIRE_TIME),
         ];
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Anet\Games;
+namespace Anet\App\Games;
 
 /**
  * **GameInterface** -- base interface for game classes

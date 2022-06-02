@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Anet\YouTubeHelpers;
+namespace Anet\App\YouTubeHelpers;
 
 /**
  * **User** -- class wrapper of Youtube users
  */
-final class User implements UserInterface
+final class User implements \Anet\App\User\UserInterface
 {
     /**
      * @var string $id `private` user id
@@ -207,7 +207,7 @@ final class User implements UserInterface
     /**
      * **Method** save new user name
      * @param string $name new user name
-     * @return \App\Anet\YouTubeHelpers\User return instance of User
+     * @return \Anet\App\YouTubeHelpers\User return instance of User
      */
     public function updateName(string $name) : User
     {
@@ -219,7 +219,7 @@ final class User implements UserInterface
     /**
      * **Method** save new subscribers count
      * @param null|int $subscribers new user subscribers count
-     * @return \App\Anet\YouTubeHelpers\User return instance of User
+     * @return \Anet\App\YouTubeHelpers\User return instance of User
      */
     public function updateSubscribers(int $subscribers) : User
     {
@@ -231,7 +231,7 @@ final class User implements UserInterface
     /**
      * **Method** save new videos count
      * @param null|int $videos new user videos count
-     * @return \App\Anet\YouTubeHelpers\User return instance of User
+     * @return \Anet\App\YouTubeHelpers\User return instance of User
      */
     public function updateVideos(int $videos) : User
     {
@@ -243,7 +243,7 @@ final class User implements UserInterface
     /**
      * **Method** save new views count
      * @param null|int $views new user views count
-     * @return \App\Anet\YouTubeHelpers\User return instance of User
+     * @return \Anet\App\YouTubeHelpers\User return instance of User
      */
     public function updateViews(int $views) : User
     {

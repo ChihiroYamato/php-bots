@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Anet\Bots;
+namespace Anet\App\Bots;
 
 /**
  * **BotDebugInterface** -- interface for debuging connect to server
