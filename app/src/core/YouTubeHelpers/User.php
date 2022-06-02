@@ -5,7 +5,7 @@ namespace Anet\App\YouTubeHelpers;
 /**
  * **User** -- class wrapper of Youtube users
  */
-final class User implements UserInterface
+final class User implements \Anet\App\User\UserInterface
 {
     /**
      * @var string $id `private` user id

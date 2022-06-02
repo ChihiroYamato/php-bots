@@ -16,6 +16,9 @@ final class Cli extends Command\Command
     protected static $defaultName = 'bot:start';
     protected static $defaultDescription = 'start new bot session';
 
+    /**
+     * @var array `private` list of current bots
+     */
     private const BOTS = [
         'YOUTUBE' => 'youtube',
     ];
@@ -47,6 +50,12 @@ final class Cli extends Command\Command
         return Command\Command::FAILURE;
     }
 
+    /**
+     * **Method** is cli handler for statring youtube bot
+     * @param \Symfony\Component\Console\Input\InputInterface $input console input
+     * @param \Symfony\Component\Console\Output\OutputInterface $output console output
+     * @return int exit code
+     */
     private function startYoutubeBot(Input\InputInterface $input, Output\OutputInterface $output) : int
     {
         if ($input->getArgument('params') === null) {

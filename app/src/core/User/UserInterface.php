@@ -1,6 +1,6 @@
 <?php
 
-namespace Anet\App\YouTubeHelpers;
+namespace Anet\App\User;
 
 /**
  * **UserInterface** -- interface of project user wrapper
