@@ -9,7 +9,7 @@ use Anet\App\Helpers;
 use Anet\App\YouTubeHelpers;
 use Google\Service;
 
-require_once __DIR__ . '/vendor/autoload.php';
+require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 $connectParams = new YouTubeHelpers\ConnectParams(
     YOUTUBE_APP_NAME,
