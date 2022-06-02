@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * @deptecated
+ *
 if (count($argv) < 2) {
     exit('second argument $argv must be specified by Youtube url'. PHP_EOL);
 }
@@ -68,3 +70,4 @@ do {
         }
     }
 } while ($restart);
+*/
