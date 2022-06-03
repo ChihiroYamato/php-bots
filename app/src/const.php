@@ -1,5 +1,7 @@
 <?php
 
+Dotenv\Dotenv::createImmutable(__DIR__)->load();
+
 if (! defined('SETTING_DIR')) {
     define('SETTING_DIR', __DIR__ . '/secrets');
 
@@ -55,21 +57,33 @@ if (! defined('SMALL_TALK_API_KEY')) {
 }
 
 if (! defined('LOGS_PATH')) {
-    define('LOGS_PATH', dirname(__DIR__, 2) . '/project_logs');
+    define('LOGS_PATH', $_ENV['PROJECT_LOGS_CONTAINER']);
 }
 
 if (! defined('DB_HOST')) {
-    define('DB_HOST', 'db');
+    define('DB_HOST', $_ENV['DB_SERVICE_NAME']);
+}
+
+if (! defined('DB_USER_NAME')) {
+    define('DB_USER_NAME', $_ENV['DB_USER_NAME']);
 }
 
 if (! defined('DB_BASE')) {
-    define('DB_BASE', 'bots');
+    define('DB_BASE', $_ENV['DB_SQL_DATABASE']);
+}
+
+if (! defined('DB_PASSWORD')) {
+    define('DB_PASSWORD', $_ENV['DB_PASSWORD']);
 }
 
 if (! defined('REDIS_HOST')) {
-    define('REDIS_HOST', 'redis');
+    define('REDIS_HOST', $_ENV['REDIS_SERVICE_NAME']);
 }
 
 if (! defined('REDIS_PORT')) {
-    define('REDIS_PORT', 6379);
+    define('REDIS_PORT', $_ENV['REDIS_PORT']);
+}
+
+if (! defined('REDIS_PASS')) {
+    define('REDIS_PASS', $_ENV['REDIS_PASSWORD']);
 }
