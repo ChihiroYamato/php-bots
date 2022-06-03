@@ -16,12 +16,13 @@ ____
 *На проекте базово используются следующие php пакеты:*
 ```json
 "require": {
-        "guzzlehttp/guzzle": "^7.0",
-        "google/apiclient": "^2.12.1",
-        "google/cloud-dialogflow": "^0.25.0",
-        "paquettg/php-html-parser": "^3.1",
-        "symfony/console": "^6.1"
-    },
+    "guzzlehttp/guzzle": "^7.0",
+    "google/apiclient": "^2.12.1",
+    "google/cloud-dialogflow": "^0.25.0",
+    "paquettg/php-html-parser": "^3.1",
+    "symfony/console": "^6.1",
+    "vlucas/phpdotenv": "^5.4"
+}
 ```
 ### **Structure:**
 Структура проекта представлена следующим деревом
@@ -32,7 +33,7 @@ ____
         - [index.php](./app/public/index.php) >> точка входа в приложение с браузера
     - src
         - controllers >> директория классов контроллеров проекта
-        - core >> директория классов модели проекта
+        - core >> директория классов ядра проекта
         - secrets >> директория с файлами токенов
         - views >> директория классов представления проекта
         - [const.php](./app/src/const.php) >> файл с основными константами
@@ -176,28 +177,47 @@ _____
 
 [Пример в .env.example](./.env.example)
 ```
-DB_PATH_HOST=./project_database
-DB_PASSWORD=<pass>
+# ENV
+DB_SERVICE_NAME=<your_name>
+DB_USER_NAME=<your_name>
+DB_SQL_DATABASE=<your_name>
+DB_PASSWORD=<your_pass>
+REDIS_SERVICE_NAME=<your_name>
+REDIS_PASSWORD=<your_pass>
 
+# Ports
+DB_PORT=<your_port>
+REDIS_PORT=<your_port>
+ADMINER_PORT=<your_port>
+NGINX_PORT=<your_port>
+
+# DataBase mapping
+DB_PATH_HOST=./project_database
+DB_PATH_CONTAINER=/var/lib/mysql
+
+# Application mapping
 APP_PATH_HOST=./app
 APP_PATH_CONTAINER=/var/www/app
 
+# Project logs mapping
 PROJECT_LOGS_HOST=./project_logs
 PROJECT_LOGS_CONTAINER=/var/www/project_logs
 
+# PHP ini mapping
 PHP_INI_HOST=./images/php-fpm/php.ini
 PHP_INI_CONTAINER=/usr/local/etc/php/conf.d/php.ini
 
+# Nginx mapping
 NGINX_SETTINGS_HOST=./images/nginx/default.conf
 NGINX_SETTINGS_CONTAINER=/etc/nginx/conf.d/default.conf
-
 NGINX_PASS_HOST=./images/nginx/.htpasswd
 NGINX_PASS_CONTAINER=/etc/nginx/.htpasswd
-
 NGINX_LOGS_HOST=./docker_logs/nginx/
 NGINX_LOGS_CONTAINER=/var/log/nginx/
 
-REDIS_PASS=<pass>
+# Env mapping
+ENV_PATH_HOST=./.env
+ENV_PATH_CONTAINER=/var/www/app/src/.env
 ```
 #### env_const.php
 Файл env_const.php должен иметь следующий вид:
@@ -209,9 +229,6 @@ define('YOUTUBE_APP_EMAIL', ''); // почта юзер бота
 define('YOUTUBE_APP_USER_NAME', ''); // имя юзер бота
 define('SMALL_TALK_ID', ''); // Имя проекта Dialogflow
 define('USER_LISTEN_LIST', []); // список пользователей на постоянную прослушку
-define('DB_USER_NAME', ''); // Имя пользователя БД
-define('DB_PASSWORD', ''); // пароль БД
-define('REDIS_PASS', ''); // пароль redis
 
 define('YOUTUBE_RESERVE', true); // Если необходимо установить резевный проект подключения к Google Cloud Platform
 define('YOUTUBE_APP_NAME_RESERVE', ''); // резервное имя проекта

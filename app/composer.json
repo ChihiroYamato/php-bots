@@ -24,7 +24,8 @@
         "google/apiclient": "^2.12.1",
         "google/cloud-dialogflow": "^0.25.0",
         "paquettg/php-html-parser": "^3.1",
-        "symfony/console": "^6.1"
+        "symfony/console": "^6.1",
+        "vlucas/phpdotenv": "^5.4"
     },
     "scripts": {
         "pre-autoload-dump": "Google\\Task\\Composer::cleanup"
