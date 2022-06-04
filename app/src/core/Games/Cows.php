@@ -12,7 +12,7 @@ class Cows extends Game
     public const NAME = 'COWS';
     public const COMMAND_HELP = '/play cows';
     public const COMMAND_START = '/play cows s';
-    public const DEFAULT_EXPIRE_TIME = 900;
+    public const DEFAULT_EXPIRE_TIME = 1200;
     protected const GAME_INIT_MESSAGE = 'выберите уровень сложности';
 
     /**

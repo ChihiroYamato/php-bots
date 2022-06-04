@@ -14,7 +14,7 @@ class Towns extends Game
     public const NAME = 'TOWNS';
     public const COMMAND_HELP = '/play towns';
     public const COMMAND_START = '/play towns s';
-    protected const GAME_INIT_MESSAGE = 'назовите город';
+    protected const GAME_INIT_MESSAGE = 'выберите город';
     /**
      * @var int `private` max step of game
      */
@@ -80,6 +80,7 @@ class Towns extends Game
         $response = $this->getCity($letter);
         $this->stopList[] = $response;
         $this->lastLetter = mb_strtolower(mb_strcut($response, -2));
+        var_dump($response);
 
         return [
             'message' => $this->user->getName() . " продолжаем, $response, тебе на <{$this->lastLetter}>",

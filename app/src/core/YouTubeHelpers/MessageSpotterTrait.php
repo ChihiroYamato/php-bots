@@ -7,8 +7,8 @@ namespace Anet\App\YouTubeHelpers;
  */
 trait MessageSpotterTrait
 {
-    private array $_searchChars = ['а', 'о', 'е', 'р', 'у', 'к', 'х', 'с'];
-    private array $_replaceChars = ['a', 'o', 'e', 'p', 'y', 'k', 'x', 'c'];
+    private array $_searchChars = ['а', 'А', 'о', 'О', 'е', 'Е', 'р', 'Р', 'у', 'У', 'к', 'К', 'х', 'Х', 'с', 'C',];
+    private array $_replaceChars = ['a', 'A', 'o', 'O', 'e', 'E', 'p', 'P', 'y', 'Y', 'k', 'K', 'x', 'X', 'c', 'C',];
 
     /**
      * **Method** change letters in word for youtube censorship

@@ -92,7 +92,7 @@ abstract class Game implements GameInterface
      */
     protected function getStatisticMessage(int $rating) : string
     {
-        return "—— очки: {$this->score} —— текущий соц рейтинг: $rating";
+        return sprintf('—— время игры: %s —— очки: %s —— текущий соц рейтинг: %s', $this->timeTracker->getDuration(), $this->score, $rating);
     }
 
     /**
