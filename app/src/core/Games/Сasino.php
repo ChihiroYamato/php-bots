@@ -6,6 +6,8 @@ use Anet\App\YouTubeHelpers;
 
 /**
  * **Сasino** -- class realization of game Casino
+ * @author Mironov Alexander <aleaxan9610@gmail.com>
+ * @version 1.0
  */
 class Сasino extends Game
 {
@@ -14,24 +16,24 @@ class Сasino extends Game
     public const COMMAND_START = '/play casino s';
     protected const GAME_INIT_MESSAGE = 'итак, выберите фишку';
     /**
-     * @var int `private` min point for score
+     * @var int min point for score
      */
     private const MIN_POINT = 10;
     /**
-     * @var int `private` max point for score
+     * @var int max point for score
      */
     private const MAX_POINT = 300;
     /**
-     * @var int `private` size of casino board
+     * @var int size of casino board
      */
     private const BOARD_SIZE = 42;
 
     /**
-     * @var array $board `private` current board for session
+     * @var int[] $board current board for session
      */
     private array $board;
     /**
-     * @var null|int $position `private` current user choice
+     * @var null|int $position current user choice
      */
     private ?int $position;
 
@@ -85,7 +87,7 @@ class Сasino extends Game
      * **Method** init board for current game session
      * @param int $min min score
      * @param int $max max score
-     * @return array board
+     * @return int[] board
      */
     private function prepareBoard(int $min, int $max) : array
     {

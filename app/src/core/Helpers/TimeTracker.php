@@ -4,31 +4,33 @@ namespace Anet\App\Helpers;
 
 /**
  * **TimerTracker** -- helper class with methods for setup and calulate timers
+ * @author Mironov Alexander <aleaxan9610@gmail.com>
+ * @version 1.0
  */
 final class TimeTracker
 {
     /**
-     * @var \DateTime $DateTimeInit `private` time stamp of init TimeTracker object
+     * @var \DateTime $DateTimeInit time stamp of init TimeTracker object
      */
     private \DateTime $DateTimeInit;
     /**
-     * @var array $points `private` local storage of tracker points
+     * @var array $points local storage of tracker points
      */
     private array $points;
     /**
-     * @var array $bufferPoints `private` storage of current tracker block
+     * @var array $bufferPoints storage of current tracker block
      */
     private array $bufferPoints;
     /**
-     * @var array $tracker `private` storage of named timer
+     * @var array $tracker storage of named timer
      */
     private array $tracker;
     /**
-     * @var null|float $minIteration `private` value of min tracker points iteration
+     * @var null|float $minIteration value of min tracker points iteration
      */
     private ?float $minIteration;
     /**
-     * @var null|float $maxIteration `private` value of max tracker points iteration
+     * @var null|float $maxIteration value of max tracker points iteration
      */
     private ?float $maxIteration;
 
@@ -217,7 +219,7 @@ final class TimeTracker
 
     /**
      * **Method** calulate value of iterations from local points storage
-     * @return array list of all iterations
+     * @return int[] list of all iterations
      */
     private function fetchIterations() : array
     {

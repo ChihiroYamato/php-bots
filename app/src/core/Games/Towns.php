@@ -7,6 +7,8 @@ use Anet\App\YouTubeHelpers;
 
 /**
  * **Towns** -- class realization of game Towns
+ * @author Mironov Alexander <aleaxan9610@gmail.com>
+ * @version 1.0
  */
 class Towns extends Game
 {
@@ -16,25 +18,37 @@ class Towns extends Game
     public const COMMAND_START = '/play towns s';
     protected const GAME_INIT_MESSAGE = 'выберите город';
     /**
-     * @var int `private` max step of game
+     * @var int max step of game
      */
     private const MAX_TURN = 15;
     /**
-     * @var int `private` count of victory letters
+     * @var int count of victory letters
      */
     private const LETTERS_COUNT = 4;
     /**
-     * @var int `private` score of victory
+     * @var int score of victory
      */
     private const WIN_SCORE = 300;
     /**
-     * @var int `private` score of defeat
+     * @var int score of defeat
      */
     private const LOSE_SCORE = 50;
 
+    /**
+     * @var string[] $winLetters list of letters for win game
+     */
     private array $winLetters;
+    /**
+     * @var string[] $stopList list of cities that are used
+     */
     private array $stopList;
+    /**
+     * @var int $steps count of user steps
+     */
     private int $steps;
+    /**
+     * @var null|string $lastLetter last letter of current city
+     */
     private ?string $lastLetter;
 
     public function __construct(YouTubeHelpers\User $user)
@@ -126,8 +140,8 @@ class Towns extends Game
 
     /**
      * **Method** init victory letters
-     * @param array $vocabulary current vocabulary for victory letters
-     * @return array victory letters
+     * @param string[] $vocabulary current vocabulary for victory letters
+     * @return string[] victory letters
      */
     private function getLetters(array $vocabulary) : array
     {

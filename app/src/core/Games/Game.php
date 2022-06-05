@@ -5,18 +5,23 @@ namespace Anet\App\Games;
 use Anet\App\Helpers;
 use Anet\App\YouTubeHelpers;
 
+/**
+ * Base implementation of Game class
+ * @author Mironov Alexander <aleaxan9610@gmail.com>
+ * @version 1.0
+ */
 abstract class Game implements GameInterface
 {
     /**
-     * @var string `protected` base init message
+     * @var string base init message
      */
     protected const GAME_INIT_MESSAGE = '';
     /**
-     * @var \Anet\App\Helpers\TimeTracker $timeTracker `private` instance of TimeTracker class
+     * @var \Anet\App\Helpers\TimeTracker $timeTracker instance of TimeTracker class
      */
     private Helpers\TimeTracker $timeTracker;
     /**
-     * @var \Anet\App\YouTubeHelpers\User $user `protected` instance of User class
+     * @var \Anet\App\YouTubeHelpers\User $user instance of User class
      */
     protected YouTubeHelpers\User $user;
     /**
@@ -27,14 +32,14 @@ abstract class Game implements GameInterface
     /**
      * **Method** for setup defeat scenario
      * @param string $defeatMessage defeating message of game
-     * @return array return params of game session, include 'message' - answer to user, 'end' - flag of game over
+     * @return mixed[] return params of game session, include 'message' - answer to user, 'end' - flag of game over
      */
     abstract protected function defeat(string $defeatMessage) : array;
 
     /**
      * **Method** for setup victory scenario
      * @param string $victoryMessage victorying message of game
-     * @return array return params of game session, include 'message' - answer to user, 'end' - flag of game over
+     * @return mixed[] return params of game session, include 'message' - answer to user, 'end' - flag of game over
      */
     abstract protected function victory(string $victoryMessage) : array;
 
@@ -98,7 +103,7 @@ abstract class Game implements GameInterface
     /**
      * **Method** setup game over
      * @param string $endMessage message of game over
-     * @return array return params of game session, include 'message' - answer to user, 'end' - flag of game over
+     * @return mixed[] return params of game session, include 'message' - answer to user, 'end' - flag of game over
      */
     protected function end(string $endMessage) : array
     {

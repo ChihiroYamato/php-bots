@@ -4,6 +4,8 @@ namespace Anet\App\YouTubeHelpers;
 
 /**
  * **ConnectParams** -- class for seting params for connect to youtube server
+ * @author Mironov Alexander <aleaxan9610@gmail.com>
+ * @version 1.0
  */
 final class ConnectParams
 {

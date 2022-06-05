@@ -4,11 +4,13 @@ namespace Anet\App\Storages;
 
 /**
  * **Buffer** -- class for storage in memory any data
+ * @author Mironov Alexander <aleaxan9610@gmail.com>
+ * @version 1.0
  */
 final class Buffer
 {
     /**
-     * @var array $buffer `private` storage of data
+     * @var string[][] $buffer storage of data
      */
     private array $buffer;
 
@@ -24,7 +26,7 @@ final class Buffer
     /**
      * **Method** fetch with delete data by node name from storage
      * @param string $node name of node in storage
-     * @return array data by node name
+     * @return string[] data by node name
      */
     public function fetch(string $node) : array
     {
@@ -41,7 +43,7 @@ final class Buffer
     /**
      * **Method** add data to storage by node name
      * @param string $node name of node in storage
-     * @param array $buffer saving data
+     * @param string[] $buffer saving data
      * @return void
      */
     public function add(string $node, array $buffer) : void

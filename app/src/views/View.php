@@ -4,6 +4,8 @@ namespace Anet\Views;
 
 /**
  * **View** -- handler class for views
+ * @author Mironov Alexander <aleaxan9610@gmail.com>
+ * @version 1.0
  */
 final class View
 {

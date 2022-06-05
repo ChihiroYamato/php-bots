@@ -4,21 +4,23 @@ namespace Anet\App\Helpers;
 
 /**
  * **ErrorTrait** -- contains any methods for storage and increment project errors
+ * @author Mironov Alexander <aleaxan9610@gmail.com>
+ * @version 1.0
  */
 trait ErrorTrait
 {
     /**
-     * @var int $errorCount `private` current count of errors
+     * @var int $errorCount current count of errors
      */
     private int $errorCount = 0;
     /**
-     * @var array $errors `private` storage of current errors
+     * @var string[][] $errors storage of current errors
      */
     private array $errors = [];
 
     /**
      * Method return all stored errors
-     * @return array all stored errors
+     * @return string[][] all stored errors
      */
     protected function getErrors() : array
     {
@@ -27,7 +29,7 @@ trait ErrorTrait
 
     /**
      * Method return all stored error categories
-     * @return array error categories
+     * @return string[] error categories
      */
     protected function getErrorsCategory() : array
     {

@@ -9,62 +9,64 @@ use Anet\App\Storages;
 
 /**
  * **ChatBotAbstract** -- base class for project bots
+ * @author Mironov Alexander <aleaxan9610@gmail.com>
+ * @version 1.0
  */
 abstract class ChatBotAbstract implements BotInterface, BotDebugInterface, StatisticsInterface
 {
     use Helpers\UrlTrait, Helpers\ErrorTrait;
 
     /**
-     * @var string $className `protected` short name of current class
+     * @var string $className short name of current class
      */
     protected string $className;
     /**
-     * @var int $totalMessageReading `protected` total count of message which reading by bot
+     * @var int $totalMessageReading total count of message which reading by bot
      */
     protected int $totalMessageReading;
     /**
-     * @var int $totalMessageSending `protected` total count of message which sending by bot
+     * @var int $totalMessageSending total count of message which sending by bot
      */
     protected int $totalMessageSending;
     /**
-     * @var int $totalIterations `protected` total count of bot iterations
+     * @var int $totalIterations total count of bot iterations
      */
     protected int $totalIterations;
     /**
-     * @var bool $listeningFlag `protected` flag of bot working
+     * @var bool $listeningFlag flag of bot working
      */
     protected bool $listeningFlag;
     /**
-     * @var \Anet\App\GoogleModules\SmallTalk $smallTalk `protected` instance of SmallTalk class
+     * @var \Anet\App\GoogleModules\SmallTalk $smallTalk instance of SmallTalk class
      */
     protected GoogleModules\SmallTalk $smallTalk;
     /**
-     * @var \Anet\App\Helpers\TimeTracker $timeTracker `protected` instance of TimeTracker class
+     * @var \Anet\App\Helpers\TimeTracker $timeTracker instance of TimeTracker class
      */
     protected Helpers\TimeTracker $timeTracker;
     /**
-     * @var \Anet\App\Storages\Vocabulary $vocabulary `protected` instance of Vocabulary class
+     * @var \Anet\App\Storages\Vocabulary $vocabulary instance of Vocabulary class
      */
     protected Storages\Vocabulary $vocabulary;
     /**
-     * @var \Anet\App\Storages\Buffer $buffer `protected` instance of Buffer class
+     * @var \Anet\App\Storages\Buffer $buffer instance of Buffer class
      */
     protected Storages\Buffer $buffer;
     /**
-     * @var \Anet\App\Games $games `protected` instance of Games class
+     * @var \Anet\App\Games $games instance of Games class
      */
     protected App\Games $games;
 
     /**
      * **Method** prepare list of sending
-     * @param array $chatlist current chat list from server
-     * @return array list of sending
+     * @param string[][] $chatlist current chat list from server
+     * @return string[][] list of sending
      */
     abstract protected function prepareSendings(array $chatlist) : array;
 
     /**
      * **Method** execute sending of message list
-     * @param array $sending current message list for sending
+     * @param string[][] $sending current message list for sending
      * @return int count of success sending
      */
     abstract protected function sendingMessages(array $sending) : int;

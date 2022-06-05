@@ -6,14 +6,19 @@ use Anet\App;
 use Anet\App\DB;
 use PHPHtmlParser;
 
+/**
+ * **Texts** -- class realization of parsing content from web
+ * @author Mironov Alexander <aleaxan9610@gmail.com>
+ * @version 1.0
+ */
 abstract class Texts extends App\Contents
 {
     /**
-     * @var string `protected` name of text category in DB
+     * @var string name of text category in DB
      */
     protected const CATEGORY_NAME = '%';
     /**
-     * @var string `protected` emergency message
+     * @var string emergency message
      */
     protected const WARNING_MESSAGE = 'Сорри, что-то пошло не так';
 
@@ -71,7 +76,7 @@ abstract class Texts extends App\Contents
 
     /**
      * **Method** get from DB rand text
-     * @return array list of message
+     * @return string[] list of message
      */
     public static function fetchRand() : array
     {
@@ -88,7 +93,7 @@ abstract class Texts extends App\Contents
      * **Method** divide string by lenght and return parts in array
      * @param string $string base string
      * @param int $lenght `[optional]` max lenght of string
-     * @return array parts of base string
+     * @return string[] parts of base string
      */
     private static function shortenString(string $string, int $lenght = 150) : array
     {

@@ -4,66 +4,68 @@ namespace Anet\App\YouTubeHelpers;
 
 /**
  * **User** -- class wrapper of Youtube users
+ * @author Mironov Alexander <aleaxan9610@gmail.com>
+ * @version 1.0
  */
 final class User implements \Anet\App\User\UserInterface
 {
     /**
-     * @var string $id `private` user id
+     * @var string $id user id
      */
     private string $id;
     /**
-     * @var string $name `private` user name
+     * @var string $name user name
      */
     private string $name;
     /**
-     * @var string $channelUrl `private` user channel url
+     * @var string $channelUrl user channel url
      */
     private string $channelUrl;
     /**
-     * @var \DateTime $lastPublished `private` user last published
+     * @var \DateTime $lastPublished user last published
      */
     private \DateTime $lastPublished;
     /**
-     * @var \DateTime $registration `private` user registation date
+     * @var \DateTime $registration user registation date
      */
     private \DateTime $registration;
     /**
-     * @var \DateTime $lastUpdate `private` user last update in DB
+     * @var \DateTime $lastUpdate user last update in DB
      */
     private \DateTime $lastUpdate;
     /**
-     * @var null|int $subscribers `private` user subscribers count
+     * @var null|int $subscribers user subscribers count
      */
     private ?int $subscribers;
     /**
-     * @var null|int $videos `private` user video count
+     * @var null|int $videos user video count
      */
     private ?int $videos;
     /**
-     * @var null|int $views `private` user views count
+     * @var null|int $views user views count
      */
     private ?int $views;
     /**
-     * @var int $messages `private` user messages count
+     * @var int $messages user messages count
      */
     private int $messages;
     /**
-     * @var int $rating `private` user current rating
+     * @var int $rating user current rating
      */
     private int $rating;
     /**
-     * @var bool $isActive `private` user active status
+     * @var bool $isActive user active status
      */
     private bool $isActive;
     /**
-     * @var bool $isAdmin `private` user admin status
+     * @var bool $isAdmin user admin status
      */
     private bool $isAdmin;
 
     /**
      * Initialize User
      * @param string $id user id
-     * @param array $params list of params, necessarily to be `'name'`, optional are:
+     * @param string[] $params list of params, necessarily to be `'name'`, optional are:
      * `'last_published'`, `'registation_date'`, `'last_update'`, `'subscriber_count'`, `'video_count'`,
      * `'view_count'`, `'message_count'`, `'social_rating'`
      * @param bool $isAdmin `[optional]` user admin status, default false

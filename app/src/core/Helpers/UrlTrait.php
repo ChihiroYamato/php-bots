@@ -4,6 +4,8 @@ namespace Anet\App\Helpers;
 
 /**
  * **UrlTrait** -- contains any methods for work with url
+ * @author Mironov Alexander <aleaxan9610@gmail.com>
+ * @version 1.0
  */
 trait UrlTrait
 {

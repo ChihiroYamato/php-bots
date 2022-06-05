@@ -7,40 +7,42 @@ use Anet\App\Helpers;
 
 /**
  * **VideoProperties** -- class storage of youtube video properties
+ * @author Mironov Alexander <aleaxan9610@gmail.com>
+ * @version 1.0
  */
 final class VideoProperties
 {
     /**
-     * @var string `public` current timezone
+     * @var string current timezone
      */
     public const TIME_ZONE = 'Europe/Moscow';
 
     /**
-     * @var \Google\Service\YouTube $youtube `private` instance of Youtube Service class
+     * @var \Google\Service\YouTube $youtube instance of Youtube Service class
      */
     private Service\YouTube $youtube;
     /**
-     * @var \Anet\App\Helpers\TimeTracker $timeTracker `private` instance of TimeTracker class
+     * @var \Anet\App\Helpers\TimeTracker $timeTracker instance of TimeTracker class
      */
     private Helpers\TimeTracker $timeTracker;
     /**
-     * @var \DateTime $videoStarting `private` timestamp of video starting
+     * @var \DateTime $videoStarting timestamp of video starting
      */
     private \DateTime $videoStarting;
     /**
-     * @var string $youtubeURL `private` link to youtube video
+     * @var string $youtubeURL link to youtube video
      */
     private string $youtubeURL;
     /**
-     * @var string $videoID `private` youtube video id
+     * @var string $videoID youtube video id
      */
     private string $videoID;
     /**
-     * @var string $liveChatID `private` id of youtube video live chat
+     * @var string $liveChatID id of youtube video live chat
      */
     private string $liveChatID;
     /**
-     * @var null|string $totalViews `private` total count of current video view
+     * @var null|string $totalViews total count of current video view
      */
     private ?string $totalViews;
 
@@ -99,7 +101,7 @@ final class VideoProperties
 
     /**
      * **Method** get readble statistic of video
-     * @return array list of message to show
+     * @return string[] list of message to show
      */
     public function showStatistic() : array
     {
@@ -110,7 +112,7 @@ final class VideoProperties
 
     /**
      * **Method** get statistic of video, fetch info from youtube server with interval of 10 minutes
-     * @return array list of statistic properties
+     * @return string[] list of statistic properties
      */
     public function getStatistic() : array
     {

@@ -4,15 +4,17 @@ namespace Anet\App;
 
 /**
  * **Games** -- class controller of game instances
+ * @author Mironov Alexander <aleaxan9610@gmail.com>
+ * @version 1.0
  */
 final class Games
 {
     /**
-     * @var array $storage `private` storage of games sessions
+     * @var Anet\App\Games\GameInterface[] $storage storage of games sessions
      */
     private array $storage;
     /**
-     * @var array $restList `private` list of users timeouts
+     * @var array $restList list of users timeouts
      */
     private array $restList;
 
@@ -41,7 +43,7 @@ final class Games
      * @param \Anet\App\YouTubeHelpers\User $user instance of current user
      * @param int $timeout game timeout for current user
      * @param int $minRaiting `[optional]` min rating for user to validate session
-     * @return array list of response messages
+     * @return string[] list of response messages
      */
     public function validateAndStarting(Games\GameInterface $game, YouTubeHelpers\User $user, int $timeout, int $minRaiting = 1) : array
     {
@@ -93,7 +95,7 @@ final class Games
 
     /**
      * **Method** Check all users sessiins if it's expired
-     * @return array lost of response messages to users
+     * @return string[] list of response messages to users
      */
     public function checkSessionsTimeOut() : array
     {

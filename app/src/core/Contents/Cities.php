@@ -6,10 +6,15 @@ use Anet\App;
 use Anet\App\DB;
 use PHPHtmlParser;
 
+/**
+ * **Cities** -- class of parsing cities from web resurce
+ * @author Mironov Alexander <aleaxan9610@gmail.com>
+ * @version 1.0
+ */
 class Cities extends App\Contents
 {
     /**
-     * @var array `public` vocabulary of base pagination
+     * @var string[] vocabulary of base pagination
      */
     public const VOCABULARY = ['А', 'Б', 'В', 'Г', 'Д', 'Е', 'Ж', 'З', 'И', 'Й', 'К', 'Л', 'М', 'Н', 'О', 'П', 'Р', 'С', 'Т', 'У', 'Ф', 'Х', 'Ц', 'Ч', 'Ш', 'Щ', 'Э', 'Ю', 'Я',];
 

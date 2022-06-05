@@ -6,6 +6,8 @@ use Anet\App\YouTubeHelpers;
 
 /**
  * **Cows** -- class realization of game Bulls and Cows
+ * @author Mironov Alexander <aleaxan9610@gmail.com>
+ * @version 1.0
  */
 class Cows extends Game
 {
@@ -16,23 +18,23 @@ class Cows extends Game
     protected const GAME_INIT_MESSAGE = 'выберите уровень сложности';
 
     /**
-     * @var array `private` list of game difficults mode
+     * @var string[] list of game difficults mode
      */
     private const DIFFICULT = [1 => 'easy', 2 => 'normal', 3 => 'hard', 4 => 'insane'];
     /**
-     * @var array `private` list of description for difficults mode
+     * @var string[] list of description for difficults mode
      */
     private const DESCRIPTION = ['easy' => '4 цифры от 1 до 8', 'normal' => '5 цифр от 1 до 0', 'hard' => '6 цифр от 1 до b', 'insane' => '8 цифр от 1 до f'];
     /**
-     * @var array `private` list score difficult modifer
+     * @var string[] list score difficult modifer
      */
     private const MODIFIER = ['easy' => 1, 'normal' => 1.5, 'hard' => 2.5, 'insane' => 5];
     /**
-     * @var array `private` base victory score list
+     * @var int[] base victory score list
      */
     private const VICTORY_SCORE = [350, 300, 250, 200, 150];
     /**
-     * @var array `private` base defeat score
+     * @var int base defeat score
      */
     private const DEFEAT_SCORE = -50;
 

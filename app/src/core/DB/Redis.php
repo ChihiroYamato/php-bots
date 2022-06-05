@@ -7,6 +7,8 @@ use Anet\App\YouTubeHelpers;
 /**
  * **Redis** -- simple wrapper for Redis PHP library
  * https://github.com/phpredis/phpredis
+ * @author Mironov Alexander <aleaxan9610@gmail.com>
+ * @version 1.0
  */
 final class Redis
 {
@@ -64,7 +66,7 @@ final class Redis
      * **Method** fetch values with deleting from redis storage
      * @param string $keys key name, support mask 'name*' whitch return all suitable keys
      * @param bool $isObjects `[optional]` set true if return values are objects and it's needed to unserialize, default false
-     * @return array list of values
+     * @return object[]|mixed[] list of values
      */
     public static function fetch(string $keys, bool $isObjects = false) : array
     {

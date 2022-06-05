@@ -6,15 +6,17 @@ use Anet\App\DB;
 
 /**
  * **Vocabulary** -- class for store vocabulary from DB on script runtime
+ * @author Mironov Alexander <aleaxan9610@gmail.com>
+ * @version 1.0
  */
 final class Vocabulary
 {
     /**
-     * @var array $storage `private` storage of vocabulary phrases
+     * @var array[] $storage storage of vocabulary phrases
      */
     private array $storage;
     /**
-     * @var array $groups `private` storage of custom grouping phrases
+     * @var array[] $groups storage of custom grouping phrases
      */
     private array $groups;
 
@@ -45,7 +47,7 @@ final class Vocabulary
 
     /**
      * **Method** return vocabulary storage
-     * @return array vocabulary storage
+     * @return array[] vocabulary storage
      */
     public function getAll() : array
     {
@@ -54,7 +56,7 @@ final class Vocabulary
 
     /**
      * **Method** get all categories from storage
-     * @return array categories from storage
+     * @return string[] categories from storage
      */
     public function getCategories() : array
     {
@@ -64,7 +66,7 @@ final class Vocabulary
     /**
      * **Method** get all phrases from storage by category
      * @param string $category name of phrases category
-     * @return array phrases from storage by category or empty array if category name is incorrect
+     * @return string[][] phrases from storage by category or empty array if category name is incorrect
      */
     public function getCategory(string $category) : array
     {
@@ -79,7 +81,7 @@ final class Vocabulary
      * **Method** get all phrases from storage by category and type
      * @param string $category name of phrases category
      * @param string $type name of phrases type
-     * @return array phrases from storage by params or empty array if params are incorrect
+     * @return string[] phrases from storage by params or empty array if params are incorrect
      */
     public function getCategoryType(string $category, string $type) : array
     {
@@ -93,8 +95,8 @@ final class Vocabulary
     /**
      * **Method** groped vocabulary categories and return group (only return group if it's exists)
      * @param string $group name of group
-     * @param array $categories list of grouping categories
-     * @return array return group of categories
+     * @param string[] $categories list of grouping categories
+     * @return array[] return group of categories
      */
     public function getCategoriesGroup(string $group, array $categories) : array
     {

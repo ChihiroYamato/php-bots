@@ -9,17 +9,19 @@ use Google\Cloud\Dialogflow\V2;
 /**
  * **SmallTalk** -- wrapper for Google Dialogflow module
  * https://dialogflow.cloud.google.com/
+ * @author Mironov Alexander <aleaxan9610@gmail.com>
+ * @version 1.0
  */
 final class SmallTalk
 {
     use Helpers\ErrorTrait;
 
     /**
-     * @var string $smallTalkSession `private` session for connecting
+     * @var string $smallTalkSession session for connecting
      */
     private string $smallTalkSession;
     /**
-     * @var \Google\Cloud\Dialogflow\V2\SessionsClient $smallTalkClient `private` instance of Google\Cloud\Dialogflow\V2\SessionsClient
+     * @var \Google\Cloud\Dialogflow\V2\SessionsClient $smallTalkClient instance of Google\Cloud\Dialogflow\V2\SessionsClient
      */
     private V2\SessionsClient $smallTalkClient;
 

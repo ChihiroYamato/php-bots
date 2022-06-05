@@ -8,30 +8,32 @@ use Anet\App\DB;
 
 /**
  * **UserStorage** class storage of User
+ * @author Mironov Alexander <aleaxan9610@gmail.com>
+ * @version 1.0
  */
 final class UserStorage
 {
     use Helpers\ErrorTrait;
 
     /**
-     * @var int `private` max days for users without update
+     * @var int max days for users without update
      */
     private const DAYS_WITHOUT_UPDATE = 4;
     /**
-     * @var int `private` max days for users without active
+     * @var int max days for users without active
      */
     private const DAYS_WITHOUT_ACTIVE = 365;
     /**
-     * @var string `private` prefix of redis storage keys
+     * @var string prefix of redis storage keys
      */
     private const REDIS_PREFIX = 'youtube_user_';
 
     /**
-     * @var \Google\Service\YouTube $youtube `private` instance of Yotube Service class
+     * @var \Google\Service\YouTube $youtube instance of Yotube Service class
      */
     private Service\YouTube $youtube;
     /**
-     * @var array $storage `private` storage of users
+     * @var \Anet\App\YouTubeHelpers\User[] $storage storage of users
      */
     private array $storage;
 
@@ -96,7 +98,7 @@ final class UserStorage
     /**
      * **Method** get readnle messages with user statistic by user name
      * @param string $name user name
-     * @return array list of messages
+     * @return string[] list of messages
      */
     public function showUserStatistic(string $name) : array
     {
@@ -151,7 +153,7 @@ final class UserStorage
     /**
      * **Method** find user by name in storage
      * @param string $name user name
-     * @return null|User instance of user if it's exist else - null
+     * @return null|\Anet\App\YouTubeHelpers\User instance of user if it's exist else - null
      */
     private function findUserByName(string $name) : ?User
     {
@@ -246,7 +248,7 @@ final class UserStorage
     /**
      * **Method** fetch user properties from youtube server
      * @param string $id user id
-     * @return array list of user properties
+     * @return string[] list of user properties
      */
     private function requestUser(string $id) : array
     {

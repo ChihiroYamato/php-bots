@@ -4,6 +4,8 @@ namespace Anet\App\Helpers;
 
 /**
  * **FileSystemTrait** -- contains any methods for work with file system og project
+ * @author Mironov Alexander <aleaxan9610@gmail.com>
+ * @version 1.0
  */
 trait FileSystemTrait
 {

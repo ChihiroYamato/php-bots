@@ -4,30 +4,32 @@ namespace Anet\App\Games;
 
 /**
  * **GameInterface** -- base interface for game classes
+ * @author Mironov Alexander <aleaxan9610@gmail.com>
+ * @version 1.0
  */
 interface GameInterface
 {
     /**
-     * @var string `public` base name of game
+     * @var string base name of game
      */
     public const NAME = 'GAME';
     /**
-     * @var string `public` base command to get help message
+     * @var string base command to get help message
      */
     public const COMMAND_HELP = '/play';
     /**
-     * @var string `public` base command to start game
+     * @var string base command to start game
      */
     public const COMMAND_START = '/play s';
     /**
-     * @var int `public` time of game expire in seconds
+     * @var int time of game expire in seconds
      */
     public const DEFAULT_EXPIRE_TIME = 120;
 
     /**
      * **Method** execute step of game by user answer and return params list
      * @param string $answer user message to game
-     * @return array list of params, include 'message' - answer to user, 'end' - flag of game over
+     * @return mixed[] list of params, include 'message' - answer to user, 'end' - flag of game over
      */
     public function step(string $answer) : array;
 
@@ -45,13 +47,13 @@ interface GameInterface
 
     /**
      * **Method** get statistic of game session
-     * @return array statistic of game session
+     * @return string[] statistic of game session
      */
     public function getStatistic() : array;
 
     /**
      * **Method** get help message for user
-     * @return array list of messages
+     * @return string[] list of messages
      */
     public static function getHelpMessage() : array;
 }

@@ -6,41 +6,43 @@ use Anet\App\DB;
 
 /**
  * **Logger** -- helper static class for working with logs (save to DBm save to XML, archive)
+ * @author Mironov Alexander <aleaxan9610@gmail.com>
+ * @version 1.0
  */
 final class Logger
 {
     use FileSystemTrait;
 
     /**
-     * @var string `private` path to logs directory
+     * @var string path to logs directory
      */
     private const LOGS_PATH = LOGS_PATH;
     /**
-     * @var string `private` path with base name to proccess logs
+     * @var string path with base name to proccess logs
      */
     private const LOGS_PROCCESS_BASE_NAME = '/proccess/proccess_report';
     /**
-     * @var string `private` path with base name to runtime logs
+     * @var string path with base name to runtime logs
      */
     private const RUNTIME_LOGS_NAME = '/runtime/logs';
     /**
-     * @var string `private` name of root xml tag
+     * @var string name of root xml tag
      */
     private const XML_ROOT_TAG = 'body';
     /**
-     * @var string `private` name of proccess statistic xml tag
+     * @var string name of proccess statistic xml tag
      */
     private const XML_PROCCESS_GLOBAL_TAG = 'global';
     /**
-     * @var string `private` name of proccess detail xml tag
+     * @var string name of proccess detail xml tag
      */
     private const XML_PROCCESS_DETAIL_TAG = 'detail';
     /**
-     * @var string `private` name of proccess node xml tag
+     * @var string name of proccess node xml tag
      */
     private const XML_PROCCESS_NODE_TAG = 'proccessing';
     /**
-     * @var string `private` prefix of archived files
+     * @var string prefix of archived files
      */
     private const ARCHIVE_POSTFIX = '-old';
 
@@ -70,8 +72,8 @@ final class Logger
     /**
      * **Method** save logs of proccess to xml file
      * @param string $category name of logs directory
-     * @param array $globalProccess data of global proccess statistic
-     * @param array $detailProccess data of proccess detail
+     * @param string[] $globalProccess data of global proccess statistic
+     * @param string[][] $detailProccess data of proccess detail
      * @return bool return false if globalProccess or detailProccess are empty else - true after success saving
      */
     public static function loggingProccess(string $category, array $globalProccess, array $detailProccess) : bool
@@ -90,7 +92,7 @@ final class Logger
     /**
      * **Method** save standart logs to xml file
      * @param string $category name of logs directory
-     * @param array $data detail data of logs
+     * @param string[] $data detail data of logs
      * @param string $mode name of dir (with prefix 's') and xml root node
      * @return bool return false if data is empty else - true after success saving
      */
@@ -279,7 +281,7 @@ final class Logger
     /**
      * **Method** save logs to initialized xml file
      * @param string $logsName path to xml file
-     * @param array $logs logs data to save
+     * @param string[][]|string[] $logs logs data to save
      * @param string $nodeName name of log root node
      * @return void
      * @throw `\Exception`
@@ -310,8 +312,8 @@ final class Logger
     /**
      * **Method** save proccess logs to initialized xml file
      * @param string $logsName path to logs file
-     * @param array $globalProccess data of global proccess statistic
-     * @param array $detailProccess data of proccess detail
+     * @param string[] $globalProccess data of global proccess statistic
+     * @param string[][] $detailProccess data of proccess detail
      * @return void
      * @throw `\Exception`
      */

@@ -11,13 +11,18 @@ use Anet\App\Helpers;
 use Anet\App\YouTubeHelpers;
 use Google\Service;
 
+/**
+ * **Cli** -- base realization of cli run boys by \Symfony\Component\Console\Command\Command
+ * @author Mironov Alexander <aleaxan9610@gmail.com>
+ * @version 1.0
+ */
 final class Cli extends Command\Command
 {
     protected static $defaultName = 'bot:start';
     protected static $defaultDescription = 'start new bot session';
 
     /**
-     * @var array `private` list of current bots
+     * @var string[] list of current bots
      */
     private const BOTS = [
         'YOUTUBE' => 'youtube',

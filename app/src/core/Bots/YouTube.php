@@ -19,47 +19,48 @@ use Anet\App\Games;
 
  * For more information about working and examples read README.md
  *
- * @author Mironov Alexander https://github.com/ChihiroYamato
+ * @author Mironov Alexander <aleaxan9610@gmail.com> https://github.com/ChihiroYamato
+ * @version 0.7
  */
 final class YouTube extends ChatBotAbstract
 {
     use YouTubeHelpers\MessageSpotterTrait;
     /**
-     * @var \Google\Service\YouTube $youtubeService `private` instance of Youtube Servise class
+     * @var \Google\Service\YouTube $youtubeService instance of Youtube Servise class
      */
     private Service\YouTube $youtubeService;
     /**
-     * @var \Anet\App\YouTubeHelpers\VideoProperties $video `private` instance of VideoProperties class
+     * @var \Anet\App\YouTubeHelpers\VideoProperties $video instance of VideoProperties class
      */
     private YouTubeHelpers\VideoProperties $video;
     /**
-     * @var \Anet\App\YouTubeHelpers\UserStorage $users `private` instance of UserStorage class
+     * @var \Anet\App\YouTubeHelpers\UserStorage $users instance of UserStorage class
      */
     private YouTubeHelpers\UserStorage $users;
     /**
-     * @var string $botUserEmail `private` email of current bot user
+     * @var string $botUserEmail email of current bot user
      */
     private string $botUserEmail;
     /**
-     * @var string $botUserName `private` name of current bot user
+     * @var string $botUserName name of current bot user
      */
     private string $botUserName;
     /**
-     * @var null|string $lastChatMessageID `private` id of last reading message
+     * @var null|string $lastChatMessageID id of last reading message
      */
     private ?string $lastChatMessageID;
     /**
-     * @var array $usersListening `private` list of users which are listened
+     * @var string[] $usersListening list of users which are listened
      */
     private array $usersListening;
 
     /**
-     * @var array $currentUsersList `private` list of users on current iteration
+     * @var \Anet\App\YouTubeHelpers\User[] $currentUsersList list of users on current iteration
      */
     private array $currentUsersList;
 
     /**
-     * @var array $actionPrepareList `private` list of action methods for prepareSendings()
+     * @var string[] $actionPrepareList list of action methods for prepareSendings()
      * for set method to action is needed: named like `actionPrepare...Sendings`,
      * accept param array with chat message
      * return array with formed sendings
@@ -254,7 +255,7 @@ final class YouTube extends ChatBotAbstract
     /**
      * **Method** fetch actual message list from video chat with request to youtube server.
      * for the first fetching method setup last message and controls the relevance of the chat with that param
-     * @return array actual message list
+     * @return string[][] actual message list
      */
     private function fetchChatList() : array
     {
@@ -380,8 +381,8 @@ final class YouTube extends ChatBotAbstract
 
     /**
      * **Method** get detail for sending by current youtube chat message
-     * @param array $chatItem current youtube chat message
-     * @return array detail for sending
+     * @param string[] $chatItem current youtube chat message
+     * @return string[] detail for sending
      */
     private function getSendingDetail(array $chatItem) : array
     {
@@ -394,7 +395,7 @@ final class YouTube extends ChatBotAbstract
 
     /**
      * **Method** prepare sendings from system
-     * @return array sendings from system
+     * @return string[][] sendings from system
      */
     private function prepareSystemSendings() : array
     {
@@ -405,16 +406,16 @@ final class YouTube extends ChatBotAbstract
         ];
         $result = [];
 
-        $result = array_merge($result, $this->prepareSystemGamesSendings( $sendingDetail));
-        $result = array_merge($result, $this->prepareSystemLotterySendings( $sendingDetail));
+        $result = array_merge($result, $this->prepareSystemGamesSendings($sendingDetail));
+        $result = array_merge($result, $this->prepareSystemLotterySendings($sendingDetail));
 
         return $result;
     }
 
     /**
      * **Method** prepare system sendings from game module
-     * @param array $sendingDetail system headers for sendings
-     * @return array system sendings from game module
+     * @param string[] $sendingDetail system headers for sendings
+     * @return string[][] system sendings from game module
      */
     private function prepareSystemGamesSendings(array $sendingDetail) : array
     {
@@ -430,8 +431,8 @@ final class YouTube extends ChatBotAbstract
 
     /**
      * **Method** prepare system sendings from lottery module
-     * @param array $sendingDetail system headers for sendings
-     * @return array system sendings from lottery module
+     * @param string[] $sendingDetail system headers for sendings
+     * @return string[][] system sendings from lottery module
      */
     private function prepareSystemLotterySendings(array $sendingDetail) : array
     {
@@ -452,8 +453,8 @@ final class YouTube extends ChatBotAbstract
 
     /**
      * **Method** [is action of prepareSendings] prepare sendings from admin commands module by current youtube chat message
-     * @param array $chatItem current youtube chat message
-     * @return array sendings from admin commands module
+     * @param string[] $chatItem current youtube chat message
+     * @return string[][] sendings from admin commands module
      */
     private function actionPrepareAdminSendings(array $chatItem) : array
     {
@@ -498,8 +499,8 @@ final class YouTube extends ChatBotAbstract
 
     /**
      * **Method** [is action of prepareSendings] prepare sendings from game module by current youtube chat message
-     * @param array $chatItem current youtube chat message
-     * @return array sendings from game module
+     * @param string[] $chatItem current youtube chat message
+     * @return string[][] sendings from game module
      */
     private function actionPrepareGamesSendings(array $chatItem) : array
     {
@@ -517,8 +518,8 @@ final class YouTube extends ChatBotAbstract
 
     /**
      * **Method** [is action of prepareSendings] prepare sendings from default commands module by current youtube chat message
-     * @param array $chatItem current youtube chat message
-     * @return array sendings from default commands module
+     * @param string[] $chatItem current youtube chat message
+     * @return string[][] sendings from default commands module
      */
     private function actionPrepareCommandSendings(array $chatItem) : array
     {
@@ -598,8 +599,8 @@ final class YouTube extends ChatBotAbstract
 
     /**
      * **Method** [is action of prepareSendings] prepare sendings from greeting and parting module by current youtube chat message
-     * @param array $chatItem current youtube chat message
-     * @return array sendings from greeting and parting module
+     * @param string[] $chatItem current youtube chat message
+     * @return string[][] sendings from greeting and parting module
      */
     public function actionPrepareGreetingSendings(array $chatItem) : array
     {
@@ -630,8 +631,8 @@ final class YouTube extends ChatBotAbstract
 
     /**
      * **Method** [is action of prepareSendings] prepare sendings from dead inside joke module by current youtube chat message
-     * @param array $chatItem current youtube chat message
-     * @return array sendings from dead inside joke module
+     * @param string[] $chatItem current youtube chat message
+     * @return string[][] sendings from dead inside joke module
      */
     public function actionPrepareDeadInsideSendings(array $chatItem) : array
     {
@@ -650,8 +651,8 @@ final class YouTube extends ChatBotAbstract
 
     /**
      * **Method** [is action of prepareSendings] prepare sendings from base communication module by current youtube chat message
-     * @param array $chatItem current youtube chat message
-     * @return array sendings from base communication module
+     * @param string[] $chatItem current youtube chat message
+     * @return string[][] sendings from base communication module
      */
     public function actionPrepareBotCommunicationSendings(array $chatItem) : array
     {
@@ -669,8 +670,8 @@ final class YouTube extends ChatBotAbstract
 
     /**
      * **Method** [is action of prepareSendings] prepare sendings from vocabulary module by current youtube chat message
-     * @param array $chatItem current youtube chat message
-     * @return array sendings from vocabulary module
+     * @param string[] $chatItem current youtube chat message
+     * @return string[][] sendings from vocabulary module
      */
     public function actionPrepareVocabularySendings(array $chatItem) : array
     {
@@ -703,8 +704,8 @@ final class YouTube extends ChatBotAbstract
 
     /**
      * **Method** [is action of prepareSendings] prepare sendings from users listening module by current youtube chat message
-     * @param array $chatItem current youtube chat message
-     * @return array sendings from users listening module
+     * @param string[] $chatItem current youtube chat message
+     * @return string[][] sendings from users listening module
      */
     public function actionPrepareUsersListenSendings(array $chatItem) : array
     {

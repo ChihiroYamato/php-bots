@@ -4,6 +4,8 @@ namespace Anet\App\Helpers;
 
 /**
  * **Timer** -- class for setup general proccesing of time in script
+ * @author Mironov Alexander <aleaxan9610@gmail.com>
+ * @version 1.0
  */
 final class Timer
 {
