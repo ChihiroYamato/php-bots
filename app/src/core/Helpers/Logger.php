@@ -168,7 +168,7 @@ final class Logger
      * **Method** return success opened xml file
      * @param string $logsName path to logs file
      * @return \SimpleXMLElement success opened xml file
-     * @throw `\Exception`
+     * @throw \Exception
      */
     private static function openXMLFromFile(string $logsName) : \SimpleXMLElement
     {
@@ -236,7 +236,7 @@ final class Logger
      * **Method** init xml log file with full name (create if not exists)
      * @param string $logsBaseName base name of file with full path from logs root
      * @return string new full name of log file
-     * @throw `\Exception`
+     * @throw \Exception
      */
     private static function initialLogsXML(string $logsBaseName) : string
     {
@@ -262,7 +262,7 @@ final class Logger
      * **Method** format xml file to readable view
      * @param string $logsName path to logs name
      * @return void
-     * @throw `\Exception`
+     * @throw \Exception
      */
     private static function formatLogsXML(string $logsName) : void
     {
@@ -284,7 +284,7 @@ final class Logger
      * @param string[][]|string[] $logs logs data to save
      * @param string $nodeName name of log root node
      * @return void
-     * @throw `\Exception`
+     * @throw \Exception
      */
     private static function saveToXML(string $logsName, array $logs, string $nodeName) : void
     {
@@ -315,7 +315,7 @@ final class Logger
      * @param string[] $globalProccess data of global proccess statistic
      * @param string[][] $detailProccess data of proccess detail
      * @return void
-     * @throw `\Exception`
+     * @throw \Exception
      */
     private static function saveProccessToXML(string $logsName, array $globalProccess, array $detailProccess) : void
     {

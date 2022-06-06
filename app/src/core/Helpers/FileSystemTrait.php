@@ -13,7 +13,7 @@ trait FileSystemTrait
      * Method create new directory by path if it isn't exist
      * @param string $directory path to new directory
      * @return void
-     * @throw `\Exception`
+     * @throw \Exception
      */
     protected static function makeDirectory(string $directory) : void
     {
@@ -28,7 +28,7 @@ trait FileSystemTrait
      * @param string $fileName absolute path to file
      * @param string $postfix postfix to file
      * @return bool return false if fileName isn't correct file name of has postfix otherwise return true
-     * @throw `\Exception`
+     * @throw \Exception
      */
     protected static function archiveFile(string $fileName, string $postfix) : bool
     {

@@ -19,7 +19,7 @@ use Anet\App\Games;
 
  * For more information about working and examples read README.md
  *
- * @author Mironov Alexander <aleaxan9610@gmail.com> https://github.com/ChihiroYamato
+ * @author Mironov Alexander <aleaxan9610@gmail.com>
  * @version 0.7
  */
 final class YouTube extends ChatBotAbstract

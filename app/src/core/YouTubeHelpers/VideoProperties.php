@@ -168,7 +168,7 @@ final class VideoProperties
      * **Method** validate youtube url from params
      * @param string $url youtube url
      * @return string validated youtube url
-     * @throw `Google\Service\Exception`
+     * @throw \Google\Service\Exception
      */
     private function validateYoutubeURL(string $url) : string
     {
