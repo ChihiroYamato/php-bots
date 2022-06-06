@@ -11,12 +11,15 @@ test/
 vendor/
 
 # Project
-secrets/
-!secrets/.gitkeep
+*/*/secrets/
+!*/*/secrets/.gitkeep
 env_const.php
 another_close.php
 .env
 .htpasswd
+phpdoc/
+*/.phpdoc/*
+!*/.phpdoc/phpDocumentor.phar
 
 # Project logs
 project_logs/*

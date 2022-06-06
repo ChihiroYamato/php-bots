@@ -17,7 +17,7 @@ services:
         - backend
 
     redis:
-      image: redis
+      image: redis:7.0
       container_name: bots-redis
       build:
         args:
@@ -31,7 +31,7 @@ services:
         - backend
 
     adminer:
-      image: adminer:latest
+      image: adminer:4.8.1
       container_name: bots-adminer
       restart: unless-stopped
       ports:
@@ -42,7 +42,7 @@ services:
         - db
 
     app:
-      image: app
+      image: app:1.0
       container_name: bots-app
       build: ./images/php-fpm
       restart: unless-stopped

@@ -27,6 +27,7 @@ ____
 ### **Structure:**
 Структура проекта представлена следующим деревом
 - app
+    - phpdoc >> директория файлов phpDoc
     - console >> директория cli скриптов
         - [application.php](./app/console/application.php) >> точка входа в приложение с cli
     - public >> корневая директория сервера Nginx
@@ -41,6 +42,7 @@ ____
         - [env_const.example.php](./app/src/env_const.example.php) >> пример с константами
     - vendor
     - [bot](./app/bot) >> bash скрипт - альяс для вызова [исполняемого файла](./app/console/application.php)
+    - [doc](./app/doc) >> bash скрипт - альяс для вызова генератора phpDoc
     - [composer.json](./app/composer.json)
     - [composer.lock](./app/composer.lock)
 - docker_logs >> логи докер контейнеров
