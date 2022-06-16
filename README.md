@@ -216,10 +216,6 @@ NGINX_PASS_HOST=./images/nginx/.htpasswd
 NGINX_PASS_CONTAINER=/etc/nginx/.htpasswd
 NGINX_LOGS_HOST=./docker_logs/nginx/
 NGINX_LOGS_CONTAINER=/var/log/nginx/
-
-# Env mapping
-ENV_PATH_HOST=./.env
-ENV_PATH_CONTAINER=/var/www/app/src/.env
 ```
 #### env_const.php
 Файл env_const.php должен иметь следующий вид:
