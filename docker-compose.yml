@@ -51,7 +51,6 @@ services:
         - ${APP_PATH_HOST}:${APP_PATH_CONTAINER}
         - ${PHP_INI_HOST}:${PHP_INI_CONTAINER}
         - ${PROJECT_LOGS_HOST}:${PROJECT_LOGS_CONTAINER}
-        - ${ENV_PATH_HOST}:${ENV_PATH_CONTAINER}
       networks:
         - backend
       depends_on:
