@@ -467,7 +467,7 @@ final class YouTube extends ChatBotAbstract
 
         switch (true) {
             case $chatItem['message'] === '/help-admin':
-                $sendingDetail['sending'] = $sendTo . '</stop> —— завершить скрипт; </insert user> —— добавить юзера в список слежения ; </drop user> —— удалить юзера из списка слежения; </show-listern> —— список слежения;';
+                $sendingDetail['sending'] = $sendTo . '</stop> —— завершить скрипт; </insert user> —— добавить юзера в список слежения ; </drop user> —— удалить юзера из списка слежения; </show-listern> —— список слежения; </ping> —— pong';
                 break;
             case $chatItem['message'] === '/stop':
                 $sendingDetail['sending'] = $sendTo . 'Завершаю свою работу.';
@@ -487,6 +487,9 @@ final class YouTube extends ChatBotAbstract
                 break;
             case mb_stripos($chatItem['message'], '/show-listern') !== false:
                 $sendingDetail['sending'] = $sendTo . 'Список прослушиваемых: ' . implode(',', $this->usersListening);
+                break;
+            case mb_stripos($chatItem['message'], '/ping') !== false:
+                $sendingDetail['sending'] = 'pong: ' . mb_substr($chatItem['message'], mb_strlen('/ping ') + mb_strrpos($chatItem['message'], '/ping'));
                 break;
         }
 

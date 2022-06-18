@@ -12,11 +12,11 @@ trait MessageSpotterTrait
     /**
      * @var string[] $_searchChars chars that need be replace (ru)
      */
-    private array $_searchChars = ['а', 'А', 'о', 'О', 'е', 'Е', 'р', 'Р', 'у', 'У', 'к', 'К', 'х', 'Х', 'с', 'C',];
+    private array $_searchChars = ['а', 'А', 'о', 'О', 'е', 'Е', 'у', 'У', 'к', 'К', 'х', 'Х'];
     /**
      * @var string[] $_replaceChars chars for replace (en)
      */
-    private array $_replaceChars = ['a', 'A', 'o', 'O', 'e', 'E', 'p', 'P', 'y', 'Y', 'k', 'K', 'x', 'X', 'c', 'C',];
+    private array $_replaceChars = ['a', 'A', 'o', 'O', 'e', 'E', 'y', 'Y', 'k', 'K', 'x', 'X'];
 
     /**
      * **Method** change letters in word for youtube censorship

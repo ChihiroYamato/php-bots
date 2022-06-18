@@ -94,7 +94,6 @@ class Towns extends Game
         $response = $this->getCity($letter);
         $this->stopList[] = $response;
         $this->lastLetter = mb_strtolower(mb_strcut($response, -2));
-        var_dump($response);
 
         return [
             'message' => $this->user->getName() . " продолжаем, $response, тебе на <{$this->lastLetter}>",
@@ -105,7 +104,7 @@ class Towns extends Game
     public static function getHelpMessage() : array
     {
         return [
-            sprintf('—— GAME %s —— правила: классическая игра в города с модификацией: игра ограничена %d ходами игрока, за это время нужно угадать случайную букву, на которую город не должен заканчиваться', self::NAME, self::MAX_TURN),
+            sprintf('—— GAME %s —— правила: классическая игра в города с модификацией: игра ограничена %d ходами игрока, за это время нужно угадать букву, на которую город не должен заканчиваться', self::NAME, self::MAX_TURN),
             sprintf('Таких букв всего: %s —— старт: введите <%s>. на игру отведено %d секунд, очков за победу: +%d, очков за поражение: -%d', self::LETTERS_COUNT, self::COMMAND_START, self::DEFAULT_EXPIRE_TIME, self::WIN_SCORE, self::LOSE_SCORE),
         ];
     }
